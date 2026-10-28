@@ -1,0 +1,18 @@
+{
+  "name": "@tellme/worker-media",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "node dist/index.js",
+    "dev": "node --watch src/index.ts"
+  },
+  "dependencies": {
+    "@tellme/database": "workspace:*",
+    "bullmq": "^5.29.1",
+    "sharp": "^0.33.5"
+  },
+  "devDependencies": {
+    "@tellme/config": "workspace:*",
+    "typescript": "^5.7.0"
+  }
+}

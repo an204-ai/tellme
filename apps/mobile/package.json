@@ -1,0 +1,33 @@
+{
+  "name": "@tellme/mobile",
+  "version": "0.1.0",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.62.7",
+    "@tellme/shared": "workspace:*",
+    "@tellme/ui": "workspace:*",
+    "expo": "~52.0.0",
+    "expo-camera": "~16.0.0",
+    "expo-constants": "~17.0.0",
+    "expo-image-picker": "~16.0.0",
+    "expo-notifications": "~0.29.0",
+    "expo-router": "~4.0.0",
+    "expo-secure-store": "~14.0.0",
+    "nativewind": "^4.1.23",
+    "react": "18.3.1",
+    "react-native": "0.76.5",
+    "zustand": "^5.0.2"
+  },
+  "devDependencies": {
+    "@tellme/config": "workspace:*",
+    "@types/react": "~18.3.12",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.7.0"
+  }
+}

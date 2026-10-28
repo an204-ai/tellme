@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "Tellme",
+    "slug": "tellme",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "scheme": "tellme",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#07327F"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "app.tellme.ios"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#07327F"
+      },
+      "package": "app.tellme.android"
+    },
+
+    "plugins": ["expo-router"]
+  }
+}

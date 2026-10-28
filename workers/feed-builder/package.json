@@ -1,0 +1,10 @@
+{
+  "name": "@tellme/worker-feed",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@tellme/database": "workspace:*",
+    "bullmq": "^5.29.1",
+    "ioredis": "^5.4.1"
+  }
+}
