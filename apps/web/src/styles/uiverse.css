@@ -1,0 +1,1436 @@
+/*! Uiverse adaptations — MIT. Full notices: /licenses/uiverse.txt */
+
+/* Juanes200122 — https://uiverse.io/Juanes200122/friendly-crab-3 */
+:where(.uiv-loading) .pl {
+  width: 6em;
+  height: 6em;
+}
+
+:where(.uiv-loading) .pl__ring {
+  animation: uiv-loading-ringA 2s linear infinite;
+}
+
+:where(.uiv-loading) .pl__ring--a {
+  stroke: #000000;
+}
+
+:where(.uiv-loading) .pl__ring--b {
+  animation-name: uiv-loading-ringB;
+  stroke: #7e7e7e;
+}
+
+:where(.uiv-loading) .pl__ring--c {
+  animation-name: uiv-loading-ringC;
+  stroke: #686868;
+}
+
+:where(.uiv-loading) .pl__ring--d {
+  animation-name: uiv-loading-ringD;
+  stroke: #000000;
+}
+
+/* Animations */
+@keyframes uiv-loading-ringA {
+  from,
+  4% {
+    stroke-dasharray: 0 660;
+    stroke-width: 20;
+    stroke-dashoffset: -330;
+  }
+
+  12% {
+    stroke-dasharray: 60 600;
+    stroke-width: 30;
+    stroke-dashoffset: -335;
+  }
+
+  32% {
+    stroke-dasharray: 60 600;
+    stroke-width: 30;
+    stroke-dashoffset: -595;
+  }
+
+  40%,
+  54% {
+    stroke-dasharray: 0 660;
+    stroke-width: 20;
+    stroke-dashoffset: -660;
+  }
+
+  62% {
+    stroke-dasharray: 60 600;
+    stroke-width: 30;
+    stroke-dashoffset: -665;
+  }
+
+  82% {
+    stroke-dasharray: 60 600;
+    stroke-width: 30;
+    stroke-dashoffset: -925;
+  }
+
+  90%,
+  to {
+    stroke-dasharray: 0 660;
+    stroke-width: 20;
+    stroke-dashoffset: -990;
+  }
+}
+
+@keyframes uiv-loading-ringB {
+  from,
+  12% {
+    stroke-dasharray: 0 220;
+    stroke-width: 20;
+    stroke-dashoffset: -110;
+  }
+
+  20% {
+    stroke-dasharray: 20 200;
+    stroke-width: 30;
+    stroke-dashoffset: -115;
+  }
+
+  40% {
+    stroke-dasharray: 20 200;
+    stroke-width: 30;
+    stroke-dashoffset: -195;
+  }
+
+  48%,
+  62% {
+    stroke-dasharray: 0 220;
+    stroke-width: 20;
+    stroke-dashoffset: -220;
+  }
+
+  70% {
+    stroke-dasharray: 20 200;
+    stroke-width: 30;
+    stroke-dashoffset: -225;
+  }
+
+  90% {
+    stroke-dasharray: 20 200;
+    stroke-width: 30;
+    stroke-dashoffset: -305;
+  }
+
+  98%,
+  to {
+    stroke-dasharray: 0 220;
+    stroke-width: 20;
+    stroke-dashoffset: -330;
+  }
+}
+
+@keyframes uiv-loading-ringC {
+  from {
+    stroke-dasharray: 0 440;
+    stroke-width: 20;
+    stroke-dashoffset: 0;
+  }
+
+  8% {
+    stroke-dasharray: 40 400;
+    stroke-width: 30;
+    stroke-dashoffset: -5;
+  }
+
+  28% {
+    stroke-dasharray: 40 400;
+    stroke-width: 30;
+    stroke-dashoffset: -175;
+  }
+
+  36%,
+  58% {
+    stroke-dasharray: 0 440;
+    stroke-width: 20;
+    stroke-dashoffset: -220;
+  }
+
+  66% {
+    stroke-dasharray: 40 400;
+    stroke-width: 30;
+    stroke-dashoffset: -225;
+  }
+
+  86% {
+    stroke-dasharray: 40 400;
+    stroke-width: 30;
+    stroke-dashoffset: -395;
+  }
+
+  94%,
+  to {
+    stroke-dasharray: 0 440;
+    stroke-width: 20;
+    stroke-dashoffset: -440;
+  }
+}
+
+@keyframes uiv-loading-ringD {
+  from,
+  8% {
+    stroke-dasharray: 0 440;
+    stroke-width: 20;
+    stroke-dashoffset: 0;
+  }
+
+  16% {
+    stroke-dasharray: 40 400;
+    stroke-width: 30;
+    stroke-dashoffset: -5;
+  }
+
+  36% {
+    stroke-dasharray: 40 400;
+    stroke-width: 30;
+    stroke-dashoffset: -175;
+  }
+
+  44%,
+  50% {
+    stroke-dasharray: 0 440;
+    stroke-width: 20;
+    stroke-dashoffset: -220;
+  }
+
+  58% {
+    stroke-dasharray: 40 400;
+    stroke-width: 30;
+    stroke-dashoffset: -225;
+  }
+
+  78% {
+    stroke-dasharray: 40 400;
+    stroke-width: 30;
+    stroke-dashoffset: -395;
+  }
+
+  86%,
+  to {
+    stroke-dasharray: 0 440;
+    stroke-width: 20;
+    stroke-dashoffset: -440;
+  }
+}
+
+/* KhaledMatalkah — https://uiverse.io/KhaledMatalkah/tough-rat-6 */
+:where(.uiv-button) .button {
+  display: inline-block;
+  padding: 15px 32px;
+  font-size: 17px;
+  font-weight: bold;
+  color: rgb(0, 0, 0);
+  background-color: rgb(255, 255, 255);
+  border: none;
+  border-radius: 50px;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+:where(.uiv-button) .button:before,
+:where(.uiv-button) .button:after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50px;
+  opacity: 0.3;
+  pointer-events: none;
+  transition: all 0.3s ease-in-out;
+}
+
+:where(.uiv-button) .button:before {
+  left: -100%;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 136, 255, 0.8),
+    rgba(255, 0, 170, 0.8),
+    rgba(0, 136, 255, 0.8)
+  );
+  z-index: -1;
+}
+
+:where(.uiv-button) .button:hover:before {
+  left: 0;
+}
+
+:where(.uiv-button) .button:after {
+  right: -100%;
+  background: linear-gradient(
+    270deg,
+    rgba(0, 136, 255, 0.8),
+    rgba(255, 0, 170, 0.8),
+    rgba(0, 136, 255, 0.8)
+  );
+  z-index: -1;
+}
+
+:where(.uiv-button) .button:hover:after {
+  right: 0;
+}
+
+:where(.uiv-button) .button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+:where(.uiv-button) .button:active {
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+/* JaydipPrajapati1910 — https://uiverse.io/JaydipPrajapati1910/tricky-cobra-89 */
+:where(.uiv-toggle) .switch {
+  /* switch */
+  --switch-width: 46px;
+  --switch-height: 24px;
+  --switch-bg: rgb(131, 131, 131);
+  --switch-checked-bg: #222;
+  --switch-offset: calc((var(--switch-height) - var(--circle-diameter)) / 2);
+  --switch-transition: all 0.2s cubic-bezier(0.27, 0.2, 0.25, 1.51);
+  /* circle */
+  --circle-diameter: 18px;
+  --circle-bg: #fff;
+  --circle-shadow: 1px 1px 2px rgba(146, 146, 146, 0.45);
+  --circle-checked-shadow: -1px 1px 2px rgba(163, 163, 163, 0.45);
+  --circle-transition: var(--switch-transition);
+  /* icon */
+  --icon-transition: all 0.2s cubic-bezier(0.27, 0.2, 0.25, 1.51);
+  --icon-cross-color: var(--switch-bg);
+  --icon-cross-size: 6px;
+  --icon-checkmark-color: var(--switch-checked-bg);
+  --icon-checkmark-size: 10px;
+  /* effect line */
+  --effect-width: calc(var(--circle-diameter) / 2);
+  --effect-height: calc(var(--effect-width) / 2 - 1px);
+  --effect-bg: var(--circle-bg);
+  --effect-border-radius: 1px;
+  --effect-transition: all 0.2s ease-in-out;
+}
+
+:where(.uiv-toggle) .switch input {
+  display: none;
+}
+
+:where(.uiv-toggle) .switch {
+  display: inline-block;
+}
+
+:where(.uiv-toggle) .switch svg {
+  -webkit-transition: var(--icon-transition);
+  -o-transition: var(--icon-transition);
+  transition: var(--icon-transition);
+  position: absolute;
+  height: auto;
+}
+
+:where(.uiv-toggle) .switch .checkmark {
+  width: var(--icon-checkmark-size);
+  color: var(--icon-checkmark-color);
+  -webkit-transform: scale(0);
+  -ms-transform: scale(0);
+  transform: scale(0);
+}
+
+:where(.uiv-toggle) .switch .cross {
+  width: var(--icon-cross-size);
+  color: var(--icon-cross-color);
+}
+
+:where(.uiv-toggle) .slider {
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  width: var(--switch-width);
+  height: var(--switch-height);
+  background: var(--switch-bg);
+  border-radius: 999px;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  position: relative;
+  -webkit-transition: var(--switch-transition);
+  -o-transition: var(--switch-transition);
+  transition: var(--switch-transition);
+  cursor: pointer;
+}
+
+:where(.uiv-toggle) .circle {
+  width: var(--circle-diameter);
+  height: var(--circle-diameter);
+  background: var(--circle-bg);
+  border-radius: inherit;
+  -webkit-box-shadow: var(--circle-shadow);
+  box-shadow: var(--circle-shadow);
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  justify-content: center;
+  -webkit-transition: var(--circle-transition);
+  -o-transition: var(--circle-transition);
+  transition: var(--circle-transition);
+  z-index: 1;
+  position: absolute;
+  left: var(--switch-offset);
+}
+
+:where(.uiv-toggle) .slider::before {
+  content: "";
+  position: absolute;
+  width: var(--effect-width);
+  height: var(--effect-height);
+  left: calc(var(--switch-offset) + (var(--effect-width) / 2));
+  background: var(--effect-bg);
+  border-radius: var(--effect-border-radius);
+  -webkit-transition: var(--effect-transition);
+  -o-transition: var(--effect-transition);
+  transition: var(--effect-transition);
+}
+
+/* actions */
+
+:where(.uiv-toggle) .switch input:checked + .slider {
+  background: var(--switch-checked-bg);
+}
+
+:where(.uiv-toggle) .switch input:checked + .slider .checkmark {
+  -webkit-transform: scale(1);
+  -ms-transform: scale(1);
+  transform: scale(1);
+}
+
+:where(.uiv-toggle) .switch input:checked + .slider .cross {
+  -webkit-transform: scale(0);
+  -ms-transform: scale(0);
+  transform: scale(0);
+}
+
+:where(.uiv-toggle) .switch input:checked + .slider::before {
+  left: calc(
+    100% - var(--effect-width) - (var(--effect-width) / 2) -
+      var(--switch-offset)
+  );
+}
+
+:where(.uiv-toggle) .switch input:checked + .slider .circle {
+  left: calc(100% - var(--circle-diameter) - var(--switch-offset));
+  -webkit-box-shadow: var(--circle-checked-shadow);
+  box-shadow: var(--circle-checked-shadow);
+}
+
+/* uiverse-astronaut — https://uiverse.io/uiverse-astronaut/purple-frog-72 */
+:where(.uiv-input) .cir-search {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  width: 320px;
+  height: 48px;
+  padding: 0 8px 0 18px;
+  background: var(--color-cloud, #ffffff);
+  border: 1px solid var(--color-edge, #e3e8ee);
+  border-radius: 999px;
+  box-shadow:
+    0 1px 1px rgba(14, 17, 22, 0.03),
+    0 18px 36px -22px rgba(14, 17, 22, 0.18);
+  font-family:
+    "Poppins",
+    system-ui,
+    -apple-system,
+    sans-serif;
+  transition:
+    border-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:where(.uiv-input) .cir-search__icon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-mist, #5b6472);
+  flex-shrink: 0;
+}
+
+:where(.uiv-input) .cir-search__field {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  color: var(--color-ink, #0e1116);
+}
+
+:where(.uiv-input) .cir-search__field::placeholder {
+  color: #8a93a3;
+}
+
+:where(.uiv-input) .cir-search__kbd {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 10px;
+  background: #f3f6fa;
+  border: 1px solid #eef2f6;
+  border-radius: 999px;
+  font-family: "Poppins", system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-mist, #5b6472);
+  letter-spacing: 0.02em;
+}
+
+:where(.uiv-input) .cir-search:focus-within {
+  border-color: var(--color-signal, #2e7def);
+  box-shadow:
+    0 0 0 3px rgba(46, 125, 239, 0.22),
+    0 18px 36px -22px rgba(14, 17, 22, 0.2);
+}
+
+/* kaan_4205 — https://uiverse.io/kaan_4205/funny-chicken-88 */
+:where(.uiv-tabs) .tabs {
+  display: flex;
+  position: relative;
+  background-color: #fff;
+  box-shadow:
+    0 0 1px 0 rgba(24, 94, 224, 0.15),
+    0 6px 12px 0 rgba(24, 94, 224, 0.15);
+  padding: 0.25rem;
+  border-radius: 12px;
+}
+
+:where(.uiv-tabs) .tabs * {
+  z-index: 2;
+}
+
+:where(.uiv-tabs) .container input[type="radio"] {
+  display: none;
+}
+
+:where(.uiv-tabs) .tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  width: 70px;
+  font-size: 0.8rem;
+  color: black;
+  font-weight: 500;
+  border-radius: 99px;
+  cursor: pointer;
+  transition: color 0.15s ease-in;
+}
+
+:where(.uiv-tabs) .notification {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 4rem;
+  height: 0.8rem;
+  position: absolute;
+  top: -0.3rem;
+  left: auto;
+  font-size: 10px;
+  margin-left: 5rem;
+  border-radius: 8px;
+  margin: 0px;
+  background-color: #e6eef9;
+  transition: 0.15s ease-in;
+}
+
+:where(.uiv-tabs) .container input[type="radio"]:checked + label {
+  color: #185ee0;
+}
+
+:where(.uiv-tabs)
+  .container
+  input[type="radio"]:checked
+  + label
+  > .notification {
+  background-color: #185ee0;
+  color: #fff;
+  margin: 0px;
+}
+
+:where(.uiv-tabs) .container input[id="radio-1"]:checked ~ .glider {
+  transform: translateX(0);
+}
+
+:where(.uiv-tabs) .container input[id="radio-2"]:checked ~ .glider {
+  transform: translateX(100%);
+}
+
+:where(.uiv-tabs) .container input[id="radio-3"]:checked ~ .glider {
+  transform: translateX(200%);
+}
+
+:where(.uiv-tabs) .glider {
+  position: absolute;
+  display: flex;
+  height: 30px;
+  width: 70px;
+  background-color: #e6eef9;
+  z-index: 1;
+  border-radius: 8px;
+  transition: 0.15s ease-out;
+}
+
+@media (max-width: 700px) {
+  :where(.uiv-tabs) .tabs {
+    transform: scale(0.6);
+  }
+}
+
+/* Pankaj-Meharchandani — https://uiverse.io/Pankaj-Meharchandani/curly-robin-81 */
+:where(.uiv-radio) .radio-inputs {
+  display: flex;
+  flex-direction: column; /* Stack elements vertically */
+  justify-content: center;
+  align-items: center;
+  max-width: 100%; /* Ensure it doesn't overflow */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+:where(.uiv-radio) .radio-inputs > * {
+  margin: 10px 0; /* Add vertical spacing between options */
+}
+
+:where(.uiv-radio) .radio-input:checked + .radio-tile {
+  border-color: #2260ff;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+  color: #2260ff;
+}
+
+:where(.uiv-radio) .radio-input:checked + .radio-tile:before {
+  transform: scale(1);
+  opacity: 1;
+  background-color: #2260ff;
+  border-color: #2260ff;
+}
+
+:where(.uiv-radio) .radio-input:checked + .radio-tile .radio-icon svg {
+  fill: #2260ff;
+}
+
+:where(.uiv-radio) .radio-input:checked + .radio-tile .radio-label {
+  color: #2260ff;
+}
+
+:where(.uiv-radio) .radio-input:focus + .radio-tile {
+  border-color: #2260ff;
+  box-shadow:
+    0 5px 10px rgba(0, 0, 0, 0.1),
+    0 0 0 4px #b5c9fc;
+}
+
+:where(.uiv-radio) .radio-input:focus + .radio-tile:before {
+  transform: scale(1);
+  opacity: 1;
+}
+
+:where(.uiv-radio) .radio-tile {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  width: 200px; /* Width of the pill */
+  min-height: 50px; /* Height of the pill */
+  border-radius: 25px; /* Full pill shape */
+  border: 2px solid #b5bfd9;
+  background-color: #fff;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+  transition: 0.15s ease;
+  cursor: pointer;
+  position: relative;
+  padding-left: 50px; /* Space for the indicator */
+}
+
+:where(.uiv-radio) .radio-tile:before {
+  content: "";
+  position: absolute;
+  display: block;
+  width: 20px; /* Size of the indicator */
+  height: 20px; /* Size of the indicator */
+  border: 2px solid #b5bfd9;
+  background-color: #fff;
+  border-radius: 50%; /* Circle shape for the indicator */
+  left: 15px; /* Position of the indicator */
+  transition: 0.25s ease;
+}
+
+:where(.uiv-radio) .radio-tile:hover {
+  border-color: #2260ff;
+}
+
+:where(.uiv-radio) .radio-tile:hover:before {
+  transform: scale(1);
+  opacity: 1;
+}
+
+:where(.uiv-radio) .radio-icon {
+  margin-left: 10px; /* Space between the indicator and icon */
+}
+
+:where(.uiv-radio) .radio-icon svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  fill: #494949;
+}
+
+:where(.uiv-radio) .radio-label {
+  color: #707070;
+  transition: 0.375s ease;
+  text-align: left; /* Align text to the left */
+  font-size: 13px;
+  margin-left: 10px; /* Space between the icon and label */
+}
+
+:where(.uiv-radio) .radio-input {
+  clip: rect(0 0 0 0);
+  -webkit-clip-path: inset(100%);
+  clip-path: inset(100%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+/* zanina-yassine — https://uiverse.io/zanina-yassine/quiet-turkey-90 */
+:where(.uiv-comment-reply) .card {
+  width: 450px;
+  height: fit-content;
+  background-color: white;
+  box-shadow:
+    0px 187px 75px rgba(0, 0, 0, 0.01),
+    0px 105px 63px rgba(0, 0, 0, 0.05),
+    0px 47px 47px rgba(0, 0, 0, 0.09),
+    0px 12px 26px rgba(0, 0, 0, 0.1),
+    0px 0px 0px rgba(0, 0, 0, 0.1);
+  border-radius: 17px 17px 27px 27px;
+}
+
+:where(.uiv-comment-reply) .title {
+  width: 100%;
+  height: 50px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding-left: 20px;
+  border-bottom: 1px solid #f1f1f1;
+  font-weight: 700;
+  font-size: 13px;
+  color: #47484b;
+}
+
+:where(.uiv-comment-reply) .title::after {
+  content: "";
+  width: 8ch;
+  height: 1px;
+  position: absolute;
+  bottom: -1px;
+  background-color: #47484b;
+}
+
+:where(.uiv-comment-reply) .comments {
+  display: grid;
+  grid-template-columns: 35px 1fr;
+  gap: 20px;
+  padding: 20px;
+}
+
+:where(.uiv-comment-reply) .comment-react {
+  width: 35px;
+  height: fit-content;
+  display: grid;
+  grid-template-columns: auto;
+  margin: 0;
+  background-color: #f1f1f1;
+  border-radius: 5px;
+}
+
+:where(.uiv-comment-reply) .comment-react button {
+  width: 35px;
+  height: 35px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  border: 0;
+  outline: none;
+}
+
+:where(.uiv-comment-reply) .comment-react button:after {
+  content: "";
+  width: 40px;
+  height: 40px;
+  position: absolute;
+  left: -2.5px;
+  top: -2.5px;
+  background-color: #f5356e;
+  border-radius: 50%;
+  z-index: 0;
+  transform: scale(0);
+}
+
+:where(.uiv-comment-reply) .comment-react button svg {
+  position: relative;
+  z-index: 9;
+}
+
+:where(.uiv-comment-reply) .comment-react button:hover:after {
+  animation: uiv-comment-reply-ripple 0.6s ease-in-out forwards;
+}
+
+:where(.uiv-comment-reply) .comment-react button:hover svg {
+  fill: #f5356e;
+}
+
+:where(.uiv-comment-reply) .comment-react button:hover svg path {
+  stroke: #f5356e;
+  fill: #f5356e;
+}
+
+:where(.uiv-comment-reply) .comment-react hr {
+  width: 80%;
+  height: 1px;
+  background-color: #dfe1e6;
+  margin: auto;
+  border: 0;
+}
+
+:where(.uiv-comment-reply) .comment-react span {
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: auto;
+  font-size: 13px;
+  font-weight: 600;
+  color: #707277;
+}
+
+:where(.uiv-comment-reply) .comment-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 0;
+  margin: 0;
+}
+
+:where(.uiv-comment-reply) .comment-container .user {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 10px;
+}
+
+:where(.uiv-comment-reply) .comment-container .user .user-pic {
+  width: 40px;
+  height: 40px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f1f1f1;
+  border-radius: 50%;
+}
+
+:where(.uiv-comment-reply) .comment-container .user .user-pic:after {
+  content: "";
+  width: 9px;
+  height: 9px;
+  position: absolute;
+  right: 0px;
+  bottom: 0px;
+  border-radius: 50%;
+  background-color: #0fc45a;
+  border: 2px solid #ffffff;
+}
+
+:where(.uiv-comment-reply) .comment-container .user .user-info {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 3px;
+}
+
+:where(.uiv-comment-reply) .comment-container .user .user-info span {
+  font-weight: 700;
+  font-size: 12px;
+  color: #47484b;
+}
+
+:where(.uiv-comment-reply) .comment-container .user .user-info p {
+  font-weight: 600;
+  font-size: 10px;
+  color: #acaeb4;
+}
+
+:where(.uiv-comment-reply) .comment-container .comment-content {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  color: #5f6064;
+}
+
+:where(.uiv-comment-reply) .text-box {
+  width: 100%;
+  height: fit-content;
+  background-color: #f1f1f1;
+  padding: 8px;
+}
+
+:where(.uiv-comment-reply) .text-box .box-container {
+  background-color: #ffffff;
+  border-radius: 8px 8px 21px 21px;
+  padding: 8px;
+}
+
+:where(.uiv-comment-reply) .text-box textarea {
+  width: 100%;
+  height: 40px;
+  resize: none;
+  border: 0;
+  border-radius: 6px;
+  padding: 12px 12px 10px 12px;
+  font-size: 13px;
+  outline: none;
+  caret-color: #0a84ff;
+}
+
+:where(.uiv-comment-reply) .text-box .formatting {
+  display: grid;
+  grid-template-columns: auto auto auto auto auto 1fr;
+}
+
+:where(.uiv-comment-reply) .text-box .formatting button {
+  width: 30px;
+  height: 30px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  border-radius: 50%;
+  border: 0;
+  outline: none;
+}
+
+:where(.uiv-comment-reply) .text-box .formatting button:hover {
+  background-color: #f1f1f1;
+}
+
+:where(.uiv-comment-reply) .text-box .formatting .send {
+  width: 30px;
+  height: 30px;
+  background-color: #0a84ff;
+  margin: 0 0 0 auto;
+}
+
+:where(.uiv-comment-reply) .text-box .formatting .send:hover {
+  background-color: #026eda;
+}
+
+@keyframes uiv-comment-reply-ripple {
+  0% {
+    transform: scale(0);
+    opacity: 0.6;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+/* mahbowal — https://uiverse.io/mahbowal/dull-ape-98 */
+:where(.uiv-form) .container {
+  max-width: 350px;
+  background: #f8f9fd;
+  background: linear-gradient(
+    0deg,
+    rgb(255, 255, 255) 0%,
+    rgb(244, 247, 251) 100%
+  );
+  border-radius: 40px;
+  padding: 25px 35px;
+  border: 5px solid rgb(255, 255, 255);
+  box-shadow: rgba(133, 189, 215, 0.8784313725) 0px 30px 30px -20px;
+  margin: 20px;
+}
+
+:where(.uiv-form) .heading {
+  text-align: center;
+  font-weight: 900;
+  font-size: 30px;
+  color: rgb(16, 137, 211);
+}
+
+:where(.uiv-form) .form {
+  margin-top: 20px;
+}
+
+:where(.uiv-form) .form .input {
+  width: 100%;
+  background: white;
+  border: none;
+  padding: 15px 20px;
+  border-radius: 20px;
+  margin-top: 15px;
+  box-shadow: #cff0ff 0px 10px 10px -5px;
+  border-inline: 2px solid transparent;
+}
+
+:where(.uiv-form) .form .input::-moz-placeholder {
+  color: rgb(170, 170, 170);
+}
+
+:where(.uiv-form) .form .input::placeholder {
+  color: rgb(170, 170, 170);
+}
+
+:where(.uiv-form) .form .input:focus {
+  outline: none;
+  border-inline: 2px solid #12b1d1;
+}
+
+:where(.uiv-form) .form .forgot-password {
+  display: block;
+  margin-top: 10px;
+  margin-left: 10px;
+}
+
+:where(.uiv-form) .form .forgot-password a {
+  font-size: 11px;
+  color: #0099ff;
+  text-decoration: none;
+}
+
+:where(.uiv-form) .form .login-button {
+  display: block;
+  width: 100%;
+  font-weight: bold;
+  background: linear-gradient(
+    45deg,
+    rgb(16, 137, 211) 0%,
+    rgb(18, 177, 209) 100%
+  );
+  color: white;
+  padding-block: 15px;
+  margin: 20px auto;
+  border-radius: 20px;
+  box-shadow: rgba(133, 189, 215, 0.8784313725) 0px 20px 10px -15px;
+  border: none;
+  transition: all 0.2s ease-in-out;
+}
+
+:where(.uiv-form) .form .login-button:hover {
+  transform: scale(1.03);
+  box-shadow: rgba(133, 189, 215, 0.8784313725) 0px 23px 10px -20px;
+}
+
+:where(.uiv-form) .form .login-button:active {
+  transform: scale(0.95);
+  box-shadow: rgba(133, 189, 215, 0.8784313725) 0px 15px 10px -10px;
+}
+
+:where(.uiv-form) .social-account-container {
+  margin-top: 25px;
+}
+
+:where(.uiv-form) .social-account-container .title {
+  display: block;
+  text-align: center;
+  font-size: 10px;
+  color: rgb(170, 170, 170);
+}
+
+:where(.uiv-form) .social-account-container .social-accounts {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 5px;
+}
+
+:where(.uiv-form) .social-account-container .social-accounts .social-button {
+  background: linear-gradient(45deg, rgb(0, 0, 0) 0%, rgb(112, 112, 112) 100%);
+  border: 5px solid white;
+  padding: 5px;
+  border-radius: 50%;
+  width: 40px;
+  aspect-ratio: 1;
+  display: grid;
+  place-content: center;
+  box-shadow: rgba(133, 189, 215, 0.8784313725) 0px 12px 10px -8px;
+  transition: all 0.2s ease-in-out;
+}
+
+:where(.uiv-form)
+  .social-account-container
+  .social-accounts
+  .social-button
+  .svg {
+  fill: white;
+  margin: auto;
+}
+
+:where(.uiv-form)
+  .social-account-container
+  .social-accounts
+  .social-button:hover {
+  transform: scale(1.2);
+}
+
+:where(.uiv-form)
+  .social-account-container
+  .social-accounts
+  .social-button:active {
+  transform: scale(0.9);
+}
+
+:where(.uiv-form) .agreement {
+  display: block;
+  text-align: center;
+  margin-top: 15px;
+}
+
+:where(.uiv-form) .agreement a {
+  text-decoration: none;
+  color: #0099ff;
+  font-size: 9px;
+}
+
+/* ilkhoeri — https://uiverse.io/ilkhoeri/polite-wasp-12 */
+:where(.uiv-heart-tooltip) .tooltip {
+  --bg: #fff;
+  --cl: red;
+  --sz: 1rem;
+  --sizer: 44px;
+  --h-cnt: calc(var(--sz) * 2);
+  position: relative;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:where(.uiv-heart-tooltip) .trigger {
+  color: var(--cl);
+  background: var(--bg);
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 999px;
+  padding: calc(var(--sz) / 2);
+  font-size: var(--sz);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  outline: none;
+  box-shadow:
+    rgba(95, 95, 115, 0.25) 0px 2px 5px -1px,
+    rgba(255, 255, 255, 0.3) 0px 1px 3px -1px;
+}
+:where(.uiv-heart-tooltip) .trigger .heart {
+  --sizer: 30px;
+  transition: all 0.2s ease;
+  color: var(--cl);
+  margin-bottom: -2px;
+}
+:where(.uiv-heart-tooltip) .trigger .heart .fill {
+  opacity: 0;
+  display: none;
+}
+
+:where(.uiv-heart-tooltip) .trigger:hover {
+  --scale-1: 0.9;
+  --scale-2: 0.8;
+  animation: uiv-heart-tooltip-scaling 1s ease infinite;
+}
+:where(.uiv-heart-tooltip) .trigger:hover .heart {
+  --scale-1: 1.3;
+  --scale-2: 1.4;
+  animation: uiv-heart-tooltip-scaling 1s ease infinite;
+}
+@keyframes uiv-heart-tooltip-scaling {
+  0% {
+    transform: scale(1);
+  }
+  20%,
+  90% {
+    transform: scale(var(--scale-1));
+  }
+  50% {
+    transform: scale(var(--scale-2));
+  }
+}
+
+:where(.uiv-heart-tooltip) .trigger .checkround {
+  position: absolute;
+  fill: none;
+  stroke: var(--cl);
+  scale: 1.1;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dashoffset: 162.6;
+  stroke-dasharray: 0 330 158 134.6;
+  rotate: 130deg;
+  opacity: 0.6;
+  z-index: -1;
+  cursor: none;
+  pointer-events: none;
+}
+
+:where(.uiv-heart-tooltip) .content {
+  position: absolute;
+  border-radius: 999px;
+  top: calc(var(--h-cnt) * -0.75);
+  font-size: 14px;
+  padding: calc(var(--sz) / 4) calc(var(--sz) / 2);
+  z-index: -1;
+  pointer-events: none;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: max-content;
+  transition: all 0.3s ease;
+  opacity: 0;
+  transform: scale(0) translate(0, 200%);
+  font-weight: 600;
+  background-color: var(--cl);
+  color: whitesmoke;
+}
+
+:where(.uiv-heart-tooltip) .content::before {
+  position: absolute;
+  content: "";
+  height: 1rem;
+  width: 1rem;
+  bottom: -0.2em;
+  left: 50%;
+  transform: translate(-50%) rotate(45deg);
+  border-radius: 2px;
+  z-index: -2;
+  background-color: transparent;
+}
+
+:where(.uiv-heart-tooltip) .tooltip .trigger:hover + .content {
+  top: calc(var(--h-cnt) * -1.25);
+  visibility: visible;
+  pointer-events: auto;
+  opacity: 1;
+  transform: scale(1) translate(0%, 0%);
+}
+
+:where(.uiv-heart-tooltip) .content span {
+  --y-crease: 16px;
+  position: relative;
+  margin-left: 4px;
+  height: var(--y-crease);
+  overflow: hidden;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  flex-direction: column;
+  margin-bottom: -1px;
+}
+:where(.uiv-heart-tooltip) .content span::before,
+:where(.uiv-heart-tooltip) .content span::after {
+  line-height: 1.1;
+  position: relative;
+  transform: translateY(calc(var(--y-crease) / 2));
+  transition: transform 0.5s ease;
+  transition-delay: 0s;
+}
+:where(.uiv-heart-tooltip) .content span::before {
+  content: attr(data-decrease);
+}
+:where(.uiv-heart-tooltip) .content span::after {
+  content: attr(data-increase);
+}
+
+/* Like Indicator */
+:where(.uiv-heart-tooltip) .trigger:focus .heart .fill {
+  display: unset;
+  animation: uiv-heart-tooltip-filled 0.2s ease 1s forwards;
+}
+@keyframes uiv-heart-tooltip-filled {
+  to {
+    opacity: 0.3;
+  }
+}
+:where(.uiv-heart-tooltip) .trigger:focus + .content span::before,
+:where(.uiv-heart-tooltip) .trigger:focus + .content span::after {
+  transform: translateY(calc((var(--y-crease) / 2) * -1));
+  transition-delay: 1s;
+}
+:where(.uiv-heart-tooltip) .trigger:focus .checkround {
+  animation:
+    uiv-heart-tooltip-stroke 0.9s linear forwards,
+    uiv-heart-tooltip-checkhide 0.45s linear 0.9s forwards;
+}
+@keyframes uiv-heart-tooltip-stroke {
+  to {
+    stroke-dasharray: 0 163 158 134.6;
+  }
+}
+@keyframes uiv-heart-tooltip-checkhide {
+  to {
+    stroke: var(--bg);
+    scale: 0;
+    stroke-width: 0;
+    opacity: 0;
+  }
+}
+
+:where(.uiv-heart-tooltip) .sizer {
+  width: var(--sizer);
+  min-width: var(--sizer);
+  max-width: var(--sizer);
+  height: var(--sizer);
+  min-height: var(--sizer);
+  max-height: var(--sizer);
+}
+
+/* preet_7613 — https://uiverse.io/preet_7613/new-cougar-63 */
+:where(.uiv-not-found) .my-custom-face-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 500px;
+  background: #ffffff00;
+  color: #1a1a1a;
+}
+
+:where(.uiv-not-found) .my-custom-face-container .face {
+  width: 200px;
+}
+
+:where(.uiv-not-found) .my-custom-face-container .face__eyes,
+:where(.uiv-not-found) .my-custom-face-container .face__eye-lid,
+:where(.uiv-not-found) .my-custom-face-container .face__mouth-left,
+:where(.uiv-not-found) .my-custom-face-container .face__mouth-right,
+:where(.uiv-not-found) .my-custom-face-container .face__nose,
+:where(.uiv-not-found) .my-custom-face-container .face__pupil {
+  animation: uiv-not-found-eyes 1s 0.3s forwards;
+}
+
+:where(.uiv-not-found) .my-custom-face-container .face__eye-lid,
+:where(.uiv-not-found) .my-custom-face-container .face__pupil {
+  animation-duration: 4s;
+  animation-delay: 1.3s;
+  animation-iteration-count: infinite;
+}
+
+:where(.uiv-not-found) .my-custom-face-container .face__eye-lid {
+  animation-name: uiv-not-found-eye-lid;
+}
+:where(.uiv-not-found) .my-custom-face-container .face__mouth-left {
+  animation-name: uiv-not-found-mouth-left;
+}
+:where(.uiv-not-found) .my-custom-face-container .face__mouth-right {
+  animation-name: uiv-not-found-mouth-right;
+}
+:where(.uiv-not-found) .my-custom-face-container .face__nose {
+  animation-name: uiv-not-found-nose;
+}
+:where(.uiv-not-found) .my-custom-face-container .face__pupil {
+  animation-name: uiv-not-found-pupil;
+}
+
+@keyframes uiv-not-found-eye-lid {
+  0%,
+  40%,
+  45%,
+  100% {
+    transform: translateY(0);
+  }
+  42.5% {
+    transform: translateY(17.5px);
+  }
+}
+
+@keyframes uiv-not-found-eyes {
+  from {
+    transform: translateY(112.5px);
+  }
+  to {
+    transform: translateY(15px);
+  }
+}
+
+@keyframes uiv-not-found-pupil {
+  0%,
+  37.5%,
+  40%,
+  45%,
+  87.5%,
+  100% {
+    stroke-dashoffset: 0;
+    transform: translate(0, 0);
+  }
+  12.5%,
+  25%,
+  62.5%,
+  75% {
+    transform: translate(-35px, 0);
+  }
+  42.5% {
+    stroke-dashoffset: 35;
+    transform: translate(0, 17.5px);
+  }
+}
+
+@keyframes uiv-not-found-mouth-left {
+  from,
+  50% {
+    stroke-dashoffset: -102;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes uiv-not-found-mouth-right {
+  from,
+  50% {
+    stroke-dashoffset: 102;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes uiv-not-found-nose {
+  from {
+    transform: translate(0, 0);
+  }
+  to {
+    transform: translate(0, 22.5px);
+  }
+}

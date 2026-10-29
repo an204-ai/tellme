@@ -4,6 +4,10 @@ node_modules/
 
 # Build outputs
 .next/
+.next-production/
+.next-qa/
+*.tsbuildinfo
+**/.impeccable/review/
 dist/
 build/
 out/
@@ -32,3 +36,7 @@ pnpm-debug.log*
 # OS files
 .DS_Store
 Thumbs.db
+
+#library
+.impeccable
+/docs

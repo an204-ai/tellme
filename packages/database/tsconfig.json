@@ -1,4 +1,10 @@
 {
   "extends": "@tellme/config/typescript/base.json",
-  "include": ["src/**/*"]
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src"
+  },
+  "include": [
+    "src/**/*.ts"
+  ]
 }

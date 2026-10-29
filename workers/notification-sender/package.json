@@ -3,7 +3,19 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@tellme/database": "workspace:*",
-    "bullmq": "^5.29.1"
+    "@tellme/database": "workspace:*"
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "check-types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@tellme/config": "workspace:*",
+    "@types/node": "^22.10.2",
+    "tsx": "^4.23.15",
+    "typescript": "^5.7.0"
   }
 }

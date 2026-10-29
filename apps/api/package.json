@@ -3,24 +3,26 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node --watch src/main.ts",
+    "dev": "tsx watch src/main.ts",
     "build": "tsc",
-    "start": "node dist/main.js"
+    "start": "node dist/main.js",
+    "check-types": "tsc --noEmit",
+    "test": "tsx --test src/backend/*.test.ts"
   },
   "dependencies": {
     "@hono/node-server": "^1.13.7",
-    "@hono/zod-validator": "^0.4.1",
-    "@tellme/database": "workspace:*",
-    "@tellme/shared": "workspace:*",
-    "bullmq": "^5.29.1",
+    "cloudinary": "^2.11.0",
     "dotenv": "^16.4.7",
     "hono": "^4.6.14",
-    "ioredis": "^5.4.1",
-    "zod": "^3.23.8"
+    "mongodb": "^7.7.0",
+    "zod": "^3.23.8",
+    "@tellme/database": "workspace:*"
   },
   "devDependencies": {
     "@tellme/config": "workspace:*",
     "@types/node": "^22.10.2",
+    "tsx": "^4.23.15",
     "typescript": "^5.7.0"
-  }
+  },
+  "type": "module"
 }

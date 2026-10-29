@@ -1,0 +1,7 @@
+{
+  "/auth/login/page": "app/auth/login/page.js",
+  "/community/saved/page": "app/community/saved/page.js",
+  "/community/profile/[username]/page": "app/community/profile/[username]/page.js",
+  "/community/feed/page": "app/community/feed/page.js",
+  "/community/messages/[id]/page": "app/community/messages/[id]/page.js"
+}
