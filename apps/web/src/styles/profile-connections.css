@@ -1,0 +1,13 @@
+.profile-details > button { display: inline-flex; align-items: center; gap: 5px; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; }
+.profile-details > button:hover { color: var(--primary); text-decoration: underline; text-underline-offset: 4px; }
+.profile-connections-dialog { width: 480px; }
+.profile-connections-list { max-height: min(60dvh, 520px); min-height: 120px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; padding: 8px 20px 16px; }
+.profile-connections-list::-webkit-scrollbar { display: none; }
+.profile-connections-list ul { padding: 0; margin: 0; list-style: none; }
+.profile-connections-list li + li { border-top: 1px solid var(--line); }
+.profile-connections-list a { display: flex; align-items: center; gap: 12px; min-height: 72px; padding: 12px 4px; }
+.profile-connections-list a:hover { color: var(--primary); }
+.profile-connections-list a > span:last-child { min-width: 0; display: grid; gap: 4px; }
+.profile-connections-list strong { font-size: 16px; font-weight: 500; overflow-wrap: anywhere; }
+.profile-connections-list small { font-size: 14px; overflow-wrap: anywhere; }
+.profile-connections-list .empty-state { padding: 24px 8px; }

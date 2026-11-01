@@ -1,11 +1,22 @@
 export type Privacy = "public" | "connections" | "private";
-export type Reaction =
-  | "like"
-  | "love"
-  | "cheer"
-  | "celebrate"
-  | "appreciate"
-  | "smile";
+export interface AnonymousIdentity {
+  name: string;
+  animal: "cat" | "fish" | "bird" | "nightingale" | "sparrow" | "owl" | "rabbit" | "turtle" | "squirrel" | "dog" | "bear" | "otter" | "fox" | "frog" | "penguin";
+  color: "lavender" | "mint" | "peach" | "sky" | "sand" | "rose";
+}
+export interface ArchiveItem {
+  id: string;
+  kind: "post" | "story";
+  at: string;
+  privacy: Privacy;
+  person: Person | null;
+  text: string;
+  image: string;
+  count?: number;
+  anonymousIdentity?: AnonymousIdentity;
+}
+export interface ArchivePage { items: ArchiveItem[]; total: number; nextCursor: number | null }
+export type Reaction = "like" | "love" | "haha" | "wow" | "sad";
 export interface Person {
   id: string;
   username: string;
@@ -13,8 +24,16 @@ export interface Person {
   avatar: string;
   bio: string;
   location: string;
+  birthday?: string;
+  occupation?: string;
+  interests?: string;
+  favoriteLunch?: string;
+  favoriteDrink?: string;
+  followersCount?: number;
+  followingCount?: number;
   cover: string;
 }
+export type ProfileConnection = Pick<Person, "id" | "username" | "name" | "avatar">;
 export interface Comment {
   id: string;
   userId: string;
@@ -22,6 +41,7 @@ export interface Comment {
   createdAt: string;
   parentId?: string;
   liked?: boolean;
+  isAuthor?: boolean;
   media?: CommentMedia;
 }
 export interface CommentMedia {
@@ -40,10 +60,12 @@ export interface Post {
   topic: string;
   privacy: Privacy;
   anonymous: boolean;
+  anonymousIdentity?: AnonymousIdentity;
   createdAt: string;
   likes: number;
   reactorIds?: string[];
   reaction: Reaction | null;
+  reactorReactions?: Record<string, Reaction>;
   comments: Comment[];
   saved: boolean;
   shares: number;
@@ -53,7 +75,19 @@ export interface MomentItem {
   image: string;
   caption: string;
   at: string;
+  /** Optional per-photo restriction; absent means the day-wide audience applies. */
+  privacy?: Privacy;
   reaction?: Reaction | null;
+}
+export interface StoryMusic {
+  provider: "epidemic-sound" | "youtube";
+  trackId: string;
+  title: string;
+  artists: string[];
+  cover: string;
+  metadataUpdatedAt?: string;
+  durationSeconds?: number;
+  startSeconds?: number;
 }
 export interface DayStory {
   id: string;
@@ -61,6 +95,7 @@ export interface DayStory {
   day: string;
   privacy: Privacy;
   items: MomentItem[];
+  music?: StoryMusic;
 }
 export interface Message {
   userId?: string;
@@ -78,6 +113,10 @@ export interface Message {
   at: string;
 }
 export interface Conversation {
+  ownerId?: string;
+  muted?: boolean;
+  avatar?: string;
+  canMessage?: boolean;
   kind?: "direct" | "group";
   title?: string;
   participantIds?: string[];
@@ -87,6 +126,10 @@ export interface Conversation {
   messages: Message[];
 }
 export interface Notice {
+  kind?: "like" | "message" | "system";
+  systemIcon?: "sunrise" | "lunch" | "sunset" | "moon" | "weather";
+  title?: string;
+  url?: string;
   id: string;
   userId: string;
   text: string;
@@ -98,11 +141,14 @@ export interface Preferences {
   audience: Privacy;
   notifyLikes: boolean;
   notifyMessages: boolean;
+  notifySystem?: boolean;
   emailUpdates: boolean;
   reducedMotion: boolean;
 }
 export interface AppData {
   version: 1;
+  authenticated?: boolean;
+  features?: { pushPublicKey: string | null; emailEnabled: boolean };
   people: Person[];
   posts: Post[];
   stories: DayStory[];
@@ -112,6 +158,8 @@ export interface AppData {
   connections: string[];
   blocked: string[];
   hiddenPosts: string[];
+  hiddenStories?: string[];
+  savedStories?: string[];
   reports: { postId: string; reason: string; at: string }[];
   settings: Preferences;
   paginationSeedVersion?: number;
@@ -138,4 +186,9 @@ export interface ProfileActivityPage {
   items: ProfileActivity[];
   nextCursor: number | undefined;
   total: number;
+}
+
+export interface StoryPage {
+  items: DayStory[];
+  nextCursor: number | undefined;
 }

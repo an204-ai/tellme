@@ -1,1 +1,1 @@
-export const computeTrendingJob = async () => {};
+export { buildFeed as computeTrendingJob } from "@tellme/database";

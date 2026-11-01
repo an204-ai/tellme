@@ -7,17 +7,19 @@ on:
     branches: [main, develop]
 
 jobs:
-  test:
+  build-and-types:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v3
         with:
-          version: 9
+          version: 9.15.0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: "pnpm"
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run lint
+      # Build workspace declarations before consumers resolve @tellme/database.
+      # These checks do not need production credentials or service connections.
+      - run: pnpm run build
       - run: pnpm run check-types

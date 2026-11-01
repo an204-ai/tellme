@@ -1,10 +1,10 @@
 "use client";
 import Link from "next/link";
+import { NoticeAvatar } from "@/components/app/NoticeAvatar";
 import { useRef } from "react";
 import { Bell, CheckCheck } from "lucide-react";
 import { useCommunity } from "@/hooks/use-community";
 import { timeAgo } from "@/lib/api-repository";
-import { Avatar } from "@/components/ui/Primitives";
 
 export function NotificationBell() {
   const { data, update } = useCommunity();
@@ -61,7 +61,7 @@ export function NotificationBell() {
                 <Link
                   className={`popover-notice ${notice.read ? "" : "unread"}`}
                   href={
-                    notice.postId
+                    notice.kind === "system" ? notice.url || "/community/today" : notice.postId
                       ? `/post/${notice.postId}`
                       : `/community/profile/${person?.username}`
                   }
@@ -76,10 +76,10 @@ export function NotificationBell() {
                     }).catch(() => undefined);
                   }}
                 >
-                  <Avatar person={person} />
+                  <NoticeAvatar notice={notice} person={person} />
                   <span>
                     <span>
-                      <strong>{person?.name}</strong> {notice.text}
+                      <strong>{notice.kind === "system" ? notice.title : person?.name}</strong> {notice.text}
                     </span>
                     <time>{timeAgo(notice.at)}</time>
                   </span>

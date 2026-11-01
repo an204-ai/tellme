@@ -3,6 +3,7 @@ import type {
   Person,
   Post,
   DayStory,
+  StoryPage,
   PostFilters,
   PostPage,
   ProfileActivityPage,
@@ -95,10 +96,22 @@ export const apiRepository = {
     loadedStories.clear();
     knownPeople.clear();
   },
+  async getStoriesPage(cursor = 0, limit = 6): Promise<StoryPage> {
+    const result = await request<{ items: DayStory[]; people: Person[]; nextCursor: number | null }>(`/stories?cursor=${cursor}&limit=${limit}`);
+    result.people.forEach((person) => knownPeople.set(person.id, person));
+    result.items.forEach((story) => loadedStories.set(story.id, story));
+    return { items: result.items, nextCursor: result.nextCursor ?? undefined };
+  },
   async getStory(id: string) {
     const story = await request<DayStory>(`/stories/${id}`);
     loadedStories.set(story.id, story);
     return story;
+  },
+  async search(query: string) {
+    const result = await request<{ people: Person[]; authors: Person[]; stories: DayStory[] }>(`/search?q=${encodeURIComponent(query)}`);
+    [...result.people, ...result.authors].forEach((person) => knownPeople.set(person.id, person));
+    result.stories.forEach((story) => loadedStories.set(story.id, story));
+    return result;
   },
   async getPerson(username: string) {
     const p = await request<Person>(`/users/${encodeURIComponent(username)}`);
@@ -180,7 +193,7 @@ export const apiRepository = {
             );
         }
       }
-      if (before.hiddenPosts.length && !draft.hiddenPosts.length)
+      if ((before.hiddenPosts.length && !draft.hiddenPosts.length) || (before.hiddenStories?.length && !draft.hiddenStories?.length))
         command("/users/me/hidden-posts", "DELETE");
       for (const id of draft.hiddenPosts.filter(
         (id) => !before.hiddenPosts.includes(id),
@@ -205,6 +218,7 @@ export const apiRepository = {
           });
           affected.add(post.id);
         }
+        if (post.privacy !== old.privacy) command(`/posts/${post.id}/privacy`, "PUT", { privacy: post.privacy });
         if (post.saved !== old.saved) {
           command(`/posts/${post.id}/saved`, "PUT", { saved: post.saved });
           affected.add(post.id);
@@ -234,20 +248,38 @@ export const apiRepository = {
       }
       for (const story of draft.stories) {
         const old = before.stories.find((s) => s.id === story.id);
+        const hasNewMoments = story.items.some(
+          (item) => !old?.items.some((previous) => previous.id === item.id),
+        );
+        if (old && story.privacy !== old.privacy && !hasNewMoments)
+          command(`/stories/${story.id}/privacy`, "PUT", { privacy: story.privacy });
+        for (const previous of old?.items || [])
+          if (!story.items.some((item) => item.id === previous.id))
+            command(`/stories/${story.id}/moments/${previous.id}`, "DELETE");
         for (const item of story.items) {
           const previous = old?.items.find((i) => i.id === item.id);
           if (!previous)
             command("/stories/moments", "POST", {
               ...item,
               storyId: story.id,
-              privacy: story.privacy,
+              storyPrivacy: story.privacy,
+              ...(!old && story.music ? { musicTrackId: story.music.trackId, musicProvider: story.music.provider, musicStartSeconds: story.music.startSeconds || 0 } : {}),
             });
-          else if (item.reaction !== previous.reaction)
-            command(`/stories/${story.id}/moments/${item.id}/reaction`, "PUT", {
-              reaction: item.reaction || null,
-            });
+          else {
+            if (item.caption !== previous.caption || item.privacy !== previous.privacy)
+              command(`/stories/${story.id}/moments/${item.id}`, "PATCH", {
+                caption: item.caption,
+                privacy: item.privacy || null,
+              });
+            if (item.reaction !== previous.reaction)
+              command(`/stories/${story.id}/moments/${item.id}/reaction`, "PUT", {
+                reaction: item.reaction || null,
+              });
+          }
         }
       }
+      for (const story of before.stories)
+        if (!draft.stories.some((next) => next.id === story.id)) command(`/stories/${story.id}`, "DELETE");
       const aliases = new Map<string, string>();
       for (const chat of draft.conversations) {
         const old = before.conversations.find((c) => c.id === chat.id);
@@ -259,6 +291,7 @@ export const apiRepository = {
                 id: chat.id,
                 kind: chat.kind || "direct",
                 title: chat.title || "",
+                avatar: chat.avatar || "",
                 participantIds:
                   chat.kind === "group" ? chat.participantIds : [chat.userId],
               }),
@@ -306,6 +339,7 @@ export function timeAgo(value: string) {
   if (minutes < 1) return "Vừa xong";
   if (minutes < 60) return `${minutes} phút trước`;
   if (minutes < 1440) return `${Math.floor(minutes / 60)} giờ trước`;
+  if (minutes < 43200) return `${Math.floor(minutes / 1440)} ngày trước`;
   return new Intl.DateTimeFormat("vi-VN", {
     day: "numeric",
     month: "long",

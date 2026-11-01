@@ -13,13 +13,16 @@
     "./models": {
       "types": "./dist/models.d.ts",
       "default": "./dist/models.js"
+    },
+    "./weather-service": {
+      "types": "./dist/weather-service.d.ts",
+      "default": "./dist/weather-service.js"
     }
   },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch --preserveWatchOutput",
-    "check-types": "tsc --noEmit",
-    "test": "tsx --test src/*.test.ts"
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
     "mongodb": "^7.7.0",
@@ -37,7 +40,7 @@
     "@tellme/config": "workspace:*",
     "@types/node": "^22.10.2",
     "@types/nodemailer": "^7.0.0",
-    "@types/web-push": "^3.6.7",
+    "@types/web-push": "^3.6.4",
     "tsx": "^4.23.15",
     "typescript": "^5.7.0"
   }

@@ -71,6 +71,10 @@ export async function cropImage(src: string, area: { x: number; y: number; width
   canvas.height = Math.max(1, Math.round(area.height * scale));
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Chưa căn chỉnh được ảnh. Thử lại nhé.");
+  // Keep the full selected frame when zoomed out; the browser clips source pixels
+  // outside the image while preserving the matching destination spacing.
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(image, area.x, area.y, area.width, area.height, 0, 0, canvas.width, canvas.height);
   const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob(
     (value) => value ? resolve(value) : reject(new Error("Chưa lưu được ảnh. Thử lại nhé.")),

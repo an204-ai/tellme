@@ -1,25 +1,60 @@
 import { serve } from "@hono/node-server";
+import { Server as HttpServer } from "node:http";
 import { app } from "./app.js";
 import { config } from "./backend/config.js";
 import { connectDatabase, mongo } from "./backend/database.js";
+import { closeQueues, connectRedis, startDispatcher, waitForDatabase, connectionFailure, databaseUnavailable } from "@tellme/database";
+import { startRealtime, mountRealtime } from "./backend/realtime.js";
+
+const startup = new AbortController();
+let ready = false;
+let stopping = false;
+let stopDispatcher = () => {};
+let stopRealtime = () => {};
+
+// Keep the port available during a database outage, with an explicit 503 response.
+const server = serve({
+  fetch: (request) => ready ? app.fetch(request) : databaseUnavailable(),
+  port: config.PORT,
+  hostname: config.API_HOST,
+}, ({ port }) => console.log(`Tellme API listening on http://${config.API_HOST}:${port}; waiting for MongoDB.`));
+if (!(server instanceof HttpServer)) throw new Error("Realtime requires an HTTP/1 server with WebSocket upgrade support.");
+const stopSockets = mountRealtime(server, () => ready);
+
+const shutdown = async (code = 0) => {
+  if (stopping) return;
+  stopping = true;
+  ready = false;
+  startup.abort();
+  stopDispatcher();
+  stopRealtime();
+  stopSockets();
+  server.close();
+  await Promise.allSettled([closeQueues(), mongo.close()]);
+  process.exit(code);
+};
+process.once("SIGTERM", () => { void shutdown(); });
+process.once("SIGINT", () => { void shutdown(); });
+server.once("error", (error) => {
+  console.error("API HTTP server unavailable.", connectionFailure(error));
+  void shutdown(1);
+});
+
 try {
-  await connectDatabase();
-  const server = serve({
-    fetch: app.fetch,
-    port: config.PORT,
-    hostname: "127.0.0.1",
+  await waitForDatabase(connectDatabase, {
+    signal: startup.signal,
+    onRetry: (failure, attempt, delay) => console.warn("MongoDB chưa kết nối được; API sẽ tự thử lại.", { ...failure, attempt, retryInSeconds: Math.ceil(delay / 1000) }),
   });
-  console.log(`Tellme API ready on http://127.0.0.1:${config.PORT}`);
-  const shutdown = () =>
-    server.close(() => {
-      void mongo.close().then(() => process.exit(0));
-    });
-  process.on("SIGTERM", shutdown);
-  process.on("SIGINT", shutdown);
+  try { await connectRedis(); } catch { console.warn("Redis chưa sẵn sàng; tác vụ được giữ trong MongoDB để chạy lại."); }
+  startup.signal.throwIfAborted();
+  stopDispatcher = startDispatcher();
+  try { stopRealtime = await startRealtime(); } catch { console.warn("Realtime tạm dùng polling."); }
+  startup.signal.throwIfAborted();
+  ready = true;
+  console.log(`Tellme API ready on http://${config.API_HOST}:${config.PORT}`);
 } catch (error) {
-  console.error(
-    "API startup failed. Check MongoDB access and environment configuration.",
-    { type: error instanceof Error ? error.name : "UnknownError" },
-  );
-  process.exit(1);
+  if (!startup.signal.aborted) {
+    console.error("API startup failed. Check MongoDB access and environment configuration.", connectionFailure(error));
+    await shutdown(1);
+  }
 }

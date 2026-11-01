@@ -2,6 +2,9 @@ export type Privacy = "public" | "connections" | "private";
 export type Reaction =
   | "like"
   | "love"
+  | "haha"
+  | "wow"
+  | "sad"
   | "cheer"
   | "celebrate"
   | "appreciate"
@@ -10,6 +13,7 @@ export interface Preferences {
   audience: Privacy;
   notifyLikes: boolean;
   notifyMessages: boolean;
+  notifySystem?: boolean;
   emailUpdates: boolean;
   reducedMotion: boolean;
 }
@@ -17,17 +21,40 @@ export interface User {
   _id: string;
   email: string;
   passwordHash: string;
+  emailVerifiedAt?: string;
+  emailVerificationRequired?: boolean;
   username: string;
   name: string;
   avatar: string;
   cover: string;
   bio: string;
   location: string;
+  birthday?: string;
+  occupation?: string;
+  interests?: string;
+  breakTime?: string;
+  favoriteLunch?: string;
+  favoriteDrink?: string;
   following: string[];
   blocked: string[];
   hiddenPosts: string[];
+  hiddenStories?: string[];
+  savedStories?: string[];
   settings: Preferences;
   createdAt: string;
+}
+export interface AuthToken {
+  _id: string;
+  userId: string;
+  purpose: "verify-email" | "reset-password";
+  tokenHash: string;
+  codeNonce?: string;
+  attempts?: number;
+  resetGrantHash?: string;
+  codeVerifiedAt?: Date;
+  passwordHash: string;
+  createdAt: Date;
+  expiresAt: Date;
 }
 export interface Session {
   _id: string;
@@ -58,6 +85,8 @@ export interface Post {
   topic: string;
   privacy: Privacy;
   anonymous: boolean;
+  /** Absent on older posts: retain the original per-post alias. */
+  anonymousVersion?: 1 | 2;
   createdAt: string;
   reactions: Record<string, Reaction>;
   comments: Comment[];
@@ -69,7 +98,19 @@ export interface Moment {
   image: string;
   caption: string;
   at: string;
+  /** Optional per-photo restriction; absent means the story audience applies. */
+  privacy?: Privacy;
   reactions: Record<string, Reaction>;
+}
+export interface StoryMusic {
+  provider: "epidemic-sound" | "youtube";
+  trackId: string;
+  title: string;
+  artists: string[];
+  cover: string;
+  metadataUpdatedAt?: string;
+  durationSeconds?: number;
+  startSeconds?: number;
 }
 export interface Story {
   _id: string;
@@ -77,9 +118,14 @@ export interface Story {
   day: string;
   privacy: Privacy;
   items: Moment[];
+  /** A single user-selected track for the whole day; never persist expiring stream URLs. */
+  music?: StoryMusic;
   updatedAt: string;
 }
 export interface Conversation {
+  ownerId?: string;
+  mutedBy?: string[];
+  avatar?: string;
   _id: string;
   kind: "direct" | "group";
   title: string;
@@ -106,24 +152,49 @@ export interface Notice {
   read: boolean;
   at: string;
   postId?: string;
+  kind?: "like" | "message";
 }
 export interface Media {
   _id: string;
   ownerId: string;
   url: string;
   createdAt: string;
+  state?: "active" | "deleting";
+  lastReferencedAt?: string;
+  variants?: { feed: string; thumbnail: string; blurhash: string; width: number; height: number };
+}
+export type JobKind = "media.process" | "media.cleanup" | "media.sweep" | "feed.rebuild" | "notification.deliver" | "notification.email" | "notification.push" | "notification.account-email" | "notification.system";
+export interface BackgroundJob {
+  _id: string;
+  kind: JobKind;
+  data: Record<string, unknown>;
+  status: "pending" | "dispatched" | "completed" | "failed";
+  createdAt: Date;
+  availableAt: Date;
+  attempts: number;
+  error?: string;
+  finishedAt?: Date;
+}
+export interface PushSubscriptionRecord {
+  _id: string;
+  userId: string;
+  subscription: { endpoint: string; expirationTime?: number | null; keys: { p256dh: string; auth: string } };
 }
 export interface Report {
+  targetType?: "post" | "story" | "user";
+  targetId?: string;
   _id: string;
   userId: string;
   postId: string;
   reason: string;
   at: string;
+  resolution?: { action: "dismiss" | "remove-post"; actorId: string; at: string };
 }
 export const defaults: Preferences = {
   audience: "public",
   notifyLikes: true,
   notifyMessages: true,
+  notifySystem: true,
   emailUpdates: false,
   reducedMotion: false,
 };

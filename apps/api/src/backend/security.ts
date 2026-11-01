@@ -11,10 +11,20 @@ import type { Context, MiddlewareHandler } from "hono";
 import { sessions, users } from "./database.js";
 import { config, origins } from "./config.js";
 import type { User } from "./models.js";
+import { defaults } from "./models.js";
+import { redis, prefix, eventChannel, stopWeatherWatch } from "@tellme/database";
 const scrypt = promisify(scryptCallback);
 // A disposable QA server on another localhost port must not replace a real session.
 export const cookieName = config.NODE_ENV === "test" ? "tellme_qa_session" : "tellme_session";
 export type Env = { Variables: { user: User } };
+export const guestUser: User = { _id: "guest", email: "", passwordHash: "", username: "", name: "Khách", avatar: "", cover: "", bio: "", location: "", following: [], blocked: [], hiddenPosts: [], settings: { ...defaults }, createdAt: "" };
+export const optionalAuthenticate: MiddlewareHandler<Env> = async (c, next) => {
+  const token = getCookie(c, cookieName);
+  const session = token ? await sessions.findOne({ _id: digest(token), expiresAt: { $gt: new Date() } }) : null;
+  const user = session ? await users.findOne({ _id: session.userId }) : null;
+  c.set("user", user || guestUser);
+  await next();
+};
 const digest = (s: string) => createHash("sha256").update(s).digest("hex");
 export async function hashPassword(password: string) {
   const salt = randomBytes(16).toString("hex");
@@ -46,7 +56,11 @@ export async function createSession(c: Context, userId: string) {
 }
 export async function removeSession(c: Context) {
   const token = getCookie(c, cookieName);
-  if (token) await sessions.deleteOne({ _id: digest(token) });
+  if (token) {
+    const session = await sessions.findOneAndDelete({ _id: digest(token) });
+    if (session) await stopWeatherWatch(session.userId).catch(() => undefined);
+    if (session && redis.status === "ready") await redis.publish(eventChannel, JSON.stringify({ userIds: [session.userId], kind: "session-revoked", sessionId: session._id })).catch(() => {});
+  }
   deleteCookie(c, cookieName, {
     path: "/",
     secure: config.NODE_ENV === "production",
@@ -80,7 +94,7 @@ export const checkOrigin: MiddlewareHandler = async (c, next) => {
   await next();
 };
 const buckets = new Map<string, { count: number; reset: number }>();
-export function rateLimit(limit: number, windowMs: number): MiddlewareHandler {
+export function rateLimit(limit: number, windowMs: number, scope = "api"): MiddlewareHandler {
   return async (c, next) => {
     // Do not trust client-supplied X-Forwarded-For. API is bound to loopback;
     // production ingress must authenticate a client IP before enabling IP keys.
@@ -88,10 +102,20 @@ export function rateLimit(limit: number, windowMs: number): MiddlewareHandler {
       ? "auth"
       : (c.get("user") as User | undefined)?._id || "guest";
     const now = Date.now();
-    let entry = buckets.get(key);
+    if (redis.status === "ready") {
+      const bucket = `${prefix}:rate:${c.req.path.startsWith("/api/auth/") ? "auth" : scope}:${key}:${Math.floor(now / windowMs)}`;
+      const count = Number(await redis.eval("local n=redis.call('INCR',KEYS[1]); if n==1 then redis.call('PEXPIRE',KEYS[1],ARGV[1]) end; return n", 1, bucket, windowMs));
+      if (count > limit) {
+        c.header("Retry-After", String(Math.ceil(windowMs / 1000)));
+        throw new HTTPException(429, { message: "Thao tác quá nhanh. Bạn thử lại sau một phút nhé." });
+      }
+      await next(); return;
+    }
+    const memoryKey = `${scope}:${key}`;
+    let entry = buckets.get(memoryKey);
     if (!entry || entry.reset < now) {
       entry = { count: 0, reset: now + windowMs };
-      buckets.set(key, entry);
+      buckets.set(memoryKey, entry);
     }
     if (++entry.count > limit) {
       c.header("Retry-After", String(Math.ceil((entry.reset - now) / 1000)));

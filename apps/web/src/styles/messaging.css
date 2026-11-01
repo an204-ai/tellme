@@ -1,0 +1,113 @@
+/* The frame owns the viewport; only the two chat lists own content scrolling. */
+.messages-frame {
+  position: fixed;
+  top: var(--messages-offset, 0px);
+  left: 0;
+  right: 0;
+  height: var(--messages-height, 100dvh);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: #fff;
+}
+.messages-frame > .global-header { flex: 0 0 auto; }
+.messages-frame .app-shell.messages-layout {
+  flex: 1 1 0;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  width: 100%;
+  min-height: 0;
+  margin: 0;
+  padding-block: 20px;
+  overflow: hidden;
+}
+/* Inherit the same fixed left rail geometry used by every other section. */
+.messages-layout > .left-rail { min-height: 0; }
+.messages-frame .messages-layout > .main-content { height: 100%; min-height: 0; min-width: 0; overflow: hidden; }
+.messages-frame .messages-layout > .main-content::before { top: 0; bottom: 0; }
+.messages-layout .messaging { height: 100%; min-height: 0; max-height: none; }
+.messages-layout .conversation-list,
+.messages-layout .chat-content { height: 100%; min-height: 0; min-width: 0; overflow: hidden; }
+.messages-layout .conversation-list > header,
+.messages-layout .conversation-list > .input-wrap,
+.messages-layout .chat-header,
+.messages-layout .chat-composer { flex: 0 0 auto; }
+.messages-layout .conversation-rows,
+.messages-layout .chat-messages { flex: 1 1 0; min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior-y: contain; -webkit-overflow-scrolling: touch; }
+@media (max-width: 640px) {
+  .messages-frame .app-shell.messages-layout { grid-template-columns: minmax(0, 1fr); padding: 12px; }
+  .messages-frame > .mobile-nav { position: static; flex: 0 0 auto; width: 100%; }
+  .messages-layout .chat-input-line > input,
+  .messages-layout .conversation-list input { font-size: 16px; }
+}
+
+/* Keep the profile form scrollable on short screens without drawing a scrollbar. */
+.edit-profile-dialog, .share-post-dialog { scrollbar-width: none; }
+.edit-profile-dialog::-webkit-scrollbar, .share-post-dialog::-webkit-scrollbar { display: none; width: 0; height: 0; }
+.chat-unavailable { flex: 0 0 auto; padding: 16px 20px; border-top: 1px solid var(--line); font-size: 14px; line-height: 1.7; }
+.story-reply-unavailable { font-size: 13px; line-height: 1.7; margin-top: 12px; }
+@media (min-width: 1191px) {
+  .app-shell.with-support > .support-rail {
+    position: fixed;
+    top: 109px;
+    right: 42px;
+    bottom: 20px;
+    width: 278px;
+    overflow: clip;
+    overscroll-behavior: none;
+    scrollbar-width: none;
+  }
+  .app-shell.with-support > .support-rail::-webkit-scrollbar { display: none; }
+}
+
+/* Group identity uses the supplied Tellme artwork, with aligned member rows. */
+.message-create-actions { display: flex; align-items: center; gap: 2px; }
+.create-group-dialog { width: min(560px, calc(100vw - 24px)); scrollbar-width: none; }
+.create-group-dialog::-webkit-scrollbar { display: none; }
+.group-composer { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.share-body > .group-composer { padding-block: 16px; border-block: 1px solid var(--line); }
+.group-identity { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 16px; }
+.group-identity .field-label { margin-top: 0; margin-bottom: 8px; }
+.group-identity .input-wrap { margin: 0; }
+.group-avatar-choices { padding: 0; margin: 0; border: 0; min-width: 0; }
+.group-avatar-choices legend { font-weight: 600; margin-bottom: 12px; }
+.group-avatar-presets { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+.group-avatar-presets > button { position: relative; min-width: 0; padding: 4px; border-radius: 12px; border: 1px solid transparent; background: white; cursor: pointer; }
+.group-avatar-presets > button[aria-pressed="true"] { border-color: var(--primary); }
+.group-avatar-presets > button:hover { background: #f5f6f8; }
+.group-avatar-presets img { display: block; width: 100%; height: auto; aspect-ratio: 1; object-fit: contain; }
+.avatar-choice-check { position: absolute; bottom: 0; right: 0; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--primary); color: white; }
+.group-avatar-upload { position: relative; width: 66px; height: 66px; }
+.group-avatar-add { position: absolute; bottom: -4px; right: -4px; display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 2px solid #fff; border-radius: 50%; color: #fff; background: var(--primary); cursor: pointer; }
+.group-avatar-add::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; }
+.group-avatar-add:hover { background: var(--primary-hover); }
+.group-avatar-add:disabled { opacity: .6; cursor: wait; }
+.group-avatar-limit { display: block; margin-top: 10px; font-size: 12px; }
+.group-members-heading { display: flex; justify-content: space-between; gap: 12px; margin-top: 4px; }
+.group-members-heading > span { font-size: 14px; font-variant-numeric: tabular-nums; }
+.group-composer .group-members-hint { font-size: 14px; margin: 0; }
+.group-composer .group-member-options { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; max-height: 264px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
+.group-composer .group-member-options::-webkit-scrollbar { display: none; }
+.group-composer .group-member-options > label { display: grid; grid-template-columns: 18px 36px minmax(0, 1fr); align-items: center; gap: 12px; min-height: 60px; padding: 8px 4px; cursor: pointer; }
+.group-composer .group-member-options input { width: 18px; height: 18px; margin: 0; accent-color: var(--primary); }
+.group-composer .group-member-name { min-width: 0; }
+.group-composer .group-member-name strong, .group-composer .group-member-name small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.group-composer .group-member-name strong { font-weight: 600; }
+.group-composer .group-member-name small { font-size: 13px; margin-top: 2px; }
+@media (max-width: 480px) {
+  .group-avatar-presets { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 16px; }
+  .group-avatar-presets img { max-height: 72px; }
+  .group-identity { gap: 12px; }
+}
+
+.top-layer-tooltip { position: fixed; inset: auto; margin: 0; padding: 7px 10px; border: 0; border-radius: 8px; background: #fff; color: #000; box-shadow: 0 4px 15px #1e2b4424; font-size: 13px; font-weight: 500; line-height: 1.5; pointer-events: none; overflow-wrap: anywhere; }
+
+/* Presence sits outside the circular crop without changing avatar geometry. */
+.avatar { overflow: visible; }
+.avatar > img, .avatar > .avatar-fallback { border-radius: inherit; }
+.avatar-online { position: absolute; z-index: 3; right: -1px; bottom: -1px; width: 10px; height: 10px; border: 2px solid #fff; border-radius: 50%; background: #15803d; pointer-events: none; }
+.avatar-xs > .avatar-online { width: 7px; height: 7px; border-width: 1.5px; }
+.avatar-sm > .avatar-online { width: 9px; height: 9px; }
+.avatar-lg > .avatar-online { width: 13px; height: 13px; }
+.avatar-xl > .avatar-online { width: 16px; height: 16px; }

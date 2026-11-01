@@ -8,18 +8,19 @@ import {
   personDTO,
   postDTO,
   requirePost,
-  ownedImage,
   notify,
   postFilter,
 } from "../../backend/domain.js";
 import * as v from "../../backend/validation.js";
+import { cachedPublicFeed, withMediaChange, scheduleCleanup, enqueue, mongo, publishUpdate } from "@tellme/database";
 export function registerPostRoutes(api: Hono<Env>) {
   api.get("/posts", async (c) => {
     const me = c.get("user"),
       query = c.req.query(),
       { cursor, limit } = v.pageSchema.parse(query),
       filter = await postFilter(me, query);
-    const [items, total] = await Promise.all([
+    const cached = me._id === "guest" && !query.search && !query.topic && !query.authorId && query.view !== "profile" ? await cachedPublicFeed(cursor, limit) : null;
+    const [items, total] = cached ? [cached.items, cached.total] : await Promise.all([
       posts
         .find(filter)
         .sort({ createdAt: -1, _id: -1 })
@@ -32,12 +33,12 @@ export function registerPostRoutes(api: Hono<Env>) {
       ...new Set(
         items.flatMap((p) => [
           ...(p.anonymous ? [] : [p.authorId]),
-          ...p.comments.map((i) => i.userId),
+          ...p.comments.filter((i) => !p.anonymous || i.userId !== p.authorId).map((i) => i.userId),
           ...Object.keys(p.reactions),
         ]),
       ),
     ];
-    const people = await users.find({ _id: { $in: ids } }).toArray();
+    const people = await users.find({ _id: { $in: ids } }, { projection: { passwordHash: 0, email: 0 } }).toArray();
     return c.json({
       items: items.map((p) => postDTO(p, me)),
       total,
@@ -56,8 +57,8 @@ export function registerPostRoutes(api: Hono<Env>) {
   api.post("/posts", async (c) => {
     const me = c.get("user"),
       input = v.postSchema.parse(await c.req.json());
-    await ownedImage(input.image, me);
-    await posts.insertOne({
+    await withMediaChange(me, [input.image], async (session) => {
+      await posts.insertOne({
       _id: input.id,
       authorId: me._id,
       content: input.content,
@@ -65,21 +66,37 @@ export function registerPostRoutes(api: Hono<Env>) {
       topic: input.topic,
       privacy: input.privacy,
       anonymous: input.anonymous,
+      ...(input.anonymous ? { anonymousVersion: 2 as const } : {}),
       createdAt: now(),
       reactions: {},
       comments: [],
       savedBy: [],
       sharedBy: [],
+      }, { session });
+      await enqueue("feed.rebuild", {}, { session });
     });
     return c.json({ id: input.id }, 201);
   });
+  api.put("/posts/:id/privacy", async (c) => {
+    const me = c.get("user"), { privacy } = z.object({ privacy: v.privacy }).parse(await c.req.json());
+    const result = await posts.updateOne({ _id: c.req.param("id"), authorId: me._id }, { $set: { privacy } });
+    if (!result.matchedCount) fail(404, "Không thể chỉnh quyền riêng tư của bài viết này.");
+    await enqueue("feed.rebuild", {});
+    await publishUpdate([], "feed");
+    return c.json({ ok: true });
+  });
   api.delete("/posts/:id", async (c) => {
     const me = c.get("user");
-    const result = await posts.deleteOne({
-      _id: c.req.param("id"),
-      authorId: me._id,
-    });
-    if (!result.deletedCount) fail(404, "Không thể xóa bài viết này.");
+    const session = mongo.startSession();
+    try {
+      await session.withTransaction(async () => {
+        const old = await posts.findOneAndDelete({ _id: c.req.param("id"), authorId: me._id }, { session });
+        if (!old) fail(404, "Không thể xóa bài viết này.");
+        await scheduleCleanup(me._id, [old.image], session);
+        await enqueue("feed.rebuild", {}, { session });
+      });
+    } finally { await session.endSession(); }
+    await publishUpdate([], "feed");
     return c.json({ ok: true });
   });
   api.put("/posts/:id/reaction", async (c) => {
@@ -98,7 +115,7 @@ export function registerPostRoutes(api: Hono<Env>) {
       await notify(
         post.authorId,
         me._id,
-        "đã thích câu chuyện của bạn.",
+        "đã bày tỏ cảm xúc về câu chuyện của bạn.",
         post._id,
       );
     return c.json({ ok: true });
@@ -182,6 +199,10 @@ export function registerPostRoutes(api: Hono<Env>) {
       { _id: me._id },
       { $addToSet: { hiddenPosts: post._id } },
     );
+    return c.json({ ok: true });
+  });
+  api.delete("/posts/:id/hidden", async (c) => {
+    await users.updateOne({ _id: c.get("user")._id }, { $pull: { hiddenPosts: c.req.param("id") } });
     return c.json({ ok: true });
   });
   api.post("/posts/:id/report", async (c) => {

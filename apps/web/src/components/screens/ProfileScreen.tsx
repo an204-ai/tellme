@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useState } from "react";
 import {
   Camera,
   ArrowUpRight,
@@ -9,6 +10,12 @@ import {
   Pencil,
   Plus,
   Users,
+  Cake,
+  BriefcaseBusiness,
+  Heart,
+  Coffee,
+  Utensils,
+  MessageSquarePlus,
 } from "lucide-react";
 import { DAILY_TITLE } from "@/lib/brand";
 import { localDay } from "@/lib/validation";
@@ -17,8 +24,10 @@ import { InfiniteTrigger } from "@/components/app/InfiniteTrigger";
 import { useCommunity } from "@/hooks/use-community";
 import { newId, canView, ApiError } from "@/lib/api-repository";
 import { useAppStore } from "@/stores/app.store";
-import { Avatar, Button, Empty, Loader } from "@/components/ui/Primitives";
+import { Avatar, Button, Empty, IconButton, Loader } from "@/components/ui/Primitives";
 import { PostCard } from "@/components/app/PostCard";
+import { ProfileAccountMenu } from "@/components/app/ProfileAccountMenu";
+import { ProfileConnections } from "@/components/profile/ProfileConnections";
 import { useRouter } from "next/navigation";
 
 export function ProfileScreen({ username }: { username: string }) {
@@ -26,11 +35,12 @@ export function ProfileScreen({ username }: { username: string }) {
   const open = useAppStore((state) => state.open);
   const viewStory = useAppStore((state) => state.viewStory);
   const router = useRouter();
+  const [connections, setConnections] = useState<"followers" | "following" | null>(null);
   const profileQuery = useProfilePerson(username, !!data);
   const profileUnavailable = profileQuery.error instanceof ApiError && [403,404].includes(profileQuery.error.status);
   const profilePerson = profileUnavailable
     ? undefined
-    : data?.people.find((entry) => entry.username === username) || profileQuery.data;
+    : profileQuery.data || data?.people.find((entry) => entry.username === username);
   const activity = useProfileActivity(profilePerson?.id);
   if (data && profileQuery.isError && !profileUnavailable) return (
     <Empty icon={<Users size={30}/>} title="Chưa tải được hồ sơ"
@@ -59,6 +69,7 @@ export function ProfileScreen({ username }: { username: string }) {
     );
   const isMe = person.id === "me";
   const following = data.following.includes(person.id);
+  const friend = data.connections.includes(person.id);
   const entries = activity.items;
   const stories = data.stories
     .filter(
@@ -69,15 +80,20 @@ export function ProfileScreen({ username }: { username: string }) {
     .sort((a, b) => b.day.localeCompare(a.day));
   return (
     <div className="profile-journal">
-      <section className="profile-cover">
-        <img src={person.cover} alt={`Ảnh bìa của ${person.name}`} />
-      </section>
+      <div className="profile-cover-area">
+        <section className="profile-cover">
+          <img src={person.cover} alt={`Ảnh bìa của ${person.name}`} />
+        </section>
+        {!isMe && <ProfileAccountMenu person={person} />}
+      </div>
       <section className="profile-info">
         <Avatar person={person} size="xl" className="profile-avatar" />
         <div className="profile-main">
           <div>
             <h1>{person.name}</h1>
-            <span className="muted text-sm">@{person.username}</span>
+            <span className="muted text-sm">
+              Tellme ID · @{person.username}
+            </span>
           </div>
           <div className="profile-buttons">
             {isMe ? (
@@ -88,8 +104,9 @@ export function ProfileScreen({ username }: { username: string }) {
             ) : (
               <>
                 <Button
-                  variant={following ? "secondary" : "primary"}
+                  variant={following || friend ? "secondary" : "primary"}
                   disabled={saving}
+                  aria-label={friend ? `Bỏ follow ${person.name}` : undefined}
                   onClick={() =>
                     void update((draft) => {
                       draft.following = following
@@ -99,11 +116,14 @@ export function ProfileScreen({ username }: { username: string }) {
                   }
                 >
                   {following ? <Check size={16} /> : <Plus size={16} />}
-                  {following ? "Following" : "Follow"}
+                  {friend ? "Bạn bè" : following ? "Đang follow" : "Follow"}
                 </Button>
                 <Button
                   variant="secondary"
+                  disabled={!friend || saving}
+                  title={!friend ? "Hai người cần follow nhau để nhắn tin" : undefined}
                   onClick={async () => {
+                    if (!friend) return;
                     try {
                       let id = data.conversations.find(
                         (entry) => entry.userId === person.id,
@@ -142,10 +162,6 @@ export function ProfileScreen({ username }: { username: string }) {
         <p className="profile-bio">{person.bio}</p>
         <div className="profile-details">
           <span>
-            <MapPin size={15} />
-            {person.location}
-          </span>
-          <span>
             <strong>{data.postCounts?.[person.id] ?? 0}</strong> câu chuyện
           </span>
           <span>
@@ -154,18 +170,32 @@ export function ProfileScreen({ username }: { username: string }) {
             </strong>{" "}
             khoảnh khắc
           </span>
-          {isMe && (
-            <Link href="/community/follow">
-              <strong>{data.following.length}</strong> đang follow
-            </Link>
-          )}
+          <button type="button" aria-haspopup="dialog" onClick={() => setConnections("following")}><strong>{person.followingCount ?? (isMe ? data.following.length : 0)}</strong> đang follow</button>
+          <button type="button" aria-haspopup="dialog" onClick={() => setConnections("followers")}><strong>{person.followersCount ?? 0}</strong> follower</button>
         </div>
+        <section className="profile-personal" aria-labelledby="personal-heading">
+          <div className="profile-personal-heading">
+            <h2 id="personal-heading">Một chút về mình</h2>
+            {isMe && <IconButton label="Chỉnh sửa Một chút về mình" tooltip={false} onClick={() => open("edit-personal")}><Pencil size={17} /></IconButton>}
+          </div>
+          <dl>
+            {[
+              { label: "Đang ở", value: person.location, icon: MapPin },
+              { label: "Sinh nhật", value: person.birthday && !Number.isNaN(Date.parse(person.birthday)) ? new Intl.DateTimeFormat("vi-VN", { day: "numeric", month: "long" }).format(new Date(`${person.birthday}T12:00:00`)) : "", icon: Cake },
+              { label: "Công việc", value: person.occupation, icon: BriefcaseBusiness },
+              { label: "Sở thích", value: person.interests, icon: Heart },
+              { label: "Món ăn trưa yêu thích", value: person.favoriteLunch, icon: Utensils },
+              { label: "Đồ uống quen thuộc", value: person.favoriteDrink, icon: Coffee },
+            ].filter((info) => info.value).map(({ label, value, icon: Icon }) => <div key={label}><dt><Icon size={16} /><span>{label}</span></dt><dd title={value}>{value}</dd></div>)}
+          </dl>
+          {![person.location, person.birthday, person.occupation, person.interests, person.favoriteLunch, person.favoriteDrink].some(Boolean) && <p>{isMe ? <button type="button" className="text-link" onClick={() => open("edit-personal")}>Thêm vài điều về mình</button> : "Những điều nhỏ sẽ được chia sẻ ở đây."}</p>}
+        </section>
       </section>
       {isMe && (
         <button className="journal-composer" onClick={() => open("composer")}>
           <Avatar person={person} size="sm" />
           <span>Bạn muốn kể điều gì hôm nay?</span>
-          <Pencil size={18} />
+          <MessageSquarePlus size={20} />
         </button>
       )}
       <div className="profile-journal-stream">
@@ -260,8 +290,8 @@ export function ProfileScreen({ username }: { username: string }) {
       {entries.length === 0 && !activity.isPending && !activity.isError && (
         <Empty
           icon={<Camera size={30} />}
-          title={isMe ? "Bắt đầu nhật ký của bạn" : "Chưa có câu chuyện nào"}
-          text="Bài viết và những ngày có ảnh sẽ cùng xuất hiện ở đây."
+          title={isMe ? "Lưu lại ngày đi làm đầu tiên nhé" : "Chưa có câu chuyện nào"}
+          text="Ảnh và những chuyện đi làm bạn chia sẻ sẽ ở đây để xem lại."
           action={
             isMe ? (
               <Button onClick={() => open("moment")}>
@@ -287,6 +317,7 @@ export function ProfileScreen({ username }: { username: string }) {
         error={activity.isFetchNextPageError}
         loadMore={() => activity.fetchNextPage()}
       />
+      {connections && <ProfileConnections key={`${username}-${connections}`} username={username} kind={connections} onClose={() => setConnections(null)} />}
     </div>
   );
 }

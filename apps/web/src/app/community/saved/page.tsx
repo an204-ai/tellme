@@ -1,4 +1,2 @@
-import { SavedScreen } from "@/components/screens/CollectionScreens";
-export default function Page() {
-  return <SavedScreen />;
-}
+import { redirect } from "next/navigation";
+export default function Page() { redirect("/community/archive"); }

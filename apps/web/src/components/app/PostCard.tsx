@@ -1,22 +1,22 @@
 "use client";
+import { ReactionControl, ReactionIcon } from "@/components/ui/ReactionControl";
+import { Select } from "@/components/ui/Select";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import {
   Bookmark,
+  ChevronRight,
   Check,
   ChevronDown,
   Flag,
-  Heart,
   MessageCircle,
   MoreHorizontal,
   Send,
   Share2,
-  ShieldOff,
+  EyeOff,
   Sticker,
   X,
-  ThumbsUp,
   Trash2,
-  UserRound,
 } from "lucide-react";
 import { useCommunity } from "@/hooks/use-community";
 import { reactorIds } from "@/lib/visibility";
@@ -28,14 +28,14 @@ import type {
   CommentMedia,
   AppData,
   Post,
-  Reaction,
+  Privacy,
 } from "@/lib/types";
 import { useAppStore } from "@/stores/app.store";
 import {
   Avatar,
   Button,
-  HeartButton,
   IconButton,
+  AudiencePicker,
   PrivacyIcon,
   privacyNames,
 } from "@/components/ui/Primitives";
@@ -43,14 +43,8 @@ import { EmojiButton } from "@/components/ui/EmojiButton";
 import { GiphyPicker } from "./GiphyPicker";
 import { Modal } from "@/components/ui/Modal";
 import { PostPhoto } from "@/components/ui/PostPhoto";
+import { AnonymousAvatar, postPersona } from "@/components/ui/AnonymousAvatar";
 
-export const reactions: { value: Reaction; emoji: string; label: string }[] = [
-  { value: "like", emoji: "👍", label: "Thích" },
-  { value: "cheer", emoji: "👏🏻", label: "Tán thưởng" },
-  { value: "celebrate", emoji: "🎉", label: "Chúc mừng" },
-  { value: "appreciate", emoji: "✨", label: "Trân trọng" },
-  { value: "smile", emoji: "🙂", label: "Vui vẻ" },
-];
 export function PostCard({
   post,
   data,
@@ -83,9 +77,14 @@ export function PostCard({
   const [replyTo, setReplyTo] = useState<Comment | null>(null);
   const [text, setText] = useState("");
   const [error, setError] = useState("");
+  const [editingPrivacy, setEditingPrivacy] = useState(false);
+  const [privacy, setPrivacy] = useState<Privacy>(post.privacy);
   const [report, setReport] = useState(false);
   const [reason, setReason] = useState("spam");
   const replyInput = useRef<HTMLTextAreaElement>(null);
+  const reactionCount = useRef<HTMLSpanElement>(null);
+  const persona = postPersona(post);
+  const isAnonymousAuthor = (comment: Comment) => post.anonymous && (comment.isAuthor || comment.userId === "anonymous" || post.authorId === "me" && comment.userId === "me");
   if (!author) return null;
   const count = reactorIds(post, data).length;
   const changePost = (change: (post: Post) => void) =>
@@ -122,20 +121,21 @@ export function PostCard({
   const renderComment = (comment: Comment) => {
     if (data.blocked.includes(comment.userId)) return null;
     const person = data.people.find((entry) => entry.id === comment.userId);
+    const anonymousAuthor = isAnonymousAuthor(comment);
     return (
       <div
         className={`comment-row ${comment.parentId ? "is-reply" : ""}`}
         key={comment.id}
       >
-        <Avatar person={person} size="sm" />
+        {anonymousAuthor ? <AnonymousAvatar identity={persona} small /> : <Avatar person={person} size="sm" />}
         <div className="comment-body">
           <div className="comment-bubble">
-            <Link
+            {anonymousAuthor ? <span className="anonymous-comment-byline"><span className="person-name">{persona.name}</span><small>Tác giả</small></span> : <Link
               href={person ? `/community/profile/${person.username}` : "/community/profile"}
               className="person-name"
             >
               {person?.name || "Thành viên"}
-            </Link>
+            </Link>}
             {comment.content && <p>{comment.content}</p>}
             {comment.media && (
               <img
@@ -175,7 +175,7 @@ export function PostCard({
                 }).catch(() => undefined)
               }
             >
-              <Heart size={12} fill={comment.liked ? "currentColor" : "none"} />
+              <ReactionIcon value="like" size={18} />
               {comment.liked ? "1" : "Thích"}
             </button>
           </div>
@@ -184,31 +184,19 @@ export function PostCard({
     );
   };
   return (
-    <article className="post-card" id={`post-${post.id}`}>
+    <article className={`post-card${post.anonymous ? " is-anonymous" : ""}`} id={`post-${post.id}`}>
       <header className="post-header">
-        <Link
-          href={post.anonymous ? "#" : `/community/profile/${author.username}`}
-          aria-label={
-            post.anonymous ? "Người đăng ẩn danh" : `Hồ sơ ${author.name}`
-          }
-        >
-          {post.anonymous ? (
-            <span className="anonymous-avatar">
-              <UserRound size={22} />
-            </span>
-          ) : (
-            <Avatar person={author} />
-          )}
-        </Link>
+        {post.anonymous ? <AnonymousAvatar identity={persona} /> : <Link href={`/community/profile/${author.username}`} aria-label={`Hồ sơ ${author.name}`}><Avatar person={author} /></Link>}
         <div className="post-author">
-          <Link
-            href={
-              post.anonymous ? "#" : `/community/profile/${author.username}`
-            }
-            className="person-name"
-          >
-            {post.anonymous ? "Một người kể chuyện" : author.name}
-          </Link>
+          <div className="post-author-line">
+          {post.anonymous ? <span className="person-name" title={persona.name}>{persona.name}</span> : <Link href={`/community/profile/${author.username}`} className="person-name" title={author.name}>{author.name}</Link>}
+          {post.topic && <Link
+            className="post-topic"
+            href={`/community/explore?topic=${encodeURIComponent(post.topic)}`}
+            aria-label={`Xem bài viết trong chủ đề ${post.topic}`}
+            title={post.topic}
+          ><ChevronRight size={14} aria-hidden="true" /><span>{post.topic}</span></Link>}
+          </div>
           <div className="post-meta">
             <Link href={`/post/${post.id}`}>{timeAgo(post.createdAt)}</Link>
             <span>·</span>
@@ -222,7 +210,7 @@ export function PostCard({
           <summary aria-label="Tùy chọn bài viết">
             <MoreHorizontal size={21} />
           </summary>
-          <div className="menu-panel">
+          <div className="menu-panel" onClick={(event) => { const details = event.currentTarget.closest("details"); if (details) details.open = false; }}>
             <button
               onClick={() => {
                 void changePost((target) => {
@@ -231,7 +219,7 @@ export function PostCard({
               }}
             >
               <Bookmark size={16} />
-              {post.saved ? "Bỏ lưu bài viết" : "Lưu bài viết"}
+              {post.saved ? "Bỏ lưu bài viết" : "Lưu vào kho lưu trữ"}
             </button>
             {post.authorId !== "me" && (
               <>
@@ -243,23 +231,24 @@ export function PostCard({
                   <Flag size={16} />
                   Báo cáo bài viết
                 </button>
+              </>
+            )}
                 <button
                   onClick={async () => {
                     try {
                       await update((draft) => {
                         draft.hiddenPosts.push(post.id);
                       });
-                      notify("Đã ẩn bài viết. Có thể khôi phục trong Cài đặt.");
+                      notify("Đã ẩn khỏi bảng tin của bạn. Có thể hiện lại trong Kho lưu trữ.");
                     } catch {
                       /* The mutation error is announced by useCommunity. */
                     }
                   }}
                 >
-                  <ShieldOff size={16} />
-                  Ẩn bài viết
+                  <EyeOff size={16} />
+                  Ẩn khỏi bảng tin của bạn
                 </button>
-              </>
-            )}
+            {post.authorId === "me" && <button onClick={() => { setPrivacy(post.privacy); setEditingPrivacy(true); }}><PrivacyIcon value={post.privacy} size={16} /> Đổi quyền riêng tư</button>}
             {post.authorId === "me" && (
               <button
                 className="danger-text"
@@ -285,14 +274,6 @@ export function PostCard({
       </header>
       <div className="post-content">
         <p>{post.content}</p>
-        {post.topic && (
-          <Link
-            className="post-topic"
-            href={`/community/explore?topic=${encodeURIComponent(post.topic)}`}
-          >
-            #{post.topic.replaceAll(" ", "")}
-          </Link>
-        )}
       </div>
       {post.image && (
         <PostPhoto src={post.image} alt={
@@ -306,15 +287,13 @@ export function PostCard({
           type="button"
           className="reaction-total"
           onClick={() => setLikersOpen(true)}
-          aria-label={`Xem ${count} người thả tim`}
+          aria-label={`Xem ${count} người bày tỏ cảm xúc`}
         >
-          <span className="reaction-tiny">
-            <ThumbsUp size={10} fill="currentColor" />
+          <span className="reaction-summary-icons">
+            {[...new Set(Object.values(post.reactorReactions || {}).concat(post.reaction ? [post.reaction] : []))].slice(0, 3).map((value) => <ReactionIcon key={value} value={value} size={24} />)}
+            {!count && <ReactionIcon value="like" size={24} />}
           </span>
-          <span className="reaction-tiny heart">
-            <Heart size={10} fill="currentColor" />
-          </span>
-          <span>{count.toLocaleString("vi-VN")}</span>
+          <span ref={reactionCount}>{count.toLocaleString("vi-VN")}</span>
         </button>
         <button type="button" onClick={() => setCommentsOpen(!commentsOpen)}>
           {post.comments.length} bình luận
@@ -322,16 +301,9 @@ export function PostCard({
         <span>{post.shares} lượt chia sẻ</span>
       </div>
       <div className="post-actions">
-        <HeartButton
-          label="Thích"
-          active={!!post.reaction}
-          count={count}
-          onClick={() =>
-            void changePost((target) => {
-              target.reaction = target.reaction ? null : "love";
-            }).catch(() => undefined)
-          }
-        />
+        <ReactionControl selected={post.reaction} disabled={saving} flightTarget={reactionCount} onChange={(reaction) => {
+          void changePost((target) => { target.reaction = reaction; }).catch(() => undefined);
+        }} />
         <button
           className="post-action"
           type="button"
@@ -375,13 +347,13 @@ export function PostCard({
           {replyTo && (
             <div className="replying-to">
               Đang trả lời{" "}
-              {data.people.find((person) => person.id === replyTo.userId)?.name}
+              {isAnonymousAuthor(replyTo) ? persona.name : data.people.find((person) => person.id === replyTo.userId)?.name}
               <button type="button" onClick={() => setReplyTo(null)}>
                 Hủy
               </button>
             </div>
           )}
-          <form onSubmit={send} className="text-box">
+          {data.authenticated === false ? <Link className="text-link" href={`/auth/login?next=${encodeURIComponent(`/post/${post.id}`)}`}>Đăng nhập để bình luận</Link> : <form onSubmit={send} className="text-box">
             <div className="box-container">
               {media && (
                 <div className="comment-media-preview">
@@ -397,7 +369,7 @@ export function PostCard({
               <textarea
                 ref={replyInput}
                 aria-label="Viết bình luận"
-                placeholder="Viết một lời nhắn dễ thương…"
+                placeholder="Bạn nghĩ sao? Cùng trò chuyện nhé…"
                 value={text}
                 onChange={(event) => {
                   setText(event.target.value);
@@ -440,7 +412,7 @@ export function PostCard({
                 </button>
               </div>
             </div>
-          </form>
+          </form>}
           {error && (
             <p className="field-error" role="alert">
               {error}
@@ -471,6 +443,7 @@ export function PostCard({
           onClose={() => setShareOpen(false)}
         />
       )}
+      {editingPrivacy && <Modal title="Ai có thể xem bài viết?" onClose={() => setEditingPrivacy(false)}><form className="dialog-body story-settings-form" onSubmit={async (event) => { event.preventDefault(); try { await changePost((target) => { target.privacy = privacy; }); setEditingPrivacy(false); } catch { /* Mutation announces errors. */ } }}><AudiencePicker value={privacy} onChange={setPrivacy} /><Button type="submit" disabled={saving}>{saving ? "Đang lưu…" : "Lưu thay đổi"}</Button></form></Modal>}
       {report && (
         <Modal title="Báo cáo bài viết" onClose={() => setReport(false)}>
           <form
@@ -496,17 +469,17 @@ export function PostCard({
             <label className="field-label" htmlFor={`reason-${post.id}`}>
               Lý do báo cáo
             </label>
-            <select
+            <Select
               id={`reason-${post.id}`}
-              className="standard-select"
+              className="select-control"
               value={reason}
-              onChange={(event) => setReason(event.target.value)}
+              onValueChange={(value) => setReason(value)}
             >
               <option value="spam">Spam hoặc nội dung lặp lại</option>
               <option value="harassment">Quấy rối hoặc bắt nạt</option>
               <option value="inappropriate">Nội dung không phù hợp</option>
               <option value="other">Lý do khác</option>
-            </select>
+            </Select>
             <Button type="submit" disabled={saving}>
               Gửi báo cáo
             </Button>

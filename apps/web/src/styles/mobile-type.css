@@ -1,0 +1,73 @@
+/* Shared phone type roles. Preserve desktop density and the existing font family. */
+@media (max-width: 640px) {
+  body {
+    --mobile-heading: 1.125rem;
+    --mobile-body: 1rem;
+    --mobile-control: .9375rem;
+    --mobile-meta: .875rem;
+    font-size: 18px;
+  }
+  .uiv-button .button { font-size: var(--mobile-control); }
+
+  .post-header .person-name, .daily-person .person-name,
+  .conversation-row-name strong, .chat-header .person-name,
+  .chat-intro > strong, .today-friend-person strong,
+  .today-create-label, .person-result .person-name,
+  .setting-toggle-row strong, .field-label, .account-input-label,
+  .empty-state p, .chat-found-item > p {
+    font-size: var(--mobile-body);
+  }
+  .post-author-line { font-size: var(--mobile-body); }
+  .post-content > p { font-size: 17px; line-height: 1.8; }
+  .daily-caption, .message-bubble, .comment-bubble p,
+  .profile-journal .profile-bio, .journal-day > p,
+  .dialog-body, .story-reply-preview strong,
+  .chat-unavailable, .group-composer .group-members-hint {
+    font-size: var(--mobile-body);
+    line-height: 1.7;
+  }
+  .daily-compose-prompt, .journal-composer,
+  .composer-prompt > button, .conversation-preview,
+  .comment-bubble .person-name, .guest-invitation > span,
+  .notification-row > span:nth-child(2), .chat-tool-actions > button,
+  .chat-tool-actions > a, .chat-member-row strong,
+  .setting-toggle-row .button, .profile-buttons .button,
+  .search-results-page .person-result .button {
+    font-size: var(--mobile-control);
+  }
+  .post-meta, .post-statistics, .post-action,
+  .daily-person > div > span, .daily-person > time,
+  .daily-photo > time, .daily-entry-footer > span,
+  .daily-entry-footer > button, .daily-compose-action,
+  .today-friend-time, .today-friend-person small,
+  .mobile-nav > a, .journal-date, .journal-open-day,
+  .journal-day > header > div > span, .chat-header small,
+  .chat-intro > span:last-child, .message-time,
+  .comment-actions, .comment-meta, .comment-form-actions,
+  .feed-composer-bottom > button, .notification-row small,
+  .setting-toggle-row p, .settings-section .radio-label,
+  .guest-invitation > a, .uiv-tabs .tab, .text-sm,
+  .profile-journal .profile-details, .profile-main .text-sm,
+  .share-networks > a, .share-networks > button,
+  .share-recipients small, .group-composer .group-member-name small,
+  .recovery-code-hint, .account-email-status p, .chat-members-add,
+  .chat-member-row small, .chat-tools-identity > span:last-child,
+  .account-access-links, .account-resend, .toast {
+    font-size: var(--mobile-meta);
+  }
+  .dialog-header h2 { font-size: 19px; }
+  .section-heading h2, .settings-section h2,
+  .journal-day > header strong, .today-community-heading {
+    font-size: var(--mobile-heading);
+  }
+  .profile-personal h2 { font-size: 17px; }
+  .profile-personal dt { font-size: 13px; }
+  /* These values were already large enough: soften weight without enlarging them. */
+  .profile-personal dd { font-size: 15px; font-weight: 500; }
+  .story-reply-input > input, .chat-input-line > input,
+  .uiv-input .cir-search__field, .select-control, .select-options > button,
+  .moment-edit-dialog .moment-edit-panel > textarea {
+    font-size: var(--mobile-body);
+  }
+  .tellme-reaction-main { font-size: var(--mobile-control); }
+}

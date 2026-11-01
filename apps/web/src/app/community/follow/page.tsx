@@ -1,4 +1,2 @@
-import { FollowScreen } from "@/components/screens/CollectionScreens";
-export default function Page() {
-  return <FollowScreen />;
-}
+import { redirect } from "next/navigation";
+export default function Page() { redirect("/community/friends"); }

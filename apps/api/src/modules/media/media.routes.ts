@@ -7,6 +7,7 @@ import { media } from "../../backend/database.js";
 import { fail, type Env } from "../../backend/security.js";
 import { now } from "../../backend/domain.js";
 import { imageFormat, IMAGE_FORMAT_NAMES, MAX_IMAGE_BYTES } from "../../backend/image-formats.js";
+import { enqueue, mongo } from "@tellme/database";
 export function registerMediaRoutes(api: Hono<Env>) {
   api.post("/media/upload", async (c) => {
     const form = await c.req.formData(),
@@ -20,6 +21,8 @@ export function registerMediaRoutes(api: Hono<Env>) {
     const buffer = Buffer.from(await file.arrayBuffer());
     if (!imageFormat(buffer)) fail(400, `Định dạng ảnh chưa được hỗ trợ. Chọn ảnh ${IMAGE_FORMAT_NAMES}.`);
     const publicId = `tellme/${c.get("user")._id}/${randomUUID()}`;
+    const pendingUrl = `pending:${publicId}`;
+    await media.insertOne({ _id: publicId, ownerId: c.get("user")._id, url: pendingUrl, createdAt: now(), state: "active" });
     const result = await new Promise<{ secure_url: string; public_id: string; format: string }>(
       (resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
@@ -37,7 +40,10 @@ export function registerMediaRoutes(api: Hono<Env>) {
         );
         stream.end(buffer);
       },
-    ).catch(() => fail(400, "Chưa đọc được ảnh này. Thử xuất ảnh sang JPG/PNG hoặc chọn ảnh khác rồi tải lại."));
+    ).catch(async () => {
+      await enqueue("media.cleanup", { ownerId: c.get("user")._id, url: pendingUrl }, { delay: 600000 });
+      return fail(400, "Chưa đọc được ảnh này. Thử xuất ảnh sang JPG/PNG hoặc chọn ảnh khác rồi tải lại.");
+    });
     // Preserve the original pixel dimensions; negotiate a browser-friendly delivery format.
     const url = cloudinary.url(result.public_id, {
       secure: true,
@@ -47,12 +53,13 @@ export function registerMediaRoutes(api: Hono<Env>) {
       transformation: [{ fetch_format: "auto", quality: "auto" }],
     });
     try {
-      await media.insertOne({
-        _id: result.public_id,
-        ownerId: c.get("user")._id,
-        url,
-        createdAt: now(),
-      });
+      const session = mongo.startSession();
+      try {
+        await session.withTransaction(async () => {
+          await media.updateOne({ _id: publicId }, { $set: { url } }, { session });
+          await enqueue("media.process", { mediaId: publicId }, { session });
+        });
+      } finally { await session.endSession(); }
     } catch (error) {
       await cloudinary.uploader
         .destroy(result.public_id)

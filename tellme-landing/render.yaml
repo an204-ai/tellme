@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: tellme-landing
+    runtime: static
+    rootDir: tellme-landing
+    buildCommand: pnpm install --frozen-lockfile && pnpm build
+    staticPublishPath: out

@@ -1,1 +1,1 @@
-export const buildFeedJob = async () => {};
+export { buildFeed as buildFeedJob } from "@tellme/database";

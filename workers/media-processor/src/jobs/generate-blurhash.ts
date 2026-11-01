@@ -1,1 +1,1 @@
-export const generateBlurhash = async (mediaId: string) => {};
+export { processMedia as generateBlurhash } from "@tellme/database";

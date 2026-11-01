@@ -1,24 +1,31 @@
 "use client";
-import { useEffect, useState } from "react";
+import { MomentComposer } from "./MomentComposer";
+import { SupportModal } from "./TellmeSupport";
+import { MusicOverlays } from "@/components/music/StoryMusic";
+import { EmojiButton } from "@/components/ui/EmojiButton";
+import { EditPersonalInfo } from "./EditPersonalInfo";
+import { workplaceCopy } from "@/lib/brand";
+import { useWeather } from "@/providers/WeatherProvider";
+import { weatherVoice } from "@/lib/weather";
+import { useEffect, useRef, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Camera, Check, ImagePlus, Plus, X } from "lucide-react";
+import { Camera, Check, ImagePlus, X } from "lucide-react";
 import { useAppStore } from "@/stores/app.store";
 import { useCommunity } from "@/hooks/use-community";
 import { newId, readImage } from "@/lib/api-repository";
 import {
-  localDay,
-  momentSchema,
   postSchema,
-  profileSchema,
+  profileIdentitySchema,
 } from "@/lib/validation";
 import type { PostInput } from "@/lib/validation";
-import type { Privacy } from "@/lib/types";
 import {
   AudiencePicker,
   Avatar,
   Button,
   IconButton,
+  ImageUploadStatus,
   Input,
   Switch,
 } from "@/components/ui/Primitives";
@@ -26,9 +33,10 @@ import { StoryTimeline } from "./StoryTimeline";
 import { Modal } from "@/components/ui/Modal";
 import { ImageCropper } from "@/components/ui/ImageCropper";
 import { PostPhoto } from "@/components/ui/PostPhoto";
-import { IMAGE_ACCEPT, IMAGE_FORMAT_HINT, validateImage } from "@/lib/images";
+import { IMAGE_ACCEPT, validateImage } from "@/lib/images";
 
 function Composer() {
+  const { fresh: weather } = useWeather();
   const { data, update, saving } = useCommunity();
   const open = useAppStore((state) => state.open);
   const notify = useAppStore((state) => state.notify);
@@ -44,6 +52,8 @@ function Composer() {
       anonymous: false,
     },
   });
+  const contentInput = useRef<HTMLTextAreaElement | null>(null);
+  const contentField = form.register("content");
   const image = form.watch("image");
   const privacy = form.watch("privacy");
   const content = form.watch("content");
@@ -63,13 +73,13 @@ function Composer() {
         });
       });
       open(null);
-      notify("Câu chuyện của bạn đã được chia sẻ.");
+      notify("Đã đăng bài viết.");
     } catch {
       /* mutation error is announced globally */
     }
   });
   return (
-    <Modal title="Kể một câu chuyện" onClose={() => open(null)}>
+    <Modal title="Kể chuyện đi làm" onClose={() => open(null)}>
       <form className="dialog-body composer-form" onSubmit={onSubmit}>
         <div className="flex items-center gap-3">
           <Avatar person={data?.people.find((person) => person.id === "me")} />
@@ -78,20 +88,29 @@ function Composer() {
               {data?.people.find((person) => person.id === "me")?.name}
             </strong>
             <p className="muted text-xs mt-1">
-              Câu chuyện của bạn luôn có người lắng nghe.
+              Một chuyện nhỏ trong ca làm cũng được.
             </p>
           </div>
         </div>
         <textarea
           className="composer-textarea"
           aria-label="Nội dung bài viết"
-          placeholder="Hôm nay của bạn thế nào?"
+          placeholder={weather ? weatherVoice(weather).feed : workplaceCopy.postPlaceholder}
           autoFocus
-          {...form.register("content")}
+          {...contentField}
+          ref={(node) => { contentField.ref(node); contentInput.current = node; }}
           maxLength={5000}
           rows={5}
         />
-        <div className="flex justify-between gap-3">
+        <div className="composer-caption-tools">
+          <EmojiButton label="Thêm emoji vào bài viết" onSelect={(emoji) => {
+            const start = contentInput.current?.selectionStart ?? content.length;
+            const end = contentInput.current?.selectionEnd ?? content.length;
+            const next = content.slice(0, start) + emoji + content.slice(end);
+            if (next.length > 5000) return;
+            form.setValue("content", next, { shouldDirty: true, shouldValidate: true });
+            requestAnimationFrame(() => { contentInput.current?.focus(); contentInput.current?.setSelectionRange(start + emoji.length, start + emoji.length); });
+          }} />
           <span className="field-error" role="alert">
             {form.formState.errors.content?.message}
           </span>
@@ -133,7 +152,11 @@ function Composer() {
               }}
             />
           </label>
-          <span className="muted text-xs" role={uploading ? "status" : undefined}>{uploading ? "Đang tải ảnh…" : "Ảnh tối đa 50 MB · Có hỗ trợ HEIC"}</span>
+          {uploading ? (
+            <ImageUploadStatus compact />
+          ) : (
+            <span className="muted text-xs">Ảnh tối đa 50 MB · Có hỗ trợ HEIC</span>
+          )}
         </div>
         {uploadError && (
           <p className="field-error" role="alert">
@@ -145,11 +168,11 @@ function Composer() {
         </label>
         <Input
           id="post-topic"
-          placeholder="Một chủ đề của riêng bạn…"
+          placeholder="Ví dụ: Chuyện đầu ca"
           {...form.register("topic")}
         />
         <div className="topic-suggestions">
-          {["Chuyện mỗi ngày", "Điều nhỏ bé", "Những chuyến đi"].map(
+          {workplaceCopy.topicSuggestions.map(
             (topic) => (
               <button
                 type="button"
@@ -180,124 +203,7 @@ function Composer() {
           />
         </div>
         <Button type="submit" className="full-width" disabled={saving || uploading}>
-          {saving ? "Đang chia sẻ…" : "Chia sẻ câu chuyện"}
-        </Button>
-      </form>
-    </Modal>
-  );
-}
-function MomentComposer() {
-  const { update, data, saving } = useCommunity();
-  const open = useAppStore((state) => state.open);
-  const notify = useAppStore((state) => state.notify);
-  const [image, setImage] = useState("");
-  const [uploading, setUploading] = useState(false);
-  const [caption, setCaption] = useState("");
-  const [privacy, setPrivacy] = useState<Privacy>(
-    data?.stories.find(
-      (story) => story.userId === "me" && story.day === localDay(),
-    )?.privacy ||
-      data?.settings.audience ||
-      "public",
-  );
-  const [error, setError] = useState("");
-  return (
-    <Modal title="Thêm vào Chuyện hôm nay" onClose={() => open(null)}>
-      <form
-        className="dialog-body"
-        onSubmit={async (event) => {
-          event.preventDefault();
-          const parsed = momentSchema.safeParse({ image, caption, privacy });
-          if (!parsed.success) {
-            setError(
-              parsed.error.issues[0]?.message || "Kiểm tra lại khoảnh khắc.",
-            );
-            return;
-          }
-          try {
-            await update((draft) => {
-              const day = localDay();
-              let story = draft.stories.find(
-                (entry) => entry.userId === "me" && entry.day === day,
-              );
-              if (!story) {
-                story = { id: newId(), userId: "me", day, privacy, items: [] };
-                draft.stories.unshift(story);
-              }
-              story.privacy = privacy;
-              story.items.push({
-                id: newId(),
-                image,
-                caption: parsed.data.caption,
-                at: new Date().toISOString(),
-              });
-            });
-            open(null);
-            notify("Đã thêm khoảnh khắc vào chuỗi hôm nay.");
-          } catch {
-            /* mutation handles the error */
-          }
-        }}
-      >
-        <p className="muted text-sm">
-          Thêm từng khoảnh khắc, kể trọn một ngày. Chuỗi ảnh được lưu lại trên
-          hồ sơ của bạn.
-        </p>
-        <label className={`moment-upload ${image ? "has-image" : ""}`}>
-          {image ? (
-            <img src={image} alt="Khoảnh khắc đã chọn" />
-          ) : (
-            <>
-              <Camera size={34} />
-              <strong>Chọn một bức ảnh</strong>
-              <span>{IMAGE_FORMAT_HINT}</span>
-            </>
-          )}
-          <input
-            type="file"
-            className="sr-only"
-            accept={IMAGE_ACCEPT}
-            disabled={saving || uploading}
-            aria-label="Chọn ảnh cho Chuyện hôm nay"
-            onChange={async (event) => {
-              const file = event.target.files?.[0];
-              if (!file) return;
-              setUploading(true);
-              try {
-                setImage(await readImage(file));
-                setError("");
-              } catch (failure) {
-                setError((failure as Error).message);
-              } finally {
-                setUploading(false);
-              }
-              event.target.value = "";
-            }}
-          />
-        </label>
-        <label htmlFor="moment-caption" className="field-label">
-          Một lời chú thích
-        </label>
-        <Input
-          id="moment-caption"
-          placeholder="Khoảnh khắc này có gì đặc biệt?"
-          value={caption}
-          maxLength={300}
-          onChange={(event) => setCaption(event.target.value)}
-        />
-        <AudiencePicker value={privacy} onChange={setPrivacy} />
-        <p className="muted text-xs">
-          Đối tượng xem áp dụng cho toàn bộ chuỗi hôm nay.
-        </p>
-        {error && (
-          <p role="alert" className="field-error">
-            {error}
-          </p>
-        )}
-        {uploading && <p role="status">Đang tải ảnh…</p>}
-        <Button className="full-width" type="submit" disabled={saving || uploading}>
-          <Plus size={17} />
-          {saving ? "Đang lưu…" : "Lưu khoảnh khắc"}
+          {saving ? "Đang chia sẻ…" : "Đăng bài"}
         </Button>
       </form>
     </Modal>
@@ -307,6 +213,7 @@ function EditProfile() {
   const { data, update, saving } = useCommunity();
   const open = useAppStore((state) => state.open);
   const notify = useAppStore((state) => state.notify);
+  const router = useRouter();
   const person = data?.people.find((entry) => entry.id === "me");
   const [avatar, setAvatar] = useState(person?.avatar || "");
   const [cover, setCover] = useState(person?.cover || "");
@@ -327,11 +234,11 @@ function EditProfile() {
     }
   };
   const form = useForm({
-    resolver: zodResolver(profileSchema),
+    resolver: zodResolver(profileIdentitySchema),
     defaultValues: {
+      username: person?.username || "",
       name: person?.name || "",
       bio: person?.bio || "",
-      location: person?.location || "",
     },
   });
   return <>
@@ -349,6 +256,8 @@ function EditProfile() {
               if (me) Object.assign(me, input, { avatar, cover });
             });
             open(null);
+            if (input.username !== person?.username)
+              router.replace(`/community/profile/${input.username}`);
             notify("Đã cập nhật hồ sơ.");
           } catch {
             /* The mutation error is announced by useCommunity. */
@@ -395,8 +304,8 @@ function EditProfile() {
               />
             </label>
           </div>
-          <p>{IMAGE_FORMAT_HINT}. Căn chỉnh ảnh trước khi tải lên.</p>
-          {readingImage && <p role="status">Đang tải ảnh…</p>}
+          <p>Tối đa 50 MB.</p>
+          {readingImage && <ImageUploadStatus label="Đang tải ảnh đại diện và ảnh bìa lên…" />}
           {imageError && (
             <p className="field-error" role="alert">
               {imageError}
@@ -410,6 +319,26 @@ function EditProfile() {
         {form.formState.errors.name && (
           <p className="field-error" role="alert">
             {form.formState.errors.name.message}
+          </p>
+        )}
+        <label className="field-label" htmlFor="profile-username">
+          Tellme ID
+        </label>
+        <Input
+          id="profile-username"
+          className="tellme-id-input"
+          leading={<span className="tellme-id-prefix">@</span>}
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          {...form.register("username")}
+        />
+        <p className="profile-field-hint">
+          Mọi người có thể dùng Tellme ID này để tìm bạn.
+        </p>
+        {form.formState.errors.username && (
+          <p className="field-error" role="alert">
+            {form.formState.errors.username.message}
           </p>
         )}
         <label className="field-label" htmlFor="profile-bio">
@@ -427,10 +356,6 @@ function EditProfile() {
             {form.formState.errors.bio.message}
           </p>
         )}
-        <label className="field-label" htmlFor="profile-location">
-          Địa điểm
-        </label>
-        <Input id="profile-location" {...form.register("location")} />
         <Button
           type="submit"
           className="full-width"
@@ -453,6 +378,9 @@ function EditProfile() {
   </>;
 }
 export function GlobalOverlays() {
+  const { data } = useCommunity();
+  const router = useRouter();
+  const pathname = usePathname();
   const { overlay, toast, clearToast, viewedStory, viewedStoryIndex, viewedStoryMomentId } =
     useAppStore();
   useEffect(() => {
@@ -460,11 +388,19 @@ export function GlobalOverlays() {
     const timer = setTimeout(clearToast, 4500);
     return () => clearTimeout(timer);
   }, [toast, clearToast]);
+  useEffect(() => {
+    if (overlay && overlay !== "support" && data?.authenticated === false) {
+      useAppStore.getState().open(null);
+      router.push(`/auth/login?next=${encodeURIComponent(pathname)}`);
+    }
+  }, [overlay, data?.authenticated, pathname, router]);
   return (
     <>
       {overlay === "composer" && <Composer />}
       {overlay === "moment" && <MomentComposer />}
+      {overlay === "support" && <SupportModal />}
       {overlay === "edit-profile" && <EditProfile />}
+      {overlay === "edit-personal" && <EditPersonalInfo />}
       {viewedStory && (
         <StoryTimeline
           key={`${viewedStory}-${viewedStoryIndex}-${viewedStoryMomentId || ""}`}
@@ -473,6 +409,7 @@ export function GlobalOverlays() {
           initialMomentId={viewedStoryMomentId}
         />
       )}
+      <MusicOverlays />
       {toast && (
         <div className="toast" role="status">
           <Check size={18} />

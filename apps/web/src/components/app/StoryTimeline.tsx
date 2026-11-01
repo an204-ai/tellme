@@ -1,13 +1,16 @@
 "use client";
+import { StoryMusic } from "@/components/music/StoryMusic";
+import { Select } from "@/components/ui/Select";
 import { useQuery } from "@tanstack/react-query";
 import { apiRepository } from "@/lib/api-repository";
 import { useEffect, useRef, useState } from "react";
-import { Camera, Clock3, Plus } from "lucide-react";
+import { Camera, Check, MoreHorizontal, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useCommunity } from "@/hooks/use-community";
 import { canView, timeOf } from "@/lib/api-repository";
 import { localDay } from "@/lib/validation";
 import { useAppStore } from "@/stores/app.store";
-import { Avatar, Button, Loader } from "@/components/ui/Primitives";
+import { Avatar, Button, Loader, IconButton, PrivacyIcon, privacyNames } from "@/components/ui/Primitives";
+import type { Privacy } from "@/lib/types";
 import { Modal } from "@/components/ui/Modal";
 import { StoryReactions } from "./StoryReactions";
 import { StoryReply } from "./StoryReply";
@@ -21,7 +24,12 @@ export function StoryTimeline({
   initialIndex: number;
   initialMomentId?: string;
 }) {
-  const { data } = useCommunity();
+  const { data, update, saving } = useCommunity();
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [editCaption, setEditCaption] = useState("");
+  const [editPrivacy, setEditPrivacy] = useState<Privacy | "inherit">("inherit");
   const viewStory = useAppStore((state) => state.viewStory);
   const open = useAppStore((state) => state.open);
   const storyQuery = useQuery({
@@ -44,6 +52,22 @@ export function StoryTimeline({
   const scrollRef = useRef<HTMLDivElement>(null);
   const momentsRef = useRef(new Map<string, HTMLElement>());
   const reducedMotion = data?.settings.reducedMotion;
+  useEffect(() => {
+    if (!openMenu) return;
+    const closeOnPointer = (event: PointerEvent) => {
+      if (event.target instanceof Element && !event.target.closest(".day-moment-menu-anchor"))
+        setOpenMenu(null);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpenMenu(null);
+    };
+    document.addEventListener("pointerdown", closeOnPointer);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnPointer);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [openMenu]);
   const goTo = (id: string) => {
     const target = momentsRef.current.get(id);
     if (target && scrollRef.current) {
@@ -103,19 +127,21 @@ export function StoryTimeline({
     month: "long",
     year: "numeric",
   }).format(new Date(`${story.day}T12:00:00+07:00`));
+  const editItem = items.find((item) => item.id === editing);
   return (
+    <>
     <Modal
       title={`Một ngày của ${person?.name || "bạn"}`}
+      subtitle={<time dateTime={story.day}>{date}</time>}
+      headerExtra={<StoryMusic key={story.id} story={story} />}
       onClose={() => viewStory(null)}
       className="day-timeline-dialog"
     >
       <div className="day-timeline-layout">
         <aside className="day-timeline-aside">
-          <p className="day-mobile-date">{date}</p>
           <div className="day-person">
             <Avatar person={person} size="lg" />
             <strong>{person?.name}</strong>
-            <span>{date}</span>
             <span className="day-photo-count">
               <Camera size={16} />
               {items.length} khoảnh khắc
@@ -161,17 +187,20 @@ export function StoryTimeline({
             ))}
           </nav>
           {story.userId === "me" && story.day === localDay() && (
-            <Button
-              variant="secondary"
+            <button
+              type="button"
+              className="day-add-moment"
+              aria-label="Thêm khoảnh khắc"
               onClick={() => {
                 viewStory(null);
                 open("moment");
               }}
             >
               <Plus size={17} />
-              Thêm khoảnh khắc
-            </Button>
+              <span className="day-add-long">Thêm khoảnh khắc</span><span className="day-add-short">Chụp ảnh</span>
+            </button>
           )}
+
         </aside>
         <div
           className="day-timeline-scroll"
@@ -180,10 +209,6 @@ export function StoryTimeline({
           role="region"
           aria-label={`Dòng thời gian ngày ${date} của ${person?.name}`}
         >
-          <div className="day-timeline-intro">
-            <Clock3 size={17} />
-            <span>{date}</span>
-          </div>
           {items.map((item, i) => (
             <section
               className={`day-moment ${active === item.id ? "is-current" : ""}`}
@@ -200,12 +225,77 @@ export function StoryTimeline({
                 <span />
               </div>
               <div className="day-moment-content">
-                <img
-                  className="day-moment-photo"
-                  src={item.image}
-                  alt={item.caption || `Khoảnh khắc ${i + 1}`}
-                  loading={i === initialIndex ? "eager" : "lazy"}
-                />
+                <div className="day-moment-media">
+                  <img
+                    className="day-moment-photo"
+                    src={item.image}
+                    alt={item.caption || `Khoảnh khắc ${i + 1}`}
+                    loading={i === initialIndex ? "eager" : "lazy"}
+                  />
+                  {item.privacy && item.privacy !== story.privacy && (
+                    <span
+                      className="day-moment-audience"
+                      aria-label={`Quyền riêng của ảnh: ${privacyNames[item.privacy]}. Quyền cả chuỗi: ${privacyNames[story.privacy]}.`}
+                      title={`Riêng ảnh: ${privacyNames[item.privacy]}. Người xem vẫn cần được phép xem chuỗi (${privacyNames[story.privacy]}).`}
+                    >
+                      <PrivacyIcon value={item.privacy} size={14} />
+                      <span>{privacyNames[item.privacy]}</span>
+                    </span>
+                  )}
+                  {story.userId === "me" && (
+                    <div className="day-moment-menu-anchor">
+                      <IconButton
+                        className="day-moment-menu-trigger"
+                        label="Tùy chọn khoảnh khắc"
+                        tooltip={false}
+                        aria-expanded={openMenu === item.id}
+                        aria-haspopup="menu"
+                        onClick={() => setOpenMenu(openMenu === item.id ? null : item.id)}
+                      >
+                        <MoreHorizontal size={19} />
+                      </IconButton>
+                      {openMenu === item.id && (
+                        <div className="day-moment-menu" role="menu">
+                          <button type="button" role="menuitem" onClick={() => {
+                            setEditCaption(item.caption);
+                            setEditPrivacy(item.privacy || "inherit");
+                            setEditing(item.id);
+                            setDeleting(null);
+                            setOpenMenu(null);
+                          }}>
+                            <Pencil size={16} /> Chỉnh sửa khoảnh khắc
+                          </button>
+                          <button type="button" role="menuitem" className="danger" onClick={() => {
+                            setDeleting(item.id);
+                            setEditing(null);
+                            setOpenMenu(null);
+                          }}>
+                            <Trash2 size={16} /> Xóa khoảnh khắc
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {deleting === item.id && (
+                    <div className="story-delete-confirm" role="group" aria-label="Xác nhận xóa khoảnh khắc">
+                      <strong>Xóa khoảnh khắc này?</strong>
+                      <span>Ảnh sẽ bị gỡ khỏi chuỗi ngày của bạn.</span>
+                      <div>
+                        <button type="button" disabled={saving} onClick={() => setDeleting(null)}>Giữ lại</button>
+                        <button type="button" className="danger" disabled={saving} onClick={async () => {
+                          try {
+                            await update((draft) => {
+                              const target = draft.stories.find((entry) => entry.id === story.id);
+                              if (target) target.items = target.items.filter((entry) => entry.id !== item.id);
+                            });
+                            setDeleting(null);
+                            if (story.items.length === 1) viewStory(null);
+                          } catch { /* Mutation announces the error. */ }
+                        }}>{saving ? "Đang xóa…" : "Xóa ảnh"}</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
                 <div className="day-moment-caption">
                   {item.caption && <p>{item.caption}</p>}
                   <StoryReactions
@@ -220,10 +310,42 @@ export function StoryTimeline({
           ))}
           <div className="day-timeline-end">
             <span />
-            Những khoảnh khắc làm nên một ngày.
+            Vậy là thêm một ngày đi làm được lưu lại.
           </div>
         </div>
       </div>
     </Modal>
+    {editItem && <Modal title="Chỉnh sửa khoảnh khắc" onClose={() => setEditing(null)} className="moment-edit-dialog">
+      <img className="moment-edit-preview" src={editItem.image} alt="Khoảnh khắc đang chỉnh sửa" />
+                    <form className="moment-edit-panel" onSubmit={async (event) => {
+                      event.preventDefault();
+                      try {
+                        await update((draft) => {
+                          const target = draft.stories.find((entry) => entry.id === story.id)?.items.find((entry) => entry.id === editItem.id);
+                          if (!target) return;
+                          target.caption = editCaption.trim();
+                          if (editPrivacy === "inherit") delete target.privacy;
+                          else target.privacy = editPrivacy;
+                        });
+                        setEditing(null);
+                      } catch { /* Mutation announces the error. */ }
+                    }}>
+                      <label htmlFor={`moment-caption-${editItem.id}`}>Chú thích của khoảnh khắc</label>
+                      <textarea id={`moment-caption-${editItem.id}`} maxLength={300} value={editCaption} onChange={(event) => setEditCaption(event.target.value)} />
+                      <label htmlFor={`moment-privacy-${editItem.id}`}>Quyền riêng tư riêng của ảnh</label>
+                      <Select id={`moment-privacy-${editItem.id}`} className="select-control" value={editPrivacy} onValueChange={(value) => setEditPrivacy(value as Privacy | "inherit")}>
+                        <option value="inherit">Theo quyền riêng tư của chuỗi</option>
+                        <option value="public">Riêng ảnh này · Công khai</option>
+                        <option value="connections">Riêng ảnh này · Bạn bè</option>
+                        <option value="private">Riêng ảnh này · Chỉ mình tôi</option>
+                      </Select>
+                      <p>Ảnh chỉ hiện khi người xem được phép xem cả chuỗi và ảnh này.</p>
+                      <div className="moment-edit-actions">
+                        <button type="button" disabled={saving} onClick={() => setEditing(null)}><X size={15} /> Hủy</button>
+                        <button type="submit" disabled={saving}><Check size={15} /> {saving ? "Đang lưu…" : "Lưu thay đổi"}</button>
+                      </div>
+                    </form>
+    </Modal>}
+    </>
   );
 }

@@ -1,20 +1,23 @@
 "use client";
+import { postPersona } from "@/components/ui/AnonymousAvatar";
+import { ReactionIcon } from "@/components/ui/ReactionControl";
+import { GroupComposer } from "./GroupComposer";
+import { DEFAULT_GROUP_AVATAR } from "@/lib/social-assets";
 import Link from "next/link";
 import { useState } from "react";
 import {
   Check,
   Copy,
   Facebook,
-  Heart,
   Instagram,
   MessageCircle,
   Music2,
   Plus,
   Send,
-  Users,
 } from "lucide-react";
 import type { AppData, Post } from "@/lib/types";
 import { reactorIds } from "@/lib/visibility";
+import { canMessageConversation, canMessagePerson } from "@/lib/chat-policy";
 import { newId } from "@/lib/api-repository";
 import { useCommunity } from "@/hooks/use-community";
 import { useAppStore } from "@/stores/app.store";
@@ -39,7 +42,7 @@ export function PostLikers({
   const ids = reactorIds(post, data);
   return (
     <Modal
-      title={`Người thả tim · ${ids.length}`}
+      title={`Người bày tỏ cảm xúc · ${ids.length}`}
       onClose={onClose}
       className="post-likers-dialog"
     >
@@ -61,13 +64,13 @@ export function PostLikers({
                   </strong>
                   <small>@{person.username}</small>
                 </span>
-                <Heart size={19} fill="currentColor" />
+                <ReactionIcon value={id === "me" ? post.reaction || "like" : post.reactorReactions?.[id] || "like"} />
               </Link>
             );
           })
         ) : (
           <Empty
-            title="Chưa có lượt thả tim"
+            title="Chưa có lượt cảm xúc"
             text="Hãy là người đầu tiên yêu thích câu chuyện này."
           />
         )}
@@ -90,15 +93,16 @@ export function SharePost({
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
   const [creatingGroup, setCreatingGroup] = useState(false);
-  const [groupName, setGroupName] = useState("");
-  const [members, setMembers] = useState<string[]>([]);
   const [status, setStatus] = useState("");
   const [failed, setFailed] = useState(false);
+  const [sendError, setSendError] = useState("");
   const url = `${window.location.origin}/post/${post.id}`;
   const friends = data.people.filter(
-    (person) => person.id !== "me" && !data.blocked.includes(person.id),
+    (person) => canMessagePerson(person.id, data),
   );
-  const groups = data.conversations.filter((chat) => chat.kind === "group");
+  const groups = data.conversations.filter((chat) => chat.kind === "group" && canMessageConversation(chat, data));
+  const targets = new Set([...friends.map((person) => person.id), ...groups.map((group) => `group:${group.id}`)]);
+  const chosen = selected.filter((id) => targets.has(id));
   const author = data.people.find((person) => person.id === post.authorId);
   const toggle = (id: string) =>
     setSelected((current) =>
@@ -127,9 +131,11 @@ export function SharePost({
     }
   };
   const send = async () => {
+    if (!chosen.length || saving) return;
+    setSendError("");
     try {
       await update((draft) => {
-        for (const target of selected) {
+        for (const target of chosen) {
           let chat = target.startsWith("group:")
             ? draft.conversations.find(
                 (entry) =>
@@ -158,12 +164,12 @@ export function SharePost({
             });
         }
         const target = draft.posts.find((entry) => entry.id === post.id);
-        if (target) target.shares += selected.length;
+        if (target) target.shares += chosen.length;
       });
-      notify(`Đã gửi câu chuyện tới ${selected.length} cuộc trò chuyện.`);
+      notify(`Đã gửi câu chuyện tới ${chosen.length} cuộc trò chuyện.`);
       onClose();
-    } catch {
-      /* The mutation error is announced by useCommunity. */
+    } catch (failure) {
+      setSendError(failure instanceof Error ? failure.message : "Chưa gửi được. Bạn thử lại nhé.");
     }
   };
   return (
@@ -179,7 +185,7 @@ export function SharePost({
           )}
           <div>
             <strong>
-              {post.anonymous ? "Một người kể chuyện" : author?.name}
+              {post.anonymous ? postPersona(post).name : author?.name}
             </strong>
             <p>{post.content || "Một khoảnh khắc đáng nhớ."}</p>
           </div>
@@ -188,6 +194,7 @@ export function SharePost({
           <h3>Gửi trong Tellme</h3>
           <button
             type="button"
+            disabled={friends.length < 2 || saving}
             onClick={() => setCreatingGroup(!creatingGroup)}
           >
             <Plus size={16} />
@@ -195,64 +202,9 @@ export function SharePost({
           </button>
         </div>
         {creatingGroup && (
-          <div className="share-create-group">
-            <Input
-              aria-label="Tên nhóm chat"
-              placeholder="Tên nhóm của bạn…"
-              value={groupName}
-              maxLength={60}
-              onChange={(event) => setGroupName(event.target.value)}
-            />
-            <p>Chọn ít nhất 2 người bạn</p>
-            <div>
-              {friends.map((person) => (
-                <label key={person.id}>
-                  <input
-                    type="checkbox"
-                    checked={members.includes(person.id)}
-                    onChange={() =>
-                      setMembers((current) =>
-                        current.includes(person.id)
-                          ? current.filter((id) => id !== person.id)
-                          : [...current, person.id],
-                      )
-                    }
-                  />
-                  <Avatar person={person} size="xs" />
-                  {person.name}
-                </label>
-              ))}
-            </div>
-            <Button
-              variant="secondary"
-              disabled={members.length < 2 || !groupName.trim() || saving}
-              onClick={async () => {
-                try {
-                  const id = newId();
-                  await update((draft) => {
-                    draft.conversations.unshift({
-                      id,
-                      kind: "group",
-                      title: groupName.trim(),
-                      participantIds: ["me", ...members],
-                      userId: "me",
-                      unread: 0,
-                      messages: [],
-                    });
-                  });
-                  setSelected((current) => [...current, `group:${id}`]);
-                  setCreatingGroup(false);
-                  setMembers([]);
-                  setGroupName("");
-                } catch {
-                  /* The mutation error is announced by useCommunity. */
-                }
-              }}
-            >
-              Tạo nhóm
-            </Button>
-          </div>
+          <GroupComposer data={data} onCreated={(id) => { setSelected((current) => [...current, `group:${id}`]); setCreatingGroup(false); }} />
         )}
+
         <SearchInput
           aria-label="Tìm bạn bè hoặc nhóm để chia sẻ"
           placeholder="Tìm bạn bè hoặc nhóm…"
@@ -273,9 +225,7 @@ export function SharePost({
             )
             .map((group) => (
               <label key={group.id}>
-                <span className="group-avatar">
-                  <Users size={23} />
-                </span>
+                <Avatar person={{ name: group.title || "Nhóm chat", avatar: group.avatar || DEFAULT_GROUP_AVATAR }} />
                 <span>
                   <strong>{group.title}</strong>
                   <small>{group.participantIds?.length || 0} thành viên</small>
@@ -300,9 +250,7 @@ export function SharePost({
                 <span>
                   <strong>{person.name}</strong>
                   <small>
-                    {data.following.includes(person.id)
-                      ? "Đang follow"
-                      : `@${person.username}`}
+                    @{person.username}
                   </small>
                 </span>
                 <input
@@ -314,14 +262,16 @@ export function SharePost({
               </label>
             ))}
         </div>
+        {!friends.length && !groups.length && <p>Chưa có bạn bè hoặc nhóm phù hợp để gửi. Bạn vẫn có thể sao chép liên kết bên dưới.</p>}
+        {sendError && <p className="field-error" role="alert">{sendError}</p>}
         <Button
           className="full-width"
-          disabled={!selected.length || saving}
+          disabled={!chosen.length || saving}
           onClick={() => void send()}
         >
           <Send size={17} />
-          {selected.length
-            ? `Gửi tới ${selected.length} cuộc trò chuyện`
+          {chosen.length
+            ? `Gửi tới ${chosen.length} cuộc trò chuyện`
             : "Chọn người nhận"}
         </Button>
         <div className="share-section-heading">

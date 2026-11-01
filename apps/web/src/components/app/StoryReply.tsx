@@ -5,6 +5,7 @@ import { Check, Send } from "lucide-react";
 import { useCommunity } from "@/hooks/use-community";
 import { newId } from "@/lib/api-repository";
 import { replySchema } from "@/lib/validation";
+import { canMessagePerson } from "@/lib/chat-policy";
 import { useAppStore } from "@/stores/app.store";
 import { EmojiButton } from "@/components/ui/EmojiButton";
 import type { DayStory, Message, MomentItem, Person } from "@/lib/types";
@@ -17,6 +18,8 @@ export function StoryReply({ story, item, person }: { story: DayStory; item: Mom
   const input = useRef<HTMLInputElement>(null);
   const viewStory = useAppStore((state) => state.viewStory);
   if (!data || story.userId === "me" || data.blocked.includes(story.userId)) return null;
+  if (data.authenticated === false) return <Link className="text-link" href="/auth/login?next=%2Fcommunity%2Ftoday">Đăng nhập để trả lời riêng cho người đăng</Link>;
+  if (!canMessagePerson(story.userId, data)) return <p className="story-reply-unavailable">Hai người cần là bạn bè để trả lời riêng qua tin nhắn.</p>;
   return <form className="story-reply" aria-label={`Trả lời khoảnh khắc của ${person?.name || "người đăng"}`}
     onSubmit={async (event) => {
       event.preventDefault();
@@ -63,6 +66,6 @@ export function StoryReplyPreview({ reply }: { reply: NonNullable<Message["story
   return reply.image ? <button type="button" className="story-reply-preview"
     onClick={() => viewStory(reply.storyId, 0, reply.momentId)}>
     <img src={reply.image} alt={reply.caption || "Ảnh được trả lời"} loading="lazy"/>
-    <span><small>Đã trả lời một khoảnh khắc</small><strong>{reply.caption || "Tell me · Tell you"}</strong></span>
+    <span><small>Đã trả lời một khoảnh khắc</small><strong>{reply.caption || "Tell me now"}</strong></span>
   </button> : <div className="story-reply-preview unavailable">Khoảnh khắc không còn khả dụng.</div>;
 }

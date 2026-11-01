@@ -25,36 +25,51 @@
   align-items: center;
   gap: 14px;
   width: 100%;
+  margin: 16px 0 24px;
+  padding: 20px 0;
   border: 0;
   border-bottom: 1px solid var(--line);
-  padding: 17px 0 26px;
-  background: #fff;
-  text-align: left;
+  border-radius: 0;
+  background: transparent;
   color: #000;
+  text-align: left;
 }
-.daily-compose > span:nth-child(2) {
-  display: flex;
+/* Match the first sidebar navigation row at the top of the content. */
+@media (min-width: 641px) {
+  .daily-compose {
+    min-height: 51px;
+    margin-top: 0;
+    padding-block: 0;
+    border-bottom: 0;
+  }
+}
+.daily-compose-prompt {
   flex: 1;
-  flex-direction: column;
-  gap: 7px;
   min-width: 0;
-}
-.daily-compose strong {
   font-size: 15px;
-  font-weight: 500;
-  line-height: 1.7;
-}
-.daily-compose > span:nth-child(2) > span {
-  font-size: 13px;
+  font-weight: 400;
   line-height: 1.6;
 }
-.daily-compose > svg {
+.daily-compose-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 0 8px 12px;
   color: var(--primary);
-  margin-right: 7px;
-  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 500;
 }
-.daily-compose:hover strong {
-  color: var(--primary);
+.daily-compose-action > svg { flex: 0 0 auto; }
+.daily-compose:hover .daily-compose-action > span {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.daily-compose:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 4px;
 }
 .daily-stream {
   display: flex;
@@ -177,7 +192,7 @@
   }
   .daily-photo:hover {
     --photo-lift: 9px;
-    z-index: 5;
+    z-index: 10;
     box-shadow: 0 20px 32px -16px #0b214866;
   }
 }
@@ -189,7 +204,7 @@
   --fan-spread: 43%;
 }
 .daily-photo:focus-visible {
-  z-index: 5;
+  z-index: 10;
   --photo-lift: 9px;
   outline: 2px solid var(--primary);
   outline-offset: 3px;
@@ -592,16 +607,8 @@
     gap: 11px;
     padding: 10px 0 22px;
   }
-  .daily-compose strong {
-    font-size: 13px;
-  }
-  .daily-compose > span:nth-child(2) > span {
-    font-size: 11px;
-  }
-  .daily-compose > svg {
-    width: 20px;
-    margin-right: 0;
-  }
+  .daily-compose-prompt { font-size: 13px; }
+  .daily-compose-action { gap: 6px; font-size: 12px; padding-left: 4px; }
   .daily-compose .avatar {
     width: 37px;
     height: 37px;
@@ -651,8 +658,8 @@
   .daily-photo-fan.photos-2 {
     --fan-spread: 17%;
   }
-  .daily-photo-fan:focus-within,
-  .daily-photo-fan.photos-2:focus-within {
+  .daily-photo-fan:is(:hover, :focus-within),
+  .daily-photo-fan.photos-2:is(:hover, :focus-within) {
     --fan-spread: 22%;
     --fan-angle: 0.3;
   }
@@ -686,4 +693,554 @@
   .day-timeline-intro {
     display: none;
   }
+}
+
+/* The new leading story shelf keeps friends' current-day moments ahead of the open community stream. */
+.today-friends {
+  padding: 20px 0 22px;
+  border-bottom: 1px solid var(--line);
+}
+.today-friends > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.today-friends > header h2,
+.today-community-heading {
+  margin: 0;
+  color: #000;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.today-friends > header p {
+  margin-top: 3px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.today-friends > header > span {
+  flex: 0 0 auto;
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 500;
+}
+.today-friends-strip {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 2px 2px 8px;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+.today-friends-strip::-webkit-scrollbar {
+  display: none;
+}
+.drag-scroll {
+  touch-action: pan-x pan-y pinch-zoom;
+  -webkit-overflow-scrolling: touch;
+}
+@media (pointer: fine) {
+  .drag-scroll, .drag-scroll button { cursor: grab; }
+  .drag-scroll { user-select: none; }
+}
+.drag-scroll[data-dragging="true"] {
+  scroll-snap-type: none;
+  scroll-behavior: auto;
+}
+.drag-scroll[data-dragging="true"], .drag-scroll[data-dragging="true"] button { cursor: grabbing; }
+.drag-scroll[data-dragging="true"] .today-friend-story,
+.drag-scroll[data-dragging="true"] .today-friend-story > img { transform: none; }
+.today-friend-story {
+  position: relative;
+  isolation: isolate;
+  display: block;
+  flex: 0 0 220px;
+  width: 220px;
+  height: 296px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: #f4f6fa;
+  color: white;
+  text-align: left;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+.today-friend-story:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px #0b21481c;
+}
+.today-friend-story.today-create-story {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) 74px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: #000;
+  text-align: center;
+}
+.today-create-cover {
+  position: relative;
+  display: block;
+  min-height: 0;
+  background: #f5f6f8;
+}
+.today-create-cover > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.today-create-plus {
+  position: absolute;
+  left: 50%;
+  bottom: -22px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 4px solid #fff;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  transform: translateX(-50%);
+}
+.today-create-label {
+  padding: 32px 12px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.6;
+}
+.today-friend-story > img,
+.today-friend-shade {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.today-friend-story > img {
+  object-fit: cover;
+  transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.today-friend-story:hover > img {
+  transform: scale(1.035);
+}
+.today-friend-shade {
+  background: linear-gradient(180deg, #07182c05 38%, #06182cdb 100%);
+}
+.today-friend-person {
+  position: absolute;
+  right: 16px;
+  bottom: 18px;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+.today-friend-person > .avatar {
+  flex: 0 0 auto;
+  border: 2px solid white;
+  box-shadow: 0 0 0 2px var(--primary);
+}
+.today-friend-person > span:nth-child(2) {
+  flex: 1;
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+.today-friend-person strong,
+.today-friend-person small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.today-friend-person strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+.today-friend-person small {
+  font-size: 12px;
+}
+.today-friend-person > svg {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+.today-friends-empty {
+  padding: 13px 15px;
+  border-radius: 10px;
+  background: #f6f8fb;
+  color: #18243a;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.today-community-heading {
+  margin: 20px 0 0;
+}
+
+/* Privacy at the day level is the outer audience; a moment may narrow it further. */
+.day-story-audience {
+  order: 2;
+  display: grid;
+  gap: 8px;
+  margin: 0 0 14px;
+  padding: 13px 12px;
+  border-radius: 10px;
+  background: #f6f8fb;
+}
+.day-story-audience > label {
+  font-size: 11px;
+  font-weight: 600;
+}
+.day-story-audience .select-control {
+  padding: 9px 34px 9px 10px;
+  font-size: 11px;
+}
+.day-story-audience > p,
+.moment-audience-fields p {
+  margin: 0;
+  font-size: 10px;
+  line-height: 1.6;
+}
+.day-timeline-aside > .button-wrap {
+  order: 3;
+}
+.day-moment-media {
+  position: relative;
+}
+.day-moment-audience {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: calc(100% - 76px);
+  padding: 6px 9px;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.5;
+  pointer-events: auto;
+}
+.day-moment-audience > svg {
+  flex: 0 0 auto;
+}
+.day-moment-menu-anchor {
+  position: absolute;
+  top: 11px;
+  right: 11px;
+  z-index: 5;
+}
+.day-moment-menu-trigger {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid #e5eaf2;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--primary);
+  box-shadow: 0 4px 13px #0a1e3b24;
+}
+.day-moment-menu {
+  position: absolute;
+  top: 42px;
+  right: 0;
+  display: grid;
+  width: 228px;
+  padding: 5px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: white;
+  box-shadow: 0 8px 26px #18223b21;
+}
+.day-moment-menu > button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 39px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 7px;
+  background: white;
+  color: #000;
+  text-align: left;
+  font-size: 12px;
+}
+.day-moment-menu > button:hover {
+  background: #f3f6fa;
+}
+.day-moment-menu > button.danger,
+.story-delete-confirm .danger {
+  color: #a02c3b;
+}
+.story-delete-confirm {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  left: 12px;
+  z-index: 4;
+  display: grid;
+  gap: 4px;
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  color: #000;
+  box-shadow: 0 8px 24px #10294d29;
+}
+.story-delete-confirm > strong {
+  font-size: 13px;
+}
+.story-delete-confirm > span {
+  font-size: 11px;
+  line-height: 1.6;
+}
+.story-delete-confirm > div {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 6px;
+}
+.story-delete-confirm button,
+.moment-edit-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 7px 11px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 500;
+}
+.story-delete-confirm button:disabled,
+.moment-edit-actions button:disabled {
+  opacity: 0.55;
+}
+.moment-edit-panel {
+  display: grid;
+  width: 100%;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #f8f9fc;
+}
+.moment-edit-panel > label {
+  margin-top: 3px;
+  font-size: 11px;
+  font-weight: 500;
+}
+.moment-edit-panel > textarea {
+  min-height: 72px;
+  padding: 10px 11px;
+  border: 1px solid #dce3ed;
+  border-radius: 8px;
+  background: #fff;
+  color: #000;
+  resize: vertical;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.moment-edit-panel > p {
+  margin: 0;
+  font-size: 10px;
+  line-height: 1.6;
+}
+.moment-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+.moment-edit-actions button[type="submit"] {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: #fff;
+}
+.moment-privacy-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 5px 8px;
+  border-radius: 7px;
+  font-size: 10px;
+  line-height: 1.5;
+}
+.moment-privacy-badge.inherited {
+  background: #f3f5f8;
+  color: #26354d;
+}
+.moment-privacy-badge.specific {
+  background: #eaf0fb;
+  color: var(--primary);
+}
+.moment-privacy-badge > svg {
+  flex: 0 0 auto;
+}
+.moment-audience-fields {
+  display: grid;
+  gap: 16px;
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.moment-audience-fields > div {
+  display: grid;
+  gap: 7px;
+}
+.moment-audience-fields .uiv-radio > legend {
+  display: none;
+}
+.image-upload-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 48px;
+  border-radius: 9px;
+  background: #f6f8fb;
+  color: var(--primary);
+  font-size: 12px;
+}
+.image-upload-status.compact {
+  min-height: 30px;
+  justify-content: flex-start;
+  gap: 7px;
+  padding: 0;
+  background: transparent;
+  font-size: 11px;
+}
+.image-upload-status.compact .uiv-image-loader {
+  width: 20px;
+  height: 20px;
+  border-width: 2px;
+}
+/* Shoh2008 — https://uiverse.io/Shoh2008/selfish-crab-11 (MIT), adapted to Tellme navy. */
+.uiv-image-loader {
+  position: relative;
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid #dbe4f2;
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: uiv-image-loader-spin 850ms linear infinite;
+}
+.uiv-image-loader > i {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--primary);
+}
+.uiv-image-loader > i:nth-child(1) { top: 1px; left: 6px; }
+.uiv-image-loader > i:nth-child(2) { top: 8px; right: 0; }
+.uiv-image-loader > i:nth-child(3) { bottom: 2px; right: 6px; }
+.uiv-image-loader > i:nth-child(4) { bottom: 7px; left: 0; }
+@keyframes uiv-image-loader-spin {
+  to { transform: rotate(360deg); }
+}
+@media (max-width: 700px) {
+  .day-story-audience {
+    margin: 0 0 9px;
+    padding: 10px 11px;
+    grid-template-columns: minmax(0, 1fr) 160px;
+    align-items: center;
+  }
+  .day-story-audience > label,
+  .day-story-audience > p { grid-column: 1; }
+  .day-story-audience .select-control {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+  .day-moment-menu-trigger { width: 34px; height: 34px; }
+  .today-friends { padding: 16px 0 18px; }
+  .today-friend-story { flex-basis: 172px; width: 172px; height: 236px; }
+  .today-friends-strip { gap: 9px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .today-friend-story,
+  .today-friend-story > img { transition: none; }
+  .uiv-image-loader { animation-duration: 2.5s; }
+}
+
+/* Shared audience and story controls. */
+.daily-person > div { min-width: 0; }
+.daily-person .person-name { overflow-wrap: anywhere; }
+.daily-person > div > span { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
+.privacy-indicator { display: inline-flex; align-items: center; color: var(--primary); }
+.daily-story-menu { flex: 0 0 auto; margin-left: auto; align-self: flex-start; }
+.daily-story-menu .menu-panel { z-index: 20; width: min(260px, calc(100vw - 48px)); }
+.today-friends { padding-top: 4px; padding-bottom: 24px; }
+.today-friends-strip { gap: 16px; scroll-snap-type: x proximity; }
+.today-friend-story { scroll-snap-align: start; border: 0; border-radius: 16px; }
+.today-friend-progress { position: absolute; top: 14px; left: 14px; right: 14px; display: flex; gap: 4px; }
+.today-friend-progress > i { flex: 1; height: 3px; border-radius: 4px; background: #fff; box-shadow: 0 1px 4px #0005; }
+.today-friend-time { position: absolute; top: 28px; left: 14px; color: #fff; font-size: 11px; text-shadow: 0 1px 4px #000a; }
+.today-friend-person > .avatar { box-shadow: none; border: 2px solid white; }
+.today-friend-person strong { white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-height: 1.4; }
+.today-friend-person small { color: #fff; }
+.today-friend-shade { background: linear-gradient(180deg, #06182c66, transparent 35%, #06182cf2); }
+.day-moment-menu-anchor { z-index: 8; }
+.day-moment-menu { max-width: calc(100vw - 64px); }
+.day-moment-menu-trigger:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+.moment-edit-dialog { width: 560px; }
+.moment-edit-preview { display: block; width: calc(100% - 48px); max-height: 220px; object-fit: contain; margin: 20px 24px 0; border-radius: 12px; background: #f5f7fa; }
+.moment-edit-dialog .moment-edit-panel { border: 0; border-radius: 0; background: white; padding: 24px; gap: 12px; }
+.moment-edit-dialog .moment-edit-panel > label { font-size: 13px; }
+.moment-edit-dialog .moment-edit-panel > textarea { font-size: 14px; }
+.moment-edit-dialog .moment-edit-panel > p { font-size: 12px; }
+.moment-edit-dialog .moment-edit-actions button { min-height: 40px; font-size: 13px; }
+.story-settings-form { display: grid; gap: 20px; }
+.story-settings-form > p { font-size: 13px; line-height: 1.7; }
+.saved-moments { display: grid; gap: 16px; margin-bottom: 24px; }
+.saved-moments > article { display: flex; align-items: center; gap: 12px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+.saved-moment-preview { display: flex; align-items: center; gap: 16px; flex: 1; min-width: 0; text-align: left; background: white; border: 0; }
+.saved-moment-preview > img { width: 100px; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 12px; }
+.saved-moment-preview > span { display: grid; gap: 6px; overflow-wrap: anywhere; }
+.saved-moment-preview small { font-size: 12px; }
+@media (max-width: 600px) {
+  .today-friends > header { align-items: flex-start; }
+  .today-friends > header p { max-width: 26ch; }
+  .today-friend-person { left: 12px; right: 12px; bottom: 14px; gap: 8px; }
+  .today-friend-person > svg { display: none; }
+  .today-friend-person strong { font-size: 12px; }
+  .today-friend-person small { font-size: 10px; }
+  .daily-person .post-menu > summary { min-width: 36px; }
+}
+
+/* Keep the friend shelf visual, with one clear invitation to add a photo. */
+.today-friends { border-bottom: 0; padding-bottom: 8px; }
+.today-friend-person { gap: 10px; }
+.today-friend-person > span:nth-child(2) { display: block; }
+.today-friend-person strong { font-size: 15px; }
+@media (max-width: 600px) {
+  .today-friend-person strong { font-size: 13px; }
+}
+
+/* A wider fan gives four or five moments their own visible strip. */
+.daily-photo-fan:is(.photos-4, .photos-5) { --fan-spread: 55%; }
+.daily-photo-fan:is(.photos-4, .photos-5) .daily-photo { width: min(44%, 360px); }
+@media (hover: hover) and (pointer: fine) {
+  .daily-photo-fan:is(.photos-4, .photos-5):hover { --fan-spread: 60%; --fan-angle: .3; }
+}
+.daily-photo-fan:is(.photos-4, .photos-5):focus-within { --fan-spread: 60%; --fan-angle: .3; }
+@media (max-width: 640px) {
+  .daily-photo-fan:is(.photos-4, .photos-5) { --fan-spread: 39%; height: clamp(170px, 49vw, 235px); }
+  .daily-photo-fan:is(.photos-4, .photos-5) .daily-photo { width: 51%; }
+  .daily-photo-fan:is(.photos-4, .photos-5):is(:hover, :focus-within) { --fan-spread: 42%; }
 }

@@ -1,1 +1,2 @@
-console.log("Notification worker started.");
+import { runWorker } from "@tellme/database";
+await runWorker("notification");

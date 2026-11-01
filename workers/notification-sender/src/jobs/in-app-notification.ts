@@ -1,1 +1,1 @@
-export const createInAppNotification = async () => {};
+export { deliverNotification as createInAppNotification } from "@tellme/database";

@@ -1,0 +1,60 @@
+/* Settings group compact controls by task; account management spans the section. */
+.settings-layout.settings-sections { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; width: 100%; max-width: none; }
+.settings-column { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+.settings-layout .settings-section { min-width: 0; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; padding: 0 0 24px; }
+.settings-layout .settings-section h2 { margin-bottom: 16px; font-size: 18px; }
+.settings-layout .settings-section > p { font-size: 14px; line-height: 1.7; }
+.settings-layout .setting-toggle-row { gap: 16px; padding-block: 14px; }
+.settings-layout .setting-toggle-row > div { min-width: 0; }
+.settings-layout .setting-toggle-row strong { font-weight: 500; }
+.settings-layout .setting-toggle-row p { max-width: 52ch; }
+.settings-layout .setting-toggle-row > .button-wrap { flex-shrink: 0; }
+.settings-layout .account-email-status + .setting-toggle-row { border-top: 0; }
+.settings-layout .settings-blocking { grid-column: 1 / -1; border-bottom: 0; }
+.settings-blocked-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 24px; }
+.settings-blocked-list .blocked-person { min-width: 0; gap: 12px; padding-block: 12px; border-bottom: 1px solid var(--line); }
+.settings-blocked-list .avatar { flex-shrink: 0; }
+.blocked-person-name { display: grid; gap: 4px; min-width: 0; }
+.blocked-person-name > * { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.blocked-person-name strong { font-size: 14px; font-weight: 600; }
+.blocked-person-name small { font-size: 13px; }
+.settings-layout .account-block-picker { width: 100%; max-width: none; margin-top: 20px; }
+@media (min-width: 1100px) {
+  .full-section .settings-layout.settings-sections { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 32px; }
+  .settings-blocked-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  .full-section .settings-layout.settings-sections { display: grid; gap: 24px; }
+  .settings-layout .settings-section { padding: 0 0 20px; }
+  .settings-layout .radio-inputs { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .settings-layout .radio-tile { min-height: 44px; }
+  .settings-layout .radio-icon { display: flex; }
+}
+
+.archive-space { min-width: 0; }
+.archive-navigation { display: flex; align-items: center; gap: 24px; border-bottom: 1px solid var(--line); }
+.archive-navigation > button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 4px 12px; border-bottom: 2px solid transparent; background: #fff; color: #000; font-size: 16px; font-weight: 500; }
+.archive-navigation > button[aria-pressed="true"] { border-bottom-color: var(--primary); color: var(--primary); }
+.archive-navigation > button:hover { color: var(--primary); }
+.archive-context { margin-block: 16px 12px; font-size: 14px; line-height: 1.7; }
+.archive-list { display: flex; flex-direction: column; }
+.archive-row { display: flex; gap: 20px; padding: 24px 0; border-bottom: 1px solid var(--line); }
+.archive-thumbnail { display: grid; place-items: center; flex: 0 0 104px; height: 104px; overflow: hidden; border: 1px solid var(--line); border-radius: 12px; color: var(--primary); }
+.archive-thumbnail img { width: 100%; height: 100%; object-fit: cover; }
+.archive-row-body { display: grid; flex: 1; min-width: 0; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "meta actions" "name actions" "text actions"; align-content: start; gap: 8px 24px; }
+.archive-row-meta { grid-area: meta; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-size: 12px; }
+.archive-row-meta > span:last-child { display: inline-flex; }
+.archive-row-body > strong { grid-area: name; font-size: 16px; font-weight: 600; overflow-wrap: anywhere; }
+.archive-row-body > p { grid-area: text; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; max-width: 72ch; font-size: 15px; line-height: 1.7; white-space: pre-wrap; }
+.archive-row-actions { grid-area: actions; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 8px; }
+.archive-row-actions > * { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 4px 0; color: var(--primary); font-size: 14px; font-weight: 500; }
+.archive-row-actions > *:hover { text-decoration: underline; text-underline-offset: 4px; }
+.archive-row-actions > button:disabled { opacity: .5; cursor: wait; }
+@media (max-width: 700px) {
+  .archive-row { gap: 12px; padding-block: 20px; }
+  .archive-thumbnail { flex-basis: 72px; height: 88px; }
+  .archive-row-body { grid-template-columns: minmax(0, 1fr); grid-template-areas: "meta" "name" "text" "actions"; }
+  .archive-row-actions { flex-direction: row; flex-wrap: wrap; gap: 4px 20px; justify-content: flex-start; }
+  .archive-row-meta { font-size: 12px; }
+  .archive-context { font-size: 14px; }
+}

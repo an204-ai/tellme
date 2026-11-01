@@ -1,5 +1,8 @@
-FROM node:22-alpine
+FROM node:22-bookworm-slim
 WORKDIR /app
+RUN corepack enable
 COPY . .
-RUN npm install -g pnpm && pnpm install
-CMD ["pnpm", "--filter=@tellme/api", "dev"]
+RUN pnpm install --frozen-lockfile --filter @tellme/api... && pnpm --filter @tellme/api... build
+ENV NODE_ENV=production API_HOST=0.0.0.0
+EXPOSE 4000
+CMD ["pnpm", "--filter", "@tellme/api", "start"]

@@ -1,3 +1,4 @@
+import { registerConversationRoutes } from "./conversation.routes.js";
 import { Hono } from "hono";
 import { z } from "zod";
 import { users, conversations, messages } from "../../backend/database.js";
@@ -9,11 +10,16 @@ import {
   requirePost,
   requireConversation,
   requireStory,
+  canViewMoment,
   messageDTO,
   notify,
+  chatAllowed,
 } from "../../backend/domain.js";
 import * as v from "../../backend/validation.js";
+import { isGroupAvatarPreset, DEFAULT_GROUP_AVATAR } from "../../backend/social-assets.js";
+import { publishUpdate, withMediaChange } from "@tellme/database";
 export function registerMessageRoutes(api: Hono<Env>) {
+  registerConversationRoutes(api);
   api.post("/conversations", async (c) => {
     const me = c.get("user"),
       input = v.conversationSchema.parse(await c.req.json());
@@ -35,27 +41,35 @@ export function registerMessageRoutes(api: Hono<Env>) {
         participants.length
     )
       fail(400, "Thành viên không khả dụng.");
+    if (!await chatAllowed(participants, input.kind === "group" ? me._id : undefined)) fail(403, input.kind === "group" ? "Chỉ có thể mời bạn bè của bạn vào nhóm. Kiểm tra lại các tài khoản đã chặn." : "Hai người cần follow nhau để nhắn tin riêng.");
     const directKey =
       input.kind === "direct" ? [...participants].sort().join(":") : undefined;
     if (directKey) {
       const existing = await conversations.findOne({ directKey });
       if (existing) return c.json({ id: existing._id });
     }
-    await conversations.insertOne({
-      _id: input.id,
-      kind: input.kind,
-      title: input.title,
-      participants,
-      readAt: {},
-      createdAt: now(),
-      updatedAt: now(),
-      ...(directKey ? { directKey } : {}),
+    const avatar = input.kind === "group" ? input.avatar || DEFAULT_GROUP_AVATAR : "";
+    if (avatar.startsWith("/") && !isGroupAvatarPreset(avatar)) fail(400, "Chọn avatar mẫu hoặc tải ảnh của bạn lên.");
+    await withMediaChange(me, avatar && !isGroupAvatarPreset(avatar) ? [avatar] : [], async (session) => {
+      await conversations.insertOne({
+        avatar,
+        _id: input.id,
+        kind: input.kind,
+        ...(input.kind === "group" ? { ownerId: me._id, mutedBy: [] } : {}),
+        title: input.title,
+        participants,
+        readAt: {},
+        createdAt: now(),
+        updatedAt: now(),
+        ...(directKey ? { directKey } : {}),
+      }, { session });
     });
+    await publishUpdate(participants, "messages");
     return c.json({ id: input.id }, 201);
   });
   api.post("/conversations/:id/messages", async (c) => {
     const me = c.get("user"),
-      chat = await requireConversation(c.req.param("id"), me),
+      chat = await requireConversation(c.req.param("id"), me, true),
       input = v.messageSchema.parse(await c.req.json());
     if (input.postId) {
       const post = await requirePost(input.postId, me);
@@ -66,7 +80,7 @@ export function registerMessageRoutes(api: Hono<Env>) {
     }
     if (input.storyReply) {
       const story = await requireStory(input.storyReply.storyId, me);
-      if (!story.items.some((item) => item.id === input.storyReply?.momentId))
+      if (!(await canViewMoment(story, input.storyReply.momentId, me)))
         fail(404, "Khoảnh khắc không còn khả dụng.");
       if (chat.kind !== "direct" || story.userId === me._id || !chat.participants.includes(story.userId))
         fail(400, "Lời trả lời cần được gửi riêng cho người đăng ảnh.");
@@ -86,7 +100,7 @@ export function registerMessageRoutes(api: Hono<Env>) {
     );
     await Promise.all(
       chat.participants
-        .filter((id) => id !== me._id)
+        .filter((id) => id !== me._id && !chat.mutedBy?.includes(id))
         .map((id) =>
           notify(
             id,
@@ -97,6 +111,7 @@ export function registerMessageRoutes(api: Hono<Env>) {
           ),
         ),
     );
+    await publishUpdate(chat.participants, "messages");
     return c.json({ ok: true }, 201);
   });
   api.get("/conversations/:id/messages", async (c) => {

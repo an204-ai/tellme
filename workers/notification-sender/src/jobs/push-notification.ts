@@ -1,1 +1,1 @@
-export const sendPushNotification = async () => {};
+export { sendPush as sendPushNotification } from "@tellme/database";

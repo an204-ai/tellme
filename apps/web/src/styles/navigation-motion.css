@@ -1,0 +1,49 @@
+.liquid-navigation { position: relative; isolation: isolate; }
+.nav-liquid-glider {
+  position: absolute;
+  inset: 0 auto auto 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform-origin: center;
+  border-radius: 10px;
+  background: #07327f;
+  overflow: hidden;
+}
+.nav-liquid-glider::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(125deg, #ffffff10, transparent 65%);
+}
+.desktop-nav-track > a { position: relative; z-index: 1; transition: color 180ms ease-out, background-color 180ms ease-out; }
+.desktop-nav-track > .nav-item.active,
+.desktop-nav-track > .nav-item[data-selected="true"] { background: transparent; }
+.desktop-nav-track > .nav-item[data-selected="true"],
+.desktop-nav-track > .nav-item[data-selected="true"] svg { color: #fff; }
+.desktop-nav-track > .nav-item[data-selected="false"],
+.desktop-nav-track > .nav-item[data-selected="false"] svg { color: #000; }
+.desktop-nav-track > .nav-item[data-selected="false"]:hover { background: #f4f4f4; }
+.desktop-nav-track > .nav-item[data-selected="true"] .nav-badge { background: #fff; color: #07327f; }
+@media (max-width: 640px) {
+  .mobile-nav-track > .nav-liquid-glider { border-radius: 999px; background: #e6eef9; }
+  .mobile-nav-track > a[data-selected="false"] { color: #000; }
+  .mobile-nav-track > a[data-selected="true"] { color: #07327f; }
+}
+@media (prefers-reduced-motion: reduce) { .desktop-nav-track > a { transition: none; } }
+.reduce-motion .desktop-nav-track > a { transition: none; }
+
+/* One transition: the loading veil recedes. New content stays fully opaque. */
+.route-content { min-width: 0; }
+.route-content[data-navigation-pending="true"] { pointer-events: none; user-select: none; }
+.route-content[data-navigation-pending="true"] .loading-state { visibility: hidden; }
+.messages-layout .route-content { height: 100%; min-height: 0; overflow: hidden; }
+.app-frame:has(.pull-refresh) > .app-shell > .main-content > .route-content {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+.page-navigation-loader { position: fixed; z-index: 32; display: grid; place-items: center; pointer-events: none; background: rgb(255 255 255 / .86); opacity: 0; transition: opacity 180ms ease-out; }
+.page-navigation-loader[data-active="true"] { opacity: 1; }
+.page-navigation-loader .loading-state { margin: 0; padding: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.reduce-motion .page-navigation-loader { transition: none; }
+@media (prefers-reduced-motion: reduce) { .page-navigation-loader { transition: none; } }

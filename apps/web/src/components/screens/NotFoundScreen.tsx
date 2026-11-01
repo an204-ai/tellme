@@ -25,7 +25,7 @@ export function NotFoundScreen() {
           </p>
           <Link href="/community/feed" className="not-found-home">
             <Home size={18} />
-            Về bảng tin
+            Về Khám phá
           </Link>
           <button
             type="button"

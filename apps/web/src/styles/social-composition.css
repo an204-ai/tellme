@@ -1,0 +1,110 @@
+/* Composing a moment and a post share the same type scale and white surface. */
+.daily-space .daily-compose,
+.guest-invitation {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+  min-height: 88px;
+  margin: 0 0 24px;
+  background: #fff;
+}
+.daily-space .daily-compose { gap: 12px; }
+.daily-space .daily-compose-prompt {
+  background: #f5f7fa;
+  border-radius: 24px;
+  padding: 11px 16px;
+  font-size: 16px;
+  min-height: 44px;
+}
+.daily-space .daily-compose:hover .daily-compose-prompt { background: #edf1f7; }
+.composer-prompt > button { font-size: 16px; }
+.daily-space .daily-compose-action { font-size: 14px; padding: 8px 0 8px 4px; }
+.daily-space .daily-compose:hover .daily-compose-action > span { text-decoration: none; }
+.guest-invitation > span { font-size: 16px; max-width: none; }
+.guest-invitation > a { min-height: 44px; font-size: 14px; }
+.daily-entry > .daily-caption { padding-left: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.daily-entry-music { padding-left: 56px; }
+
+/* Keep the title/date and shared soundtrack outside the scrolling photo column. */
+.day-timeline-dialog .dialog-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 36px;
+  gap: 16px;
+  align-items: start;
+}
+.day-timeline-dialog .dialog-heading { min-width: 0; }
+.day-timeline-dialog .dialog-heading h2 { margin: 0; overflow-wrap: anywhere; }
+.day-timeline-dialog .dialog-subtitle { margin-top: 5px; font-size: 12px; line-height: 1.6; font-weight: 400; }
+.day-timeline-dialog .dialog-header > .icon-button { grid-column: 2; grid-row: 1; }
+.day-timeline-aside > .day-add-moment {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  flex-shrink: 0;
+  align-self: center;
+  margin: auto auto 0;
+  min-height: 40px;
+  max-width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  order: 3;
+}
+.day-add-moment:hover { background: #f5f7fa; }
+.day-add-moment > svg { flex-shrink: 0; }
+.day-add-short { display: none; }
+
+/* Animal personas have no account link or presence indicator. */
+.anonymous-persona {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 43px;
+  width: 43px;
+  height: 43px;
+  box-sizing: border-box;
+  padding: 2px;
+  border: 1px solid #cfd9e8;
+  border-radius: 50%;
+  overflow: hidden;
+  color: #3e306b;
+  background: #fff;
+}
+.anonymous-persona[data-color="mint"] { color: #195b44; }
+.anonymous-persona[data-color="peach"] { color: #873d20; }
+.anonymous-persona[data-color="sky"] { color: #234b7e; }
+.anonymous-persona[data-color="sand"] { color: #6b521b; }
+.anonymous-persona[data-color="rose"] { color: #843450; }
+.anonymous-persona.is-small { flex-basis: 34px; width: 34px; height: 34px; padding: 1.5px; }
+.anonymous-persona > img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.anonymous-comment-byline { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; }
+.anonymous-comment-byline > small { font-size: 11px; font-weight: 400; color: var(--primary); }
+.post-card.is-anonymous .post-author-line > .person-name { flex-shrink: 0; max-width: calc(100% - 40px); }
+
+@media (max-width: 700px) {
+  .day-timeline-dialog .dialog-header { grid-template-columns: minmax(0, 1fr) 36px; gap: 8px 12px; }
+  .day-timeline-dialog .dialog-header > .icon-button { grid-column: 2; grid-row: 1; align-self: start; }
+  .day-timeline-dialog .dialog-heading h2 { font-size: 17px; line-height: 1.5; }
+  .day-timeline-dialog .dialog-subtitle { font-size: 12px; margin-top: 3px; }
+  .day-timeline-dialog .day-timeline-aside { display: flex; flex-direction: row; gap: 8px; align-items: center; padding-bottom: 10px; }
+  .day-timeline-aside .day-timeline-nav { flex: 1; min-width: 0; padding-bottom: 0; scrollbar-width: none; }
+  .day-timeline-nav::-webkit-scrollbar { display: none; }
+  .day-timeline-aside > .day-add-moment { margin: 0; padding: 8px 10px; font-size: 12px; line-height: 1.5; }
+  .day-add-long { display: none; }
+  .day-add-short { display: inline; }
+}
+@media (max-width: 640px) {
+  .daily-space .daily-compose { display: grid; grid-template-columns: 37px minmax(0, 1fr); gap: 10px; padding: 14px; }
+  .daily-space .daily-compose-prompt { font-size: 16px; padding: 9px 12px; }
+  .daily-space .daily-compose-action { grid-column: 2; justify-self: end; min-height: 36px; padding: 2px; font-size: 14px; }
+  .guest-invitation { flex-wrap: wrap; gap: 6px 12px; padding: 14px; }
+  .guest-invitation > span { font-size: 16px; }
+  .guest-invitation > a { font-size: 14px; margin-left: auto; }
+  .daily-entry-music { padding-left: 47px; }
+}

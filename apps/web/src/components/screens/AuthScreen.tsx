@@ -1,4 +1,5 @@
 "use client";
+import { BRAND_DESCRIPTION } from "@/lib/brand";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -34,12 +35,16 @@ export function AuthScreen({ register = false }: { register?: boolean }) {
   const submit = form.handleSubmit(async (input) => {
     setError("");
     try {
-      await request(register ? "/auth/register" : "/auth/login", {
+      const result = await request<{ verificationRequired?: boolean; verificationEmailSent?: boolean }>(register ? "/auth/register" : "/auth/login", {
         method: "POST",
         body: JSON.stringify(input),
       });
       apiRepository.clear();
       queryClient.clear();
+      if (result.verificationRequired) {
+        router.replace(`/auth/verify-email${result.verificationEmailSent === false ? "?delivery=failed" : ""}`);
+        return;
+      }
       const next = new URLSearchParams(window.location.search).get("next");
       router.replace(
         next &&
@@ -59,45 +64,30 @@ export function AuthScreen({ register = false }: { register?: boolean }) {
   });
   return (
     <main className="auth-page">
-      <section
-        className="auth-visual"
-        style={{
-          backgroundImage: "url(/images/photo-1441974231531-c6227db76b6e.jpg)",
-        }}
-      >
+      <section className="auth-visual" aria-label="Giới thiệu Tellme">
         <Link href="/community/today" className="auth-brand">
           <Brand />
         </Link>
         <div className="auth-visual-copy">
           <h1>
-            Một ngày của bạn.
+            Đi làm cũng có
             <br />
-            Muôn vàn câu chuyện.
+            <strong>chuyện để kể.</strong>
           </h1>
-          <p>
-            Chia sẻ những điều bình thường.
-            <br />
-            Tìm thấy những kết nối đặc biệt.
-          </p>
+          <p>{BRAND_DESCRIPTION}</p>
           <span>Your day. Your stories.</span>
         </div>
-        <span className="auth-photo-caption">
-          Những khoảnh khắc luôn đáng được lưu giữ.
-        </span>
       </section>
       <section className="auth-form-area">
-        <Link href="/community/today" className="auth-mobile-brand">
-          <Brand />
-        </Link>
         <div className="uiv-form">
           <div className="container auth-card">
             <div className="heading">
-              {register ? "Câu chuyện bắt đầu từ bạn." : "Mừng bạn trở lại."}
+              {register ? "Chào bạn, vào kể chuyện nhé." : "Mừng bạn trở lại."}
             </div>
             <p className="auth-description">
               {register
-                ? "Cùng kể, cùng lắng nghe, cùng kết nối."
-                : "Hôm nay, bạn có điều gì muốn kể?"}
+                ? "Tạo tài khoản để lưu ảnh, kể chuyện đi làm và làm quen."
+                : "Hôm nay đi làm thế nào? Vào kể một chút nhé."}
             </p>
             <form className="form" onSubmit={submit} noValidate>
               {register && (
@@ -187,17 +177,22 @@ export function AuthScreen({ register = false }: { register?: boolean }) {
                 {form.formState.isSubmitting
                   ? "Đang mở…"
                   : register
-                    ? "Bắt đầu câu chuyện"
+                    ? "Tạo tài khoản"
                     : "Đăng nhập"}
                 <ArrowRight size={17} />
               </button>
             </form>
+            {!register && <Link className="auth-forgot-link" href="/auth/forgot-password">Quên mật khẩu?</Link>}
             <p className="auth-switch">
               {register ? "Đã quen với Tellme?" : "Lần đầu bạn đến đây?"}{" "}
               <Link href={register ? "/auth/login" : "/auth/register"}>
                 {register ? "Đăng nhập" : "Tạo tài khoản"}
               </Link>
             </p>
+            <Link href="/community/today" className="auth-browse-link">
+              <span>Khám phá Tellme</span>
+              <ArrowRight size={15} aria-hidden="true" />
+            </Link>
           </div>
         </div>
       </section>

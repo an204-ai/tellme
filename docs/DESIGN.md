@@ -46,7 +46,7 @@ typography:
     fontWeight: 500
   field-label:
     fontFamily: "Poppins, \"Be Vietnam Pro\", sans-serif"
-    fontSize: "13px"
+    fontSize: "15px"
     fontWeight: 500
     lineHeight: 1.6
 rounded:
@@ -204,6 +204,8 @@ Màu `focus` biểu thị vị trí bàn phím; `field-error` dành cho lỗi va
 - **Body:** vai trò `body` mô tả bài viết bảng tin. Trên điện thoại giữ cỡ chữ và tăng line-height lên 1.95. Body nền của trang là 14px; textarea viết bài là 16px/1.9, thu về 15px trên điện thoại.
 - **Button label / Field label:** nhãn thao tác và trường nhập. Metadata đang có các cỡ 8–11px tùy ngữ cảnh; ghi nhận đây là mật độ đã quan sát, không nâng chúng thành chuẩn chữ nội dung.
 
+**Mobile refinement (30/10/2026):** `mobile-type.css` là lớp vai trò dùng chung ở viewport tối đa 640px, giữ nguyên desktop và font Poppins/Be Vietnam Pro. Nội dung chính 16px, bài viết 17px/1.8, nhãn thao tác 15px, metadata và điều hướng 14px, tiêu đề mục 18px và modal 19px. Chữ kế thừa body 18px. Các giá trị trong “Một chút về mình” giữ 15px nhưng giảm còn weight 500, nhãn 13px. Quy tắc này thay thế các cỡ mobile cũ nêu trong phần Hierarchy; không tăng kích thước avatar, ảnh hoặc khung trang theo chữ.
+
 **The Content First Rule.** Giữ chữ bài viết đủ thoáng để đọc và đặt ảnh trong nội dung; không dùng kiểu chữ trưng bày của màn hình tài khoản cho nội dung bảng tin.
 
 ## Layout
@@ -354,3 +356,16 @@ Tinh chỉnh và tích hợp 29/10/2026: pill mobile nhỏ hơn; cụm thao tác
 - Don't dựng người dùng hoặc số tương tác giả; lấy nội dung và quyền xem từ API, chỉ mô tả trạng thái đã được máy chủ xác nhận.
 - Don't lấy cỡ metadata nhỏ hiện có làm chuẩn cho nội dung đọc dài hoặc hướng dẫn chính.
 - Don't biến Chuyện hôm nay/Chuyện của tôi thành lưới ô bán hàng, thu ảnh thành dải dọc hẹp hoặc animate kích thước để bung ảnh.
+
+
+### Camera Tell me now
+
+Modal chụp giữ header trắng/navy của hệ thống, khung camera 4:3 và nút chụp tròn ở giữa, đổi camera nhỏ bên phải. Camera lỗi dùng chính khung xem trước để hướng dẫn thay vì thêm lớp modal. Bước xem lại giữ ảnh 4:3, nút Chụp lại trên ảnh, lời kể và nhạc bên dưới; quyền riêng tư mở rộng theo nhu cầu. Footer đăng cố định trong modal, chỉ vùng nội dung cuộn và không hiện scrollbar. Fieldset đặt min-width: 0 để caption/nhạc dài không đẩy vỡ khung mobile.
+
+### Form và ủng hộ Tellme
+
+`form-typography.css` định nghĩa chữ nhãn/điều khiển 15px desktop và 16px mobile. Nhãn weight 500, nội dung/placeholder weight 400; trường OTP giữ chữ mã lớn chuyên biệt. Hồ sơ, tài khoản, mật khẩu, chỉnh khoảnh khắc và quyền riêng tư dùng chung vai trò này.
+
+Ủng hộ dùng lời mời nhỏ không chặn trang, tự hiện một lần trên trình duyệt ở Tell me now/Khám phá. Icon cà phê, chữ đen và hành động navy; QR chỉ mở khi bấm. Khung vuông hiển thị phần chính của ảnh gốc không sửa pixel. Các nút lưu ảnh, sao chép tài khoản ở bên dưới. Nội dung modal cuộn riêng trên màn hình thấp, footer luôn trong viewport.
+
+Vùng cuộn của modal camera là div bao fieldset; cả hai đặt min-width: 0. Khung ngoài dùng overflow clip để focus không kéo lệch header; footer nền trắng nằm ngoài vùng cuộn.

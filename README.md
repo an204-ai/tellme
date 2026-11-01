@@ -7,10 +7,10 @@
 
 - **`apps/api`**: Backend REST API (Hono + Node.js, MongoDB, Cloudinary)
 - **`apps/web`**: Web Application (Next.js 15 App Router, Tailwind CSS v4, TanStack Query)
-- **`apps/mobile`**: Mobile Application iOS & Android (Expo SDK 53, NativeWind, TanStack Query)
+- **`apps/mobile`**: Mobile scaffold (Expo SDK 52); chưa nằm trong phạm vi runtime hiện tại
 - **`apps/admin`**: Admin Management Dashboard (React + Vite)
 - **`assets/brand`**: Ảnh nhận diện gốc và nơi chuẩn bị logo, icon, font dùng chung
-- **`packages/database`**: Scaffold Drizzle/PostgreSQL cũ, hiện không được API import
+- **`packages/database`**: MongoDB models/indexes, cấu hình gốc, Redis/BullMQ và tác vụ nền dùng chung cho API/workers
 - **`packages/shared`**: Types, Zod validators, hằng số, tiện ích dùng chung FE & BE
 - **`packages/ui`**: Design tokens dùng chung và component DOM cho Web/Admin; Mobile dùng component React Native riêng
 - **`packages/config`**: Cấu hình TypeScript, ESLint dùng chung
@@ -38,6 +38,14 @@ pnpm --filter @tellme/api dev
 pnpm --filter @tellme/web dev
 ```
 
-Mở [Tạo tài khoản Tellme](http://127.0.0.1:3000/auth/register). Cấu hình và kiểm thử xem [BACKEND.md](docs/BACKEND.md); hướng dẫn giao diện xem [FRONTEND.md](docs/FRONTEND.md). App mobile/admin/workers chưa được phát triển thêm.
+Mở [Tạo tài khoản Tellme](http://127.0.0.1:3000/auth/register). Cấu hình và kiểm tra vận hành xem [BACKEND.md](docs/BACKEND.md); hướng dẫn giao diện xem [FRONTEND.md](docs/FRONTEND.md). Admin và ba worker đã kết nối backend; mobile chưa triển khai thêm. Chạy toàn bộ môi trường phát triển bằng `pnpm dev` tại gốc (Redis local cần Docker Desktop).
 
 Khóa thật chỉ đặt trong file môi trường bị Git bỏ qua. Stack runtime hiện tại là MongoDB + Cloudinary; PostgreSQL/Drizzle/R2 trong bản định hướng cũ không được API sử dụng.
+
+## Chuẩn bị push và deploy
+
+- Chỉ `.env.example` được đưa lên Git; cấu hình thật giữ trong `.env` gốc và điền lại trong môi trường của dịch vụ deploy.
+- Chạy `pnpm install --frozen-lockfile`, `pnpm build` và `pnpm check-types` trước khi push. Giữ `pnpm-lock.yaml` để deploy dùng đúng phiên bản dependency.
+- `.next*`, `dist`, `node_modules`, cache, báo cáo kiểm tra và file riêng tư đã được loại trong `.gitignore`/`.dockerignore`. Không cần đưa build output từ máy cá nhân lên Git.
+- CI trên GitHub thực hiện build và kiểm tra TypeScript. Deploy dùng cấu hình của dịch vụ hosting; không còn workflow chỉ in thông báo deploy giả lập.
+- Docker API dùng build context ở gốc repo: `docker build -f infra/docker/api.Dockerfile .` (hoặc đường dẫn tương thích `apps/api/Dockerfile`). Worker dùng `infra/docker/worker.Dockerfile`.

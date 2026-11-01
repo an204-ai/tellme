@@ -1,16 +1,18 @@
 import type { Filter } from "mongodb";
-import { randomUUID } from "node:crypto";
+import { anonymousIdentity } from "./anonymous.js";
 import {
   users,
   posts,
   stories,
   conversations,
   messages,
-  notices,
   media,
 } from "./database.js";
 import { fail } from "./security.js";
 import type { User, Post, Story, Conversation, Privacy, Message } from "./models.js";
+import { enqueue, visibleStoryMusic } from "@tellme/database";
+import { normalizeReaction } from "./social-assets.js";
+import { canChatTogether, canSendInConversation } from "./chat-policy.js";
 export const now = () => new Date().toISOString();
 export const day = () =>
   new Intl.DateTimeFormat("en-CA", {
@@ -59,7 +61,7 @@ export async function visibility(
 export function personDTO(
   user: Pick<
     User,
-    "_id" | "username" | "name" | "avatar" | "cover" | "bio" | "location"
+    "_id" | "username" | "name" | "avatar" | "cover" | "bio" | "location" | "birthday" | "occupation" | "interests" | "favoriteLunch" | "favoriteDrink"
   >,
   me: User,
 ) {
@@ -71,6 +73,11 @@ export function personDTO(
     cover: user.cover,
     bio: user.bio,
     location: user.location,
+    birthday: user.birthday || "",
+    occupation: user.occupation || "",
+    interests: user.interests || "",
+    favoriteLunch: user.favoriteLunch || "",
+    favoriteDrink: user.favoriteDrink || "",
   };
 }
 export function postDTO(post: Post, me: User) {
@@ -85,34 +92,53 @@ export function postDTO(post: Post, me: User) {
     topic: post.topic,
     privacy: post.privacy,
     anonymous: post.anonymous,
+    ...(post.anonymous ? { anonymousIdentity: anonymousIdentity(post._id, post.anonymousVersion) } : {}),
     createdAt: post.createdAt,
     likes: Object.keys(post.reactions).length,
     reactorIds: Object.keys(post.reactions)
       .filter((id) => id !== me._id)
       .map((id) => externalId(id, me)),
-    reaction: post.reactions[me._id] || null,
+    reaction: normalizeReaction(post.reactions[me._id]),
+    reactorReactions: Object.fromEntries(Object.entries(post.reactions).map(([id, reaction]) => [externalId(id, me), normalizeReaction(reaction)])),
     comments: post.comments
       .filter((comment) => !me.blocked.includes(comment.userId))
       .map(({ likedBy, ...comment }) => ({
         ...comment,
-        userId: externalId(comment.userId, me),
+        userId: post.anonymous && comment.userId === post.authorId ? "anonymous" : externalId(comment.userId, me),
+        ...(post.anonymous && comment.userId === post.authorId ? { isAuthor: true } : {}),
         liked: likedBy.includes(me._id),
       })),
     saved: post.savedBy.includes(me._id),
     shares: post.sharedBy.length,
   };
 }
-export function storyDTO(story: Story, me: User) {
+export function storyDTO(story: Story, me: User, mutual: string[] = []) {
   return {
     id: story._id,
     userId: externalId(story.userId, me),
     day: story.day,
     privacy: story.privacy,
-    items: story.items.map(({ reactions, ...item }) => ({
-      ...item,
-      reaction: reactions[me._id] || null,
-    })),
+    ...(story.music ? { music: visibleStoryMusic(story.music) } : {}),
+    items: story.items
+      .filter((item) => {
+        if (story.userId === me._id) return true;
+        const audience = item.privacy || story.privacy;
+        return audience === "public" || (audience === "connections" && mutual.includes(story.userId));
+      })
+      .map(({ reactions, ...item }) => ({
+        ...item,
+        reaction: normalizeReaction(reactions[me._id]),
+      })),
   };
+}
+export async function canViewMoment(story: Story, momentId: string, me: User) {
+  const item = story.items.find((entry) => entry.id === momentId);
+  if (!item) return false;
+  if (story.userId === me._id) return true;
+  const audience = item.privacy || story.privacy;
+  if (audience === "public") return true;
+  if (audience === "private" || me._id === "guest") return false;
+  return (await relations(me)).mutual.includes(story.userId);
 }
 export async function requirePost(id: string, me: User) {
   const post = await posts.findOne({
@@ -128,12 +154,21 @@ export async function requireStory(id: string, me: User) {
   if (!story) fail(404, "Chuỗi ảnh không khả dụng.");
   return story;
 }
-export async function requireConversation(id: string, me: User) {
+export async function chatAllowed(participants: string[], creatorId?: string) {
+  const people = await users.find({ _id: { $in: participants } }, { projection: { _id: 1, following: 1, blocked: 1 } }).toArray();
+  return canChatTogether(participants, people, creatorId);
+}
+async function conversationAllowed(chat: Conversation) {
+  const people = await users.find({ _id: { $in: chat.participants } }, { projection: { _id: 1, following: 1, blocked: 1 } }).toArray();
+  return canSendInConversation(chat, people);
+}
+export async function requireConversation(id: string, me: User, sending = false) {
   const chat = await conversations.findOne({ _id: id, participants: me._id });
   if (!chat) fail(404, "Cuộc trò chuyện không khả dụng.");
   const r = await relations(me);
   if (chat.participants.some((id) => r.blocked.includes(id)))
     fail(403, "Không thể nhắn tin cho tài khoản đã chặn.");
+  if (sending && !await conversationAllowed(chat)) fail(403, chat.kind === "group" ? "Không thể gửi tin trong nhóm có tài khoản đã chặn hoặc không còn khả dụng." : "Hai người cần follow nhau để nhắn tin riêng.");
   return chat;
 }
 export async function ownedImage(url: string, me: User) {
@@ -159,17 +194,17 @@ export async function notify(
       : recipient.settings.notifyLikes)
   )
     return;
-  await notices.insertOne({
-    _id: randomUUID(),
+  await enqueue("notification.deliver", {
     recipientId,
     userId,
     text,
     read: false,
     at: now(),
     ...(postId ? { postId } : {}),
+    kind,
   });
 }
-export async function conversationDTO(chat: Conversation, me: User) {
+export async function conversationDTO(chat: Conversation, me: User, allowed?: boolean) {
   const items = await messages
     .find({ conversationId: chat._id })
     .sort({ at: -1, _id: -1 })
@@ -187,7 +222,11 @@ export async function conversationDTO(chat: Conversation, me: User) {
       me,
     ),
     kind: chat.kind,
+    ownerId: chat.kind === "group" ? externalId(chat.ownerId || chat.participants[0]!, me) : undefined,
+    muted: !!chat.mutedBy?.includes(me._id),
+    canMessage: allowed ?? await conversationAllowed(chat),
     title: chat.title,
+    avatar: chat.avatar || "",
     participantIds: chat.participants.map((id) => externalId(id, me)),
     unread,
     messages: await Promise.all(items.reverse().map((m) => messageDTO(m, me))),
@@ -202,7 +241,7 @@ export async function messageDTO(message: Message, me: User) {
     const moment = story?.items.find((item) => item.id === message.storyReply?.momentId);
     reply = {
       ...message.storyReply,
-      ...(moment ? { image: moment.image, caption: moment.caption, at: moment.at } : {}),
+      ...(moment && story && await canViewMoment(story, moment.id, me) ? { image: moment.image, caption: moment.caption, at: moment.at } : {}),
     };
   }
   return {

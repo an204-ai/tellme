@@ -1,10 +1,15 @@
 "use client";
+import { TooltipIconButton } from "@/components/ui/TooltipIconButton";
+import { ConversationTools } from "@/components/app/ConversationTools";
+import { usePresenceStore } from "@/stores/presence.store";
+import { GroupComposer } from "@/components/app/GroupComposer";
+import { DEFAULT_GROUP_AVATAR } from "@/lib/social-assets";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import {
   ArrowLeft,
-  ArrowUpRight,
+  PanelRight,
   MessageCircle,
   PencilLine,
   Send,
@@ -16,6 +21,7 @@ import { StoryReplyPreview } from "@/components/app/StoryReply";
 import type { Conversation, AppData } from "@/lib/types";
 import { newId, timeOf } from "@/lib/api-repository";
 import { replySchema } from "@/lib/validation";
+import { canMessageConversation, canMessagePerson } from "@/lib/chat-policy";
 import {
   Avatar,
   Button,
@@ -36,7 +42,7 @@ function conversationPerson(
       id: chat.id,
       name: chat.title || "Nhóm trò chuyện",
       username: "",
-      avatar: "",
+      avatar: chat.avatar || DEFAULT_GROUP_AVATAR,
       bio: "",
       cover: "",
       location: "",
@@ -52,16 +58,7 @@ function ChatAvatar({
   chat: Conversation;
   large?: boolean;
 }) {
-  return chat.kind === "group" ? (
-    <span className={`group-avatar ${large ? "large" : ""}`}>
-      <Users size={large ? 32 : 23} />
-    </span>
-  ) : (
-    <Avatar
-      person={conversationPerson(data, chat)}
-      size={large ? "lg" : "md"}
-    />
-  );
+  return <Avatar person={conversationPerson(data, chat)} size={large ? "lg" : "md"} />;
 }
 export function MessagesScreen({
   conversationId,
@@ -74,6 +71,11 @@ export function MessagesScreen({
   const [text, setText] = useState("");
   const [error, setError] = useState("");
   const [creating, setCreating] = useState(false);
+  const [creatingGroup, setCreatingGroup] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const detailsId = useId();
+  const detailsButton = useRef<HTMLButtonElement>(null);
+  const closeDetails = () => { setDetailsOpen(false); requestAnimationFrame(() => detailsButton.current?.focus({ preventScroll: true })); };
   const bottom = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const conversations =
@@ -84,6 +86,9 @@ export function MessagesScreen({
     ? conversations.find((entry) => entry.id === conversationId)
     : conversations[0];
   const person = conversationPerson(data, conversation);
+  const online = usePresenceStore((state) => !!person?.id && !!state.online[person.id]);
+  useEffect(() => { setDetailsOpen(false); }, [conversation?.id]);
+  const canSend = !!data && !!conversation && canMessageConversation(conversation, data);
   useEffect(() => {
     const list = bottom.current?.parentElement;
     if (list) list.scrollTop = list.scrollHeight;
@@ -101,10 +106,7 @@ export function MessagesScreen({
   if (!data) return <Loader />;
   return (
     <>
-      <header className="page-heading social-page-title">
-        <h1>Giữ câu chuyện tiếp nối.</h1>
-        <p>Một lời hỏi thăm, một cuộc trò chuyện gần hơn.</p>
-      </header>
+      <h1 className="sr-only">Tin nhắn</h1>
       <section
         className={`messaging ${conversationId ? "has-selection" : "without-selection"}`}
       >
@@ -113,12 +115,10 @@ export function MessagesScreen({
             <h2>
               Tin nhắn <span>{conversations.length}</span>
             </h2>
-            <IconButton
-              label="Cuộc trò chuyện mới"
-              onClick={() => setCreating(true)}
-            >
-              <PencilLine size={20} />
-            </IconButton>
+            <div className="message-create-actions">
+              <TooltipIconButton label="Tạo nhóm chat" onClick={() => setCreatingGroup(true)}><Users size={20} /></TooltipIconButton>
+              <TooltipIconButton label="Cuộc trò chuyện mới" onClick={() => setCreating(true)}><PencilLine size={20} /></TooltipIconButton>
+            </div>
           </header>
           <SearchInput
             placeholder="Tìm cuộc trò chuyện…"
@@ -164,6 +164,9 @@ export function MessagesScreen({
               })}
           </div>
         </aside>
+        <div className={`chat-workspace ${detailsOpen && conversation ? "details-open" : ""}`} onKeyDown={(event) => {
+          if (event.key === "Escape" && detailsOpen && !(event.target as HTMLElement).closest("dialog")) { event.preventDefault(); closeDetails(); }
+        }}>
         <div className="chat-content">
           {conversation && person ? (
             <>
@@ -190,24 +193,16 @@ export function MessagesScreen({
                   <small>
                     {conversation.kind === "group"
                       ? `${conversation.participantIds?.length || 0} thành viên · Nhóm chat`
-                      : "Cuộc trò chuyện"}
+                      : online ? "Đang hoạt động" : "Cuộc trò chuyện"}
                   </small>
                 </div>
-                {conversation.kind !== "group" && (
-                  <Link
-                    href={`/community/profile/${person.username}`}
-                    className="icon-button"
-                    aria-label={`Xem hồ sơ ${person.name}`}
-                  >
-                    <ArrowUpRight size={20} />
-                  </Link>
-                )}
+                <button type="button" ref={detailsButton} className={`icon-button chat-details-toggle ${detailsOpen ? "active" : ""}`} aria-label={detailsOpen ? "Đóng thông tin trò chuyện" : "Mở thông tin và chức năng trò chuyện"} aria-controls={detailsId} aria-expanded={detailsOpen} onClick={() => detailsOpen ? closeDetails() : setDetailsOpen(true)}><PanelRight size={21} /></button>
               </header>
               <div className="chat-messages">
                 <div className="chat-intro">
                   <ChatAvatar data={data} chat={conversation} large />
                   <strong>{person.name}</strong>
-                  <span>Những câu chuyện bắt đầu từ một lời chào.</span>
+                  <span>Bắt chuyện bằng một lời chào nhé.</span>
                 </div>
                 <span className="chat-day-label">Cuộc trò chuyện của bạn</span>
                 {conversation.messages.map((message) => (
@@ -237,7 +232,7 @@ export function MessagesScreen({
                 ))}
                 <div ref={bottom} />
               </div>
-              <form
+              {canSend ? <form
                 className="chat-composer"
                 onSubmit={async (event) => {
                   event.preventDefault();
@@ -310,7 +305,7 @@ export function MessagesScreen({
                     {error}
                   </p>
                 )}
-              </form>
+              </form> : <div className="chat-unavailable" role="status">{conversation.kind === "group" ? "Nhóm hiện không thể gửi tin. Kiểm tra các tài khoản đã chặn hoặc không còn khả dụng." : "Hai người cần follow nhau để tiếp tục nhắn tin. Lịch sử trò chuyện vẫn được giữ lại."}</div>}
             </>
           ) : (
             <Empty
@@ -323,17 +318,21 @@ export function MessagesScreen({
             />
           )}
         </div>
+        {conversation && <ConversationTools key={conversation.id} chat={conversation} data={data} open={detailsOpen} panelId={detailsId} onClose={closeDetails} />}
+        </div>
       </section>
+      {creatingGroup && <Modal title="Tạo nhóm chat" className="create-group-dialog" onClose={() => setCreatingGroup(false)}><div className="dialog-body"><GroupComposer data={data} onCreated={(id) => { setCreatingGroup(false); router.push(`/community/messages/${id}`); }} /></div></Modal>}
       {creating && (
         <Modal
           title="Bắt đầu một cuộc trò chuyện"
           onClose={() => setCreating(false)}
         >
           <div className="dialog-body new-conversation-list">
+            <button onClick={() => { setCreating(false); setCreatingGroup(true); }}><Users size={24} /><span><strong>Tạo nhóm chat</strong><small>Đặt tên và chọn avatar cho hội của bạn</small></span></button>
             {data.people
               .filter(
                 (entry) =>
-                  entry.id !== "me" && !data.blocked.includes(entry.id),
+                  canMessagePerson(entry.id, data),
               )
               .map((user) => (
                 <button
@@ -341,7 +340,7 @@ export function MessagesScreen({
                   onClick={async () => {
                     try {
                       let id = conversations.find(
-                        (entry) => entry.userId === user.id,
+                        (entry) => entry.kind !== "group" && entry.userId === user.id,
                       )?.id;
                       if (!id) {
                         id = newId();
@@ -370,6 +369,7 @@ export function MessagesScreen({
                   <MessageCircle size={19} />
                 </button>
               ))}
+            {!data.people.some((entry) => canMessagePerson(entry.id, data)) && <p>Chưa có bạn bè để nhắn tin. Khi hai người cùng follow nhau, họ sẽ xuất hiện ở đây.</p>}
           </div>
         </Modal>
       )}

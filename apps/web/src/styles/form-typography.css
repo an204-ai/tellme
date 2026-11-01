@@ -1,0 +1,23 @@
+/* Shared form roles: labels never read smaller than their regular input text. */
+:root { --form-label-size: 15px; --form-text-size: 15px; }
+.field-label,
+.account-input-label,
+.account-password-form > label,
+.moment-edit-dialog .moment-edit-panel > label,
+.uiv-radio > legend {
+  font-size: var(--form-label-size);
+  font-weight: 500;
+  line-height: 1.6;
+  color: var(--ink);
+}
+.uiv-input .cir-search__field,
+.standard-textarea,
+.select-control,
+.select-options > button,
+.account-block-search input,
+.moment-edit-dialog .moment-edit-panel > textarea,
+.uiv-form .form .input:not(.recovery-code-input) { font-size: var(--form-text-size); }
+input::placeholder, textarea::placeholder { font-size: inherit; font-weight: 400; }
+@media (max-width: 640px) {
+  :root { --form-label-size: 16px; --form-text-size: 16px; }
+}

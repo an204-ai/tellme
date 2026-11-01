@@ -1,6 +1,7 @@
 import { MongoClient } from "mongodb";
 import { config } from "./config.js";
 import type {
+  AuthToken,
   User,
   Session,
   Post,
@@ -10,12 +11,15 @@ import type {
   Notice,
   Media,
   Report,
+  BackgroundJob,
+  PushSubscriptionRecord,
 } from "./models.js";
 export const mongo = new MongoClient(config.MONGODB_URI, {
   serverSelectionTimeoutMS: 10000,
   maxPoolSize: 20,
 });
 const db = mongo.db(config.MONGODB_DB);
+export const authTokens = db.collection<AuthToken>("auth_tokens");
 export const users = db.collection<User>("users");
 export const sessions = db.collection<Session>("sessions");
 export const posts = db.collection<Post>("posts");
@@ -25,9 +29,13 @@ export const messages = db.collection<Message>("messages");
 export const notices = db.collection<Notice>("notifications");
 export const media = db.collection<Media>("media");
 export const reports = db.collection<Report>("reports");
+export const outbox = db.collection<BackgroundJob>("background_jobs");
+export const pushSubscriptions = db.collection<PushSubscriptionRecord>("push_subscriptions");
 export async function connectDatabase() {
   await mongo.connect();
   await Promise.all([
+    authTokens.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }),
+    authTokens.createIndex({ tokenHash: 1 }, { unique: true }),
     users.createIndex({ email: 1 }, { unique: true }),
     users.createIndex({ username: 1 }, { unique: true }),
     sessions.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }),
@@ -49,5 +57,9 @@ export async function connectDatabase() {
     notices.createIndex({ recipientId: 1, at: -1 }),
     media.createIndex({ ownerId: 1, url: 1 }),
     reports.createIndex({ userId: 1, postId: 1 }, { unique: true }),
+    outbox.createIndex({ status: 1, availableAt: 1 }),
+    outbox.createIndex({ finishedAt: 1 }, { expireAfterSeconds: 60 * 60 * 24 * 30 }),
+    pushSubscriptions.createIndex({ userId: 1 }),
+    pushSubscriptions.createIndex({ "subscription.endpoint": 1 }, { unique: true }),
   ]);
 }

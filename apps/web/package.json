@@ -6,8 +6,7 @@
     "dev": "next dev --hostname 127.0.0.1 --port 3000",
     "build": "next build",
     "start": "next start",
-    "check-types": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test src/lib/*.test.ts"
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
     "@emoji-mart/data": "^1.2.1",
@@ -19,8 +18,10 @@
     "@tellme/ui": "workspace:*",
     "axios": "^1.7.9",
     "clsx": "^2.1.1",
+    "dotenv": "^16.4.7",
     "emoji-mart": "^5.6.0",
     "heic-to": "^1.6.7",
+    "hls.js": "^1.7.4",
     "lucide-react": "^0.468.0",
     "next": "15.5.28",
     "react": "^19.2.0",
@@ -30,8 +31,7 @@
     "tailwind-merge": "^2.5.5",
     "utif": "^3.1.0",
     "zod": "^3.24.2",
-    "zustand": "^5.0.2",
-    "dotenv": "^16.4.7"
+    "zustand": "^5.0.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.0",

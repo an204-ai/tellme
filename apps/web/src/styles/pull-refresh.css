@@ -1,0 +1,57 @@
+/* Chriskoziol / bright-ladybug-86, MIT. Original: docs/references/uiverse/pull-refresh.html. */
+.app-frame:has(.pull-refresh) { position: fixed; inset: 0; display: flex; flex-direction: column; overflow: hidden; }
+.app-frame:has(.pull-refresh) > .app-shell { flex: 1 1 0; width: 100%; min-height: 0; margin: 0; padding-bottom: 0; grid-template-rows: minmax(0, 1fr); }
+.app-frame:has(.pull-refresh) > .app-shell > .main-content { height: 100%; min-height: 0; }
+.app-frame:has(.pull-refresh) > .app-shell > .main-content::before,
+.app-frame:has(.pull-refresh) > .app-shell > .main-content::after { bottom: 0; }
+.pull-refresh { position: relative; height: 100%; min-width: 0; min-height: 0; overflow-anchor: none; }
+.pull-refresh-viewport { height: 100%; overflow-y: auto; overflow-x: hidden; overscroll-behavior-y: none; scrollbar-width: none; overflow-anchor: none; scroll-behavior: auto; }
+.pull-refresh-viewport::-webkit-scrollbar { display: none; }
+.pull-refresh-viewport:focus-visible { outline: 1px solid var(--primary); outline-offset: -1px; }
+.pull-refresh-content { display: flow-root; min-height: 100%; padding-bottom: 60px; transform: translate3d(0, 0, 0); transition: transform 280ms cubic-bezier(.22, 1, .36, 1); }
+/* Idle content must stay flush even if an interrupted frame left an inline transform. */
+.pull-refresh:not([data-state]) .pull-refresh-content,
+.pull-refresh[data-state="idle"] .pull-refresh-content { transform: translate3d(0, 0, 0) !important; transition: none; }
+.pull-refresh:is([data-state="pulling"], [data-state="ready"]) .pull-refresh-content { transition: none; }
+.pull-refresh[data-state]:not([data-state="idle"]) .pull-refresh-content { will-change: transform; }
+.pull-refresh-indicator { position: absolute; z-index: 2; top: 0; left: 0; right: 0; height: 76px; display: grid; place-items: center; opacity: 0; visibility: hidden; pointer-events: none; transform: translate3d(0, -10px, 0) scale(.85); transform-origin: center top; transition: opacity 180ms ease-out, transform 280ms cubic-bezier(.22, 1, .36, 1); }
+.pull-refresh[data-state]:not([data-state="idle"]) .pull-refresh-indicator { visibility: visible; }
+.pull-refresh:is([data-state="pulling"], [data-state="ready"]) .pull-refresh-indicator { transition: none; }
+.pull-refresh-spinner-container { display: flex; flex-direction: column; align-items: center; gap: 7px; color: var(--primary); }
+.pull-refresh-rotor { width: 36px; height: 36px; }
+.pull-refresh-spinner { width: 36px; height: 36px; display: grid; border: 3px solid transparent; border-radius: 50%; border-right-color: var(--primary); animation: pull-tri-spinner 1s infinite linear paused; }
+.pull-refresh-spinner::before, .pull-refresh-spinner::after { content: ""; grid-area: 1/1; margin: 1px; border: inherit; border-radius: 50%; animation: pull-tri-spinner 2s infinite linear paused; }
+.pull-refresh-spinner::after { margin: 5px; animation-duration: 3s; }
+.pull-refresh[data-spinning="true"] .pull-refresh-spinner, .pull-refresh[data-spinning="true"] .pull-refresh-spinner::before, .pull-refresh[data-spinning="true"] .pull-refresh-spinner::after { animation-play-state: running; will-change: transform; }
+.pull-refresh-caption { position: relative; height: 20px; width: min(240px, 75vw); }
+.pull-refresh-hint { position: absolute; inset: 0; font-size: 12px; line-height: 20px; color: #000; text-align: center; transition: opacity 100ms; }
+.pull-refresh-loader { position: absolute; inset: 0; display: flex; justify-content: center; gap: 5px; height: 20px; opacity: 0; color: #000; font-size: 12px; font-weight: 500; line-height: 20px; transition: opacity 100ms; }
+.pull-refresh[data-loading="true"] .pull-refresh-loader { opacity: 1; }
+.pull-refresh[data-loading="true"] .pull-refresh-hint { opacity: 0; }
+.pull-refresh-words { overflow: hidden; }
+.pull-refresh-word { display: block; height: 100%; color: var(--primary); animation: pull-cycle-words 5s infinite paused; }
+.pull-refresh[data-loading="true"] .pull-refresh-word { animation-play-state: running; }
+.pull-refresh-grip { position: absolute; z-index: 3; top: -26px; left: 50%; width: 56px; height: 24px; transform: translateX(-50%); display: grid; place-items: center; border: 0; border-radius: 6px; padding: 0; background: transparent; color: var(--primary); cursor: grab; touch-action: none; }
+.pull-refresh-grip > span { width: 28px; height: 3px; border-radius: 3px; background: currentColor; opacity: .35; }
+.pull-refresh-grip:hover > span, .pull-refresh-grip:focus-visible > span { opacity: 1; }
+.pull-refresh-grip:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+.pull-refresh-grip:disabled { cursor: wait; }
+.pull-refresh[data-state]:not([data-state="idle"]) .pull-refresh-grip { opacity: 0; pointer-events: none; }
+.pull-refresh[data-pull-dragging="true"] { cursor: grabbing; }
+.pull-refresh-error { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; padding-block: 16px; font-size: 13px; line-height: 1.6; }
+.pull-refresh-error button { border: 0; background: transparent; color: var(--primary); text-decoration: underline; cursor: pointer; }
+@keyframes pull-tri-spinner { 100% { transform: rotate(1turn); } }
+@keyframes pull-cycle-words { 10% { transform: translateY(-105%); } 25% { transform: translateY(-100%); } 35% { transform: translateY(-205%); } 50% { transform: translateY(-200%); } 60% { transform: translateY(-305%); } 75% { transform: translateY(-300%); } 85% { transform: translateY(-405%); } 100% { transform: translateY(-400%); } }
+@media (max-width: 640px) {
+  .app-frame:has(.pull-refresh) > .app-shell { padding-bottom: 0; }
+  .pull-refresh-content { padding-bottom: 100px; }
+}
+@media (hover: none) {
+  .pull-refresh-grip { top: 0; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .pull-refresh-grip:focus-visible { width: 56px; height: 24px; clip-path: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pull-refresh-content, .pull-refresh-indicator { transition-duration: 100ms; }
+  .pull-refresh-spinner { animation-duration: 2.5s; }
+  .pull-refresh-spinner::before, .pull-refresh-spinner::after, .pull-refresh-word { animation: none; }
+}

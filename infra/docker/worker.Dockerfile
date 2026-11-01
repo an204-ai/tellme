@@ -1,5 +1,8 @@
-FROM node:22-alpine
+FROM node:22-bookworm-slim
 WORKDIR /app
+RUN corepack enable
+ARG WORKER=@tellme/worker-media
 COPY . .
-RUN npm install -g pnpm && pnpm install
-CMD ["pnpm", "--filter=@tellme/worker-media", "dev"]
+RUN pnpm install --frozen-lockfile --filter ${WORKER}... && pnpm --filter ${WORKER}... build
+ENV NODE_ENV=production WORKER=${WORKER}
+CMD ["sh", "-c", "pnpm --filter \"$WORKER\" start"]

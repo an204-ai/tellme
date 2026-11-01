@@ -1,0 +1,63 @@
+.support-welcome-dialog.app-dialog { width: min(640px, calc(100vw - 32px)); max-width: calc(100vw - 32px); max-height: calc(100dvh - 32px); box-sizing: border-box; overflow: clip; }
+.support-welcome-dialog::backdrop { background: #07162db0; backdrop-filter: blur(5px); }
+.support-welcome-dialog .dialog-content { max-height: calc(100dvh - 32px); border-radius: 22px; overflow-y: auto; scrollbar-width: none; }
+.support-welcome-dialog .dialog-content::-webkit-scrollbar { display: none; }
+.support-welcome-dialog .dialog-header { padding: 17px 24px; }
+.support-welcome-layout { display: grid; grid-template-columns: 0.85fr 1.15fr; }
+.support-welcome-art { position: relative; min-height: 310px; background: #07327f; color: white; overflow: hidden; }
+.support-welcome-wordmark { position: absolute; top: 28px; left: 28px; width: 125px; height: 40px; object-fit: contain; }
+.support-welcome-love { position: absolute; top: 86px; left: 38px; width: 174px; height: 174px; object-fit: contain; transform: rotate(-9deg); filter: drop-shadow(0 14px 20px #001a4b40); }
+.support-welcome-coffee { position: absolute; right: 20px; top: 207px; display: grid; place-items: center; background: white; color: #07327f; width: 57px; height: 57px; border-radius: 16px; transform: rotate(9deg); box-shadow: 0 8px 18px #001a4b40; }
+.support-welcome-art-copy { position: absolute; bottom: 27px; left: 28px; font-size: 23px; line-height: 1.45; font-weight: 500; }
+.support-welcome-copy { padding: 30px 28px 24px; display: flex; flex-direction: column; align-items: stretch; justify-content: center; }
+.support-welcome-copy h3 { margin: 0 0 15px; font-size: 23px; line-height: 1.5; letter-spacing: -.025em; font-weight: 600; color: #000; }
+.support-welcome-copy p { font-size: 14px; line-height: 1.85; margin: 0 0 22px; color: #000; }
+.support-welcome-copy .btn { display: inline-flex; justify-content: center; gap: 9px; min-height: 46px; }
+.support-welcome-later { border: 0; background: none; color: #07327f; cursor: pointer; min-height: 44px; margin-top: 5px; font: inherit; font-size: 14px; }
+.support-welcome-later:hover { text-decoration: underline; text-underline-offset: 4px; }
+.support-welcome-note { font-size: 11px; line-height: 1.6; text-align: center; margin-top: 5px; }
+@media (max-width: 600px) {
+ .support-welcome-dialog.app-dialog { width: calc(100vw - 20px); max-width: calc(100vw - 20px); max-height: calc(100dvh - 20px); padding: 8px; }
+ .support-welcome-dialog .dialog-content { max-height: calc(100dvh - 20px); border-radius: 20px; }
+ .support-welcome-dialog .dialog-header { padding: 13px 18px; }
+ .support-welcome-dialog .dialog-header h2 { font-size: 16px; }
+ .support-welcome-layout { grid-template-columns: 1fr; }
+ .support-welcome-art { min-height: 136px; }
+ .support-welcome-wordmark { left: 22px; top: 20px; width: 110px; height: 35px; }
+ .support-welcome-love { left: auto; right: 18px; top: 4px; width: 140px; height: 140px; }
+ .support-welcome-coffee { right: 113px; top: 100px; width: 43px; height: 43px; border-radius: 12px; }
+ .support-welcome-art-copy { bottom: 19px; left: 23px; font-size: 19px; }
+ .support-welcome-copy { padding: 19px 20px 15px; }
+ .support-welcome-copy h3 { font-size: 21px; margin-bottom: 9px; }
+ .support-welcome-copy p { font-size: 14px; line-height: 1.75; margin-bottom: 13px; }
+ .support-welcome-note { font-size: 12px; }
+}
+.support-entry { display: inline-flex; align-items: center; gap: 6px; padding: 0; border: 0; background: none; color: var(--primary); font: inherit; cursor: pointer; }
+.sidebar-tagline .support-entry { margin-top: 14px; min-height: 36px; font-size: 13px; }
+.donation-dialog.app-dialog { width: 520px; max-height: 100dvh; overflow: clip; scrollbar-width: none; }
+.donation-dialog .dialog-content { display: flex; flex-direction: column; max-height: calc(100dvh - 40px); overflow: clip; }
+.donation-dialog .dialog-header { flex-shrink: 0; }
+.donation-scroll { min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; }
+.donation-scroll::-webkit-scrollbar { display: none; }
+.donation-intro { margin: 0; font-size: 14px; line-height: 1.8; }
+/* Keep the portrait bank card and the complete QR visible without the large blank area below it. */
+.donation-qr { width: min(100%, 300px); aspect-ratio: 0.62; max-height: min(54dvh, 500px); align-self: center; flex-shrink: 0; overflow: hidden; border-radius: 12px; background: #e8f4fc; }
+.donation-qr img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center 51%; }
+.donation-recipient { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 10px 12px; align-items: center; font-size: 13px; }
+.donation-recipient > span { color: #000; }
+.donation-recipient strong { font-size: 14px; font-weight: 500; overflow-wrap: anywhere; }
+.donation-recipient > div { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.donation-copy { display: inline-flex; align-items: center; gap: 5px; border: 0; background: none; padding: 4px 0; min-height: 32px; color: var(--primary); font: inherit; font-size: 12px; cursor: pointer; }
+.donation-hint { margin: 0; font-size: 12px; line-height: 1.8; }
+.donation-download { display: inline-flex; align-items: center; justify-content: center; gap: 8px; align-self: center; min-height: 44px; color: var(--primary); font-size: 14px; font-weight: 500; text-decoration: none; }
+.donation-footer { flex-shrink: 0; padding: 16px 24px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; background: white; }
+.donation-footer > span { display: flex; align-items: center; gap: 7px; max-width: 26ch; font-size: 12px; line-height: 1.6; }
+.donation-footer > span svg { flex-shrink: 0; color: var(--primary); }
+@media (max-width: 640px) {
+  .donation-dialog.app-dialog { padding: 10px; }
+  .donation-dialog .dialog-content { max-height: calc(100dvh - 20px); }
+  .donation-scroll { padding: 16px; }
+  .donation-intro { font-size: 15px; }
+  .donation-recipient { grid-template-columns: 92px minmax(0, 1fr); font-size: 13px; }
+  .donation-footer { padding: 12px 16px; }
+}

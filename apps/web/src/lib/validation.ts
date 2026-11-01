@@ -42,10 +42,32 @@ export const commentSchema = z
     path: ["text"],
   });
 export const profileSchema = z.object({
+  username: z
+    .string()
+    .trim()
+    .transform((value) => value.replace(/^@/, "").toLowerCase())
+    .pipe(
+      z
+        .string()
+        .min(3, "Tellme ID cần ít nhất 3 ký tự.")
+        .max(24, "Tellme ID tối đa 24 ký tự.")
+        .regex(
+          /^[a-z0-9](?:[a-z0-9._]{1,22}[a-z0-9])?$/,
+          "Dùng chữ thường, số, dấu chấm hoặc gạch dưới; không đặt dấu ở đầu hoặc cuối.",
+        ),
+    ),
   name: z.string().trim().min(2, "Tên cần ít nhất 2 ký tự.").max(50),
   bio: z.string().trim().max(200, "Giới thiệu tối đa 200 ký tự."),
   location: z.string().trim().max(60),
+  birthday: z.string().refine((value) => !value || (/^\d{4}-\d{2}-\d{2}$/.test(value) && value >= "1900-01-01" && value <= new Date().toISOString().slice(0, 10) && !Number.isNaN(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value), "Ngày sinh không hợp lệ."),
+  occupation: z.string().trim().max(60, "Công việc tối đa 60 ký tự."),
+  interests: z.string().trim().max(80, "Sở thích tối đa 80 ký tự."),
+  favoriteLunch: z.string().trim().max(60, "Món ăn trưa tối đa 60 ký tự."),
+  favoriteDrink: z.string().trim().max(60, "Đồ uống tối đa 60 ký tự."),
 });
+const personalInfoFields = { location: true, birthday: true, occupation: true, interests: true, favoriteLunch: true, favoriteDrink: true } as const;
+export const personalInfoSchema = profileSchema.pick(personalInfoFields);
+export const profileIdentitySchema = profileSchema.omit(personalInfoFields);
 export const loginSchema = z.object({
   email: z.string().email("Email chưa đúng định dạng."),
   password: z.string().min(8, "Mật khẩu cần ít nhất 8 ký tự.").max(128),
@@ -54,9 +76,10 @@ export const registerSchema = loginSchema.extend({
   name: z.string().trim().min(2, "Nhập tên bạn muốn hiển thị.").max(50),
 });
 export const momentSchema = z.object({
-  image: z.string().min(1, "Chọn một bức ảnh cho khoảnh khắc này."),
+  image: z.string().min(1, "Chụp một bức ảnh cho khoảnh khắc này."),
   caption: z.string().trim().max(300, "Chú thích tối đa 300 ký tự."),
-  privacy: z.enum(["public", "connections", "private"]),
+  storyPrivacy: z.enum(["public", "connections", "private"]),
+  privacy: z.enum(["public", "connections", "private"]).optional(),
 });
 export type PostInput = z.infer<typeof postSchema>;
 

@@ -1,42 +1,80 @@
-# Dependencies
+# Dependencies and package-manager caches
 node_modules/
 .pnpm-store/
+.pnp.*
 
-# Build outputs
-.next/
-.next-production/
-.next-qa/
-*.tsbuildinfo
-**/.impeccable/review/
+# Generated builds and caches
+.next*/
 dist/
 build/
 out/
 .turbo/
+.cache/
+.vite/
+.eslintcache
+.stylelintcache
+coverage/
+.nyc_output/
+*.tsbuildinfo
+*.map
 
-# Expo / React Native
-.expo/
-*.jks
+# Private configuration and credentials
+**/.env*
+*.env
+*.env.*
+!/.env.example
+*.pem
+*.key
 *.p8
 *.p12
-*.key
+*.pfx
+*.jks
 *.mobileprovision
-*.orig.*
 
-# Environment files
-.env
-.env*.local
-!.env.example
+# Runtime files and local data
+*.log
+*.pid
+*.pid.lock
+dump.rdb
+appendonlydir/
+redis-data/
+.local-data/
+backups/
+dumps/
+*.rdb
+*.sqlite
+*.sqlite3
+*.sqlite-journal
 
-# Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
+# Test / design review output
+playwright-report/
+test-results/
+.impeccable/
+artifacts/
+blob-report/
+.playwright/
 
-# OS files
+# TypeScript output emitted by older admin scripts (source remains .ts/.tsx)
+/apps/admin/src/**/*.js
+/apps/admin/src/**/*.d.ts
+
+# Local editor and OS files
+.idea/
+.vscode/
+.codex/
 .DS_Store
 Thumbs.db
+*.swp
+*.swo
+*~
+*.bak
+*.orig
+*.rej
+*.tmp
+*.temp
+*.crdownload
 
-#library
-.impeccable
-/docs
+# Mobile generated state
+.expo/
+android/.gradle/
+ios/Pods/

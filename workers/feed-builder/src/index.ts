@@ -1,1 +1,2 @@
-console.log("Feed builder worker started.");
+import { runWorker } from "@tellme/database";
+await runWorker("feed");

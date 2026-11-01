@@ -1,4 +1,2 @@
 import { redirect } from "next/navigation";
-export default function Page() {
-  redirect("/community/follow");
-}
+export default function Page() { redirect("/community/friends"); }

@@ -1,1 +1,2 @@
-console.log("Media processor worker started.");
+import { runWorker } from "@tellme/database";
+await runWorker("media");

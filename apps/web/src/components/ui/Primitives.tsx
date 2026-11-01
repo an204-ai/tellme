@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { forwardRef, useId } from "react";
 import type {
   ButtonHTMLAttributes,
@@ -8,6 +9,7 @@ import type {
 import { Check, Globe2, LockKeyhole, Search, Users, X } from "lucide-react";
 import type { Person, Privacy } from "@/lib/types";
 import { LoaderArt } from "./SourceArt";
+import { usePresenceStore } from "@/stores/presence.store";
 
 export function Button({
   children,
@@ -28,15 +30,16 @@ export function Button({
 export function IconButton({
   children,
   label,
+  tooltip = true,
   className = "",
   ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & { label: string }) {
+}: ButtonHTMLAttributes<HTMLButtonElement> & { label: string; tooltip?: boolean }) {
   return (
     <button
-      className={`icon-button uiv-tooltip ${className}`}
+      className={`icon-button ${tooltip ? "uiv-tooltip" : ""} ${className}`}
       type="button"
       aria-label={label}
-      data-tooltip={label}
+      data-tooltip={tooltip ? label : undefined}
       {...props}
     >
       {children}
@@ -48,13 +51,14 @@ export function Avatar({
   size = "md",
   className = "",
 }: {
-  person?: Person;
+  person?: Pick<Person, "name" | "avatar"> & Partial<Pick<Person, "id">>;
   size?: "xs" | "sm" | "md" | "lg" | "xl";
   className?: string;
 }) {
+  const online = usePresenceStore((state) => !!person?.id && !!state.online[person.id]);
   return (
     <span className={`avatar avatar-${size} ${className}`}>
-      <img
+      {person?.avatar.startsWith("/images/group-avatars/") ? <Image src={person.avatar} alt={person.name} width={120} height={120} sizes="120px" /> : <img
         src={person?.avatar}
         alt={person?.name || "Thành viên Tellme"}
         loading="lazy"
@@ -65,18 +69,22 @@ export function Avatar({
           event.currentTarget.style.opacity = "0";
         }}
       />
+      }
       <span className="avatar-fallback" aria-hidden="true">
         {person?.name.charAt(0) || "T"}
       </span>
+      {online && <span className="avatar-online" role="img" aria-label="Đang hoạt động" title="Đang hoạt động" />}
     </span>
   );
 }
 export function Brand({ compact = false }: { compact?: boolean }) {
   return (
-    <span
+    <img
       className={`brand-wordmark ${compact ? "compact" : ""}`}
-      role="img"
-      aria-label="Tellme — Your day. Your stories."
+      src="/brand/logos/tellme-wordmark-on-light.png"
+      width={367}
+      height={115}
+      alt="Tellme — Your day. Your stories."
     />
   );
 }
@@ -88,10 +96,34 @@ export function Loader({
   small?: boolean;
 }) {
   return (
-    <div className={`loading-state ${small ? "small" : ""}`} role="status">
+    <div className={`loading-state ${small ? "small" : ""}`} role="status" data-route-loading={small ? undefined : "true"}>
       <span className="uiv-loading">
         <LoaderArt />
       </span>
+      <span>{label}</span>
+    </div>
+  );
+}
+export function ImageUploadSpinner() {
+  return (
+    <span className="uiv-image-loader" aria-hidden="true">
+      <i />
+      <i />
+      <i />
+      <i />
+    </span>
+  );
+}
+export function ImageUploadStatus({
+  label = "Đang tải ảnh lên Tellme…",
+  compact = false,
+}: {
+  label?: string;
+  compact?: boolean;
+}) {
+  return (
+    <div className={`image-upload-status ${compact ? "compact" : ""}`} role="status">
+      <ImageUploadSpinner />
       <span>{label}</span>
     </div>
   );

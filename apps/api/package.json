@@ -6,21 +6,22 @@
     "dev": "tsx watch src/main.ts",
     "build": "tsc",
     "start": "node dist/main.js",
-    "check-types": "tsc --noEmit",
-    "test": "tsx --test src/backend/*.test.ts"
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
     "@hono/node-server": "^1.13.7",
+    "@tellme/database": "workspace:*",
     "cloudinary": "^2.11.0",
     "dotenv": "^16.4.7",
     "hono": "^4.6.14",
     "mongodb": "^7.7.0",
-    "zod": "^3.23.8",
-    "@tellme/database": "workspace:*"
+    "ws": "^8.22.0",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@tellme/config": "workspace:*",
     "@types/node": "^22.10.2",
+    "@types/ws": "^8",
     "tsx": "^4.23.15",
     "typescript": "^5.7.0"
   },

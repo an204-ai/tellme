@@ -1,4 +1,10 @@
 "use client";
+import { PullToRefresh } from "@/components/ui/PullToRefresh";
+import { useWeather } from "@/providers/WeatherProvider";
+import { weatherVoice } from "@/lib/weather";
+import { useTimelineRefresh } from "@/hooks/use-timeline-refresh";
+import { GuestInvitation } from "@/components/app/GuestInvitation";
+import { Select } from "@/components/ui/Select";
 import Link from "next/link";
 import { useState } from "react";
 import {
@@ -8,7 +14,7 @@ import {
   SlidersHorizontal,
   Users,
 } from "lucide-react";
-import { DAILY_TITLE } from "@/lib/brand";
+import { DAILY_TITLE, FEED_TITLE, workplaceCopy } from "@/lib/brand";
 import { useCommunity } from "@/hooks/use-community";
 import { usePostPages } from "@/hooks/use-posts";
 import { useAppStore } from "@/stores/app.store";
@@ -17,6 +23,8 @@ import { PostCard } from "@/components/app/PostCard";
 import { InfiniteTrigger } from "@/components/app/InfiniteTrigger";
 
 export function FeedScreen() {
+  const { fresh: weather } = useWeather();
+  const refreshTimeline = useTimelineRefresh("posts");
   const { data, isPending, error, refetch } = useCommunity();
   const [topic, setTopic] = useState("");
   const feed = usePostPages({ view: "feed", tab: "recent", topic }, !!data);
@@ -32,13 +40,13 @@ export function FeedScreen() {
     );
   const me = data.people.find((person) => person.id === "me");
   return (
-    <>
-      <h1 className="sr-only">Bảng tin</h1>
-      <section className="feed-composer" aria-label="Tạo bài viết">
+    <PullToRefresh onRefresh={refreshTimeline}>
+      <h1 className="sr-only">{FEED_TITLE}</h1>
+      {data.authenticated === false ? <GuestInvitation next="/community/feed" /> : <section className="feed-composer" aria-label="Tạo bài viết">
         <div className="composer-prompt">
           <Avatar person={me} />
           <button type="button" onClick={() => open("composer")}>
-            Hôm nay của bạn thế nào, {me?.name.split(" ").slice(-1)[0]}?
+            {weather ? weatherVoice(weather).feed : workplaceCopy.feedPrompt(me?.name.split(" ").at(-1))}
           </button>
         </div>
         <div className="feed-composer-bottom">
@@ -59,14 +67,16 @@ export function FeedScreen() {
             Chia sẻ <ArrowRight size={16} />
           </Button>
         </div>
-      </section>
+      </section>}
       <div className="feed-controls">
-        <label className="feed-filter">
-          <SlidersHorizontal size={20} />
-          <select
-            aria-label="Lọc chủ đề bảng tin"
+        <div className="feed-filter">
+          <Select
+            className="icon-button feed-filter-trigger"
+            trigger={<SlidersHorizontal size={21} aria-hidden="true" />}
+            menuWidth={240}
+            aria-label={`Lọc chủ đề bảng tin: ${topic || "Tất cả chủ đề"}`}
             value={topic}
-            onChange={(event) => setTopic(event.target.value)}
+            onValueChange={(value) => setTopic(value)}
           >
             <option value="">Tất cả chủ đề</option>
             {data.topicStats?.map((entry) => (
@@ -74,8 +84,8 @@ export function FeedScreen() {
                 {entry.name}
               </option>
             ))}
-          </select>
-        </label>
+          </Select>
+        </div>
       </div>
       <div className="posts-list">
         {feed.isPending ? (
@@ -95,10 +105,10 @@ export function FeedScreen() {
         ) : (
           <Empty
             icon={<Users size={30} />}
-            title="Chưa có câu chuyện ở đây"
+            title="Chưa có bài viết ở đây"
             text="Thử chọn chủ đề khác hoặc theo dõi thêm bạn bè."
             action={
-              <Link href="/community/follow" className="text-link">
+              <Link href="/community/friends" className="text-link">
                 Tìm người để follow <ArrowRight size={15} />
               </Link>
             }
@@ -112,8 +122,8 @@ export function FeedScreen() {
         loadMore={() => feed.fetchNextPage()}
       />
       {!feed.hasNextPage && !feed.isPending && feed.posts.length > 0 && (
-        <p className="feed-end">Bạn đã xem hết các câu chuyện.</p>
+        <p className="feed-end">Bạn đã xem hết bài viết. Có chuyện mới, quay lại kể nhé.</p>
       )}
-    </>
+    </PullToRefresh>
   );
 }

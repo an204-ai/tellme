@@ -1,13 +1,16 @@
 "use client";
 import Link from "next/link";
+import { WeatherWidget } from "@/components/weather/WeatherWidget";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import {
   ArrowUpRight,
-  Bookmark,
+  Archive,
   Camera,
   ChevronDown,
+  ChevronRight,
   Home,
+  HeartHandshake,
   LogOut,
   MessageCircle,
   Search,
@@ -20,7 +23,7 @@ import { apiRepository, ApiError, request } from "@/lib/api-repository";
 import { useCommunity } from "@/hooks/use-community";
 import { useAppStore } from "@/stores/app.store";
 import { canView } from "@/lib/visibility";
-import { DAILY_TITLE, DAILY_SHORT } from "@/lib/brand";
+import { DAILY_TITLE, DAILY_SHORT, FEED_TITLE } from "@/lib/brand";
 import { localDay } from "@/lib/validation";
 import {
   Avatar,
@@ -30,39 +33,44 @@ import {
   Button,
 } from "@/components/ui/Primitives";
 import { GlobalOverlays } from "./GlobalOverlays";
+import { SupportInvitation } from "./TellmeSupport";
+import { LiquidNavigation } from "./LiquidNavigation";
+import { PageNavigationLoader } from "./PageNavigationLoader";
+import { usePageNavigation } from "@/hooks/use-page-navigation";
 import { NotificationBell } from "./NotificationBell";
 import type { AppData } from "@/lib/types";
+import { useRealtime } from "@/hooks/use-realtime";
 
 const nav = [
   { href: "/community/today", label: DAILY_TITLE, icon: Camera },
-  { href: "/community/feed", label: "Bảng tin", icon: Home },
+  { href: "/community/feed", label: FEED_TITLE, icon: Home },
   { href: "/community/messages", label: "Tin nhắn", icon: MessageCircle },
-  { href: "/community/saved", label: "Đã lưu", icon: Bookmark },
 ];
 export function SupportRail({ data }: { data: AppData }) {
   const { update } = useCommunity();
+  const suggestionPath = "/community/friends#suggestions";
+  const suggestionsHref = data.authenticated === false ? `/auth/login?next=${encodeURIComponent(suggestionPath)}` : suggestionPath;
   const viewStory = useAppStore((state) => state.viewStory);
-  const story = data.stories.find(
-    (entry) =>
-      entry.userId !== "me" &&
-      entry.day === localDay() &&
-      canView(entry.userId, entry.privacy, data) &&
-      entry.items.length,
-  );
+  const story = data.stories
+    .filter(
+      (entry) =>
+        entry.userId !== "me" &&
+        !(data.hiddenStories || []).includes(entry.id) &&
+        data.connections.includes(entry.userId) &&
+        entry.day === localDay() &&
+        canView(entry.userId, entry.privacy, data) &&
+        entry.items.length,
+    )
+    .sort((a, b) => b.items.at(-1)!.at.localeCompare(a.items.at(-1)!.at))[0];
   const person = data.people.find((entry) => entry.id === story?.userId);
   const suggestions = data.people
-    .filter((entry) => entry.id !== "me" && !data.blocked.includes(entry.id))
-    .sort(
-      (a, b) =>
-        Number(data.following.includes(a.id)) -
-        Number(data.following.includes(b.id)),
-    )
+    .filter((entry) => entry.id !== "me" && !data.blocked.includes(entry.id) && !data.connections.includes(entry.id) && !data.following.includes(entry.id))
     .slice(0, 3);
   return (
     <aside className="support-rail" aria-label="Bạn bè và chủ đề">
       <section className="rail-friend-story">
         <div className="rail-title">
-          <h2>Ngày của bạn bè</h2>
+          <h2>Bạn bè hôm nay</h2>
           <Camera size={19} />
         </div>
         {story && person ? (
@@ -85,15 +93,16 @@ export function SupportRail({ data }: { data: AppData }) {
           </button>
         ) : (
           <p className="rail-no-stories">
-            Khi bạn bè chia sẻ khoảnh khắc mới, bạn sẽ nhìn thấy ở đây.
+            Bạn bè đăng ảnh mới, bạn sẽ thấy ở đây.
           </p>
         )}
       </section>
       <section className="rail-people">
         <div className="rail-title">
-          <h2>Gặp thêm những người bạn</h2>
-          <Users size={20} />
+          <h2>Làm quen thêm</h2>
+          <Link href={suggestionsHref} className="rail-discovery-link" aria-label="Xem tất cả gợi ý bạn bè"><Users size={20} /></Link>
         </div>
+        {!suggestions.length && <p className="rail-no-stories">Chưa có gợi ý mới. Ghé lại sau nhé.</p>}
         {suggestions.map((user) => (
           <div className="suggestion-row" key={user.id}>
             <Link href={`/community/profile/${user.username}`}>
@@ -117,23 +126,25 @@ export function SupportRail({ data }: { data: AppData }) {
                 }).catch(() => undefined)
               }
             >
-              {data.following.includes(user.id) ? "Following" : "Follow"}
+              {data.following.includes(user.id) ? "Đang follow" : "Follow"}
             </button>
           </div>
         ))}
       </section>
       <section className="rail-topic-section">
         <div className="rail-title">
-          <h2>Điều mọi người đang kể</h2>
+          <h2>Mọi người đang kể gì?</h2>
         </div>
         <div className="rail-topic-cloud">
           {data.topicStats?.slice(0, 5).map((topic) => (
             <Link
               href={`/community/explore?topic=${encodeURIComponent(topic.name)}`}
               key={topic.name}
+              aria-label={`${topic.name}, ${topic.count} bài viết`}
             >
-              #{topic.name}
-              <span>{topic.count}</span>
+              <span className="rail-topic-name">{topic.name}</span>
+              <span className="rail-topic-count">{topic.count} bài viết</span>
+              <ChevronRight size={14} aria-hidden="true" />
             </Link>
           ))}
         </div>
@@ -159,13 +170,50 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [error, pathname, router]);
   const { search, setSearch } = useAppStore();
   const searchRef = useRef<HTMLInputElement>(null);
+  const frameRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const navigation = usePageNavigation(pathname, contentRef);
+  const selectionPath = navigation.pendingHref?.split("?")[0] || pathname;
   const me = data?.people.find((person) => person.id === "me");
+  useRealtime(data?.authenticated === true, data?.connections || []);
+  const publicPage = /^\/community\/(today|feed|explore|profile\/(?!me$)[^/]+)$/.test(pathname) || pathname.startsWith("/post/");
+  const accountHref = (href: string) => data?.authenticated === false && !/^\/community\/(today|feed|explore)$/.test(href) ? `/auth/login?next=${encodeURIComponent(href)}` : href;
+  useEffect(() => {
+    if (data?.authenticated === false && !publicPage) router.replace(`/auth/login?next=${encodeURIComponent(pathname)}`);
+  }, [data?.authenticated, publicPage, pathname, router]);
   const unreadMessages =
     data?.conversations
       .filter((entry) => !data.blocked.includes(entry.userId))
       .reduce((sum, conversation) => sum + conversation.unread, 0) || 0;
+  const mobileNavigation = [
+    ...nav.map((item) => ({ ...item, label: item.label === DAILY_TITLE ? DAILY_SHORT : item.label })),
+    { href: `/community/profile/${me?.username || "me"}`, label: "Cá nhân", icon: UserRound },
+  ];
+  const mobileIndex = selectionPath.startsWith("/community/profile")
+    ? 3
+    : mobileNavigation.findIndex((item) => selectionPath.startsWith(item.href));
   const fullSection =
-    pathname.includes("/messages") || pathname.includes("/settings");
+    pathname.includes("/messages") || pathname.includes("/settings") || pathname.includes("/archive");
+  const messagingPage = pathname.startsWith("/community/messages");
+  useEffect(() => {
+    if (!messagingPage || !data) return;
+    const viewport = window.visualViewport;
+    const resize = () => {
+      frameRef.current?.style.setProperty("--messages-height", `${viewport?.height ?? window.innerHeight}px`);
+      frameRef.current?.style.setProperty("--messages-offset", `${viewport?.offsetTop ?? 0}px`);
+    };
+    resize();
+    window.addEventListener("resize", resize);
+    viewport?.addEventListener("resize", resize);
+    viewport?.addEventListener("scroll", resize);
+    return () => {
+      window.removeEventListener("resize", resize);
+      viewport?.removeEventListener("resize", resize);
+      viewport?.removeEventListener("scroll", resize);
+      frameRef.current?.style.removeProperty("--messages-height");
+      frameRef.current?.style.removeProperty("--messages-offset");
+    };
+  }, [messagingPage, !!data]);
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key === "k") {
@@ -223,8 +271,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     ) : (
       <Loader label="Đang mở Tellme…" />
     );
+  if (data.authenticated === false && !publicPage) return <Loader label="Đang mở trang đăng nhập…" />;
   return (
-    <>
+    <div ref={frameRef} className={`app-frame ${messagingPage ? "messages-frame" : ""}`}>
       <a href="#main-content" className="skip-link">
         Đến nội dung chính
       </a>
@@ -265,6 +314,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             >
               <Search size={23} />
             </Link>
+            {data.authenticated === false ? (
+              <div className="guest-auth-actions">
+                <Link
+                  href={`/auth/login?next=${encodeURIComponent(pathname)}`}
+                  className="guest-join-button"
+                  aria-label="Tham gia cộng đồng Tellme"
+                >
+                  <span className="guest-join-full">Tham gia cộng đồng Tellme</span>
+                  <span className="guest-join-compact" aria-hidden="true">
+                    Tham gia
+                  </span>
+                </Link>
+              </div>
+            ) : <>
             <NotificationBell />
             <details className="profile-menu">
               <summary aria-label="Menu tài khoản">
@@ -276,10 +339,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   <UserRound size={18} />
                   Trang cá nhân
                 </Link>
+                <Link href="/community/archive"><Archive size={18} />Kho lưu trữ</Link>
                 <Link href="/community/settings">
                   <Settings size={18} />
                   Cài đặt
                 </Link>
+                <button type="button" onClick={() => useAppStore.getState().open("support")}><HeartHandshake size={18} />Ủng hộ Tellme</button>
                 <button
                   onClick={async () => {
                     try {
@@ -303,19 +368,23 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </button>
               </div>
             </details>
+            </>}
           </div>
         </div>
       </header>
       <div
-        className={`app-shell ${fullSection ? "wide-content full-section" : "with-support"}`}
+        className={`app-shell ${fullSection ? "wide-content full-section" : "with-support"} ${messagingPage ? "messages-layout" : ""}`}
       >
         <aside className="left-rail">
           <nav aria-label="Điều hướng chính">
+            <LiquidNavigation pathname={selectionPath} className="desktop-nav-track">
             {nav.map(({ href, label, icon: Icon }) => (
               <Link
-                href={href}
+                href={accountHref(href)}
+                prefetch={true}
+                onNavigate={(event) => { event.preventDefault(); navigation.navigate(accountHref(href), label); }}
                 key={href}
-                className={`nav-item ${pathname.startsWith(href) ? "active" : ""}`}
+                className={`nav-item ${selectionPath.startsWith(href) ? "active" : ""}`}
                 aria-current={pathname.startsWith(href) ? "page" : undefined}
               >
                 <Icon size={23} strokeWidth={1.8} />
@@ -327,26 +396,42 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             ))}
             <div className="nav-separator" />
             <Link
-              href={`/community/profile/${me?.username || "me"}`}
-              className={`nav-item ${pathname.includes("/profile/") ? "active" : ""}`}
+              href={accountHref(`/community/profile/${me?.username || "me"}`)}
+              prefetch={true}
+              onNavigate={(event) => { event.preventDefault(); navigation.navigate(accountHref(`/community/profile/${me?.username || "me"}`), "Trang cá nhân"); }}
+              className={`nav-item ${selectionPath.includes("/profile/") ? "active" : ""}`}
             >
               <UserRound size={23} />
               <span>Trang cá nhân</span>
             </Link>
             <Link
-              href="/community/follow"
-              className={`nav-item ${pathname.includes("/follow") ? "active" : ""}`}
+              href={accountHref("/community/friends")}
+              prefetch={true}
+              onNavigate={(event) => { event.preventDefault(); navigation.navigate(accountHref("/community/friends"), "Bạn bè"); }}
+              className={`nav-item ${selectionPath.includes("/friends") ? "active" : ""}`}
             >
               <Users size={23} />
-              <span>Follow</span>
+              <span>Bạn bè</span>
             </Link>
             <Link
-              href="/community/settings"
-              className={`nav-item ${pathname.includes("/settings") ? "active" : ""}`}
+              href={accountHref("/community/archive")}
+              prefetch={true}
+              onNavigate={(event) => { event.preventDefault(); navigation.navigate(accountHref("/community/archive"), "Kho lưu trữ"); }}
+              className={`nav-item ${selectionPath.includes("/archive") ? "active" : ""}`}
+            >
+              <Archive size={23} />
+              <span>Kho lưu trữ</span>
+            </Link>
+            <Link
+              href={accountHref("/community/settings")}
+              prefetch={true}
+              onNavigate={(event) => { event.preventDefault(); navigation.navigate(accountHref("/community/settings"), "Cài đặt"); }}
+              className={`nav-item ${selectionPath.includes("/settings") ? "active" : ""}`}
             >
               <Settings size={23} />
               <span>Cài đặt</span>
             </Link>
+            </LiquidNavigation>
           </nav>
           <div className="sidebar-tagline">
             <span className="tagline-line" />
@@ -355,43 +440,41 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <br />
               <strong>Your stories.</strong>
             </p>
+            <button type="button" className="support-entry" onClick={() => useAppStore.getState().open("support")}><HeartHandshake size={15} />Ủng hộ Tellme</button>
           </div>
         </aside>
-        <main id="main-content" className="main-content">
-          {children}
+        <main id="main-content" className="main-content" aria-busy={!!navigation.pendingHref}>
+          <div ref={contentRef} className="route-content" data-navigation-pending={!!navigation.pendingHref} inert={!!navigation.pendingHref}>
+            {children}
+          </div>
+          <PageNavigationLoader content={contentRef} label={navigation.pendingLabel || "trang"} active={!!navigation.pendingHref} />
         </main>
         {!fullSection && data && <SupportRail data={data} />}
       </div>
-      <nav className="mobile-nav" aria-label="Điều hướng di động">
-        {[
-          nav[0],
-          nav[1],
-          nav[2],
-          {
-            href: `/community/profile/${me?.username || "me"}`,
-            label: "Cá nhân",
-            icon: UserRound,
-          },
-        ].map(
-          (item) =>
-            item && (
+      <nav className="mobile-nav" aria-label="Điều hướng di động" data-has-active={mobileIndex >= 0}>
+        <LiquidNavigation pathname={selectionPath} className="mobile-nav-track">
+          {mobileNavigation.map((item, index) => (
               <Link
-                href={item.href}
+                href={accountHref(item.href)}
+                prefetch={true}
+                onNavigate={(event) => { event.preventDefault(); navigation.navigate(accountHref(item.href), item.label); }}
                 key={item.href}
-                className={pathname.startsWith(item.href) ? "active" : ""}
-                aria-current={
-                  pathname.startsWith(item.href) ? "page" : undefined
-                }
+                className={mobileIndex === index ? "active" : ""}
+                aria-current={(pathname.startsWith(item.href) || index === 3 && pathname.startsWith("/community/profile")) ? "page" : undefined}
+                aria-label={index === 2 && unreadMessages > 0 ? `${item.label}, ${unreadMessages} tin chưa đọc` : undefined}
               >
-                <item.icon size={24} />
-                <span>
-                  {item.label === DAILY_TITLE ? DAILY_SHORT : item.label}
+                <span className="mobile-nav-icon">
+                  <item.icon size={23} strokeWidth={1.8} />
+                  {index === 2 && unreadMessages > 0 && <span className="mobile-nav-unread" aria-hidden="true">{unreadMessages > 99 ? "99+" : unreadMessages}</span>}
                 </span>
+                <span className="mobile-nav-label">{item.label}</span>
               </Link>
-            ),
-        )}
+          ))}
+        </LiquidNavigation>
       </nav>
       <GlobalOverlays />
-    </>
+      <SupportInvitation eligible={pathname === "/community/today" || pathname === "/community/feed"} />
+      {(pathname === "/community/today" || pathname === "/community/feed") && <WeatherWidget />}
+    </div>
   );
 }

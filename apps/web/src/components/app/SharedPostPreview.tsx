@@ -27,7 +27,7 @@ export function SharedPostPreview({ id }: { id: string }) {
           Câu chuyện trên Tellme
         </small>
         <strong>{post.content || "Một khoảnh khắc đáng nhớ"}</strong>
-        <span>Xem bài viết ↗</span>
+        <span>Xem bài viết</span>
       </span>
     </Link>
   );

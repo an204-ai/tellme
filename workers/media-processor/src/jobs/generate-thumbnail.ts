@@ -1,1 +1,1 @@
-export const generateThumbnail = async (mediaId: string) => {};
+export { processMedia as generateThumbnail } from "@tellme/database";

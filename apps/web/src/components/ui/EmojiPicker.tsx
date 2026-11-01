@@ -22,7 +22,7 @@ export default function EmojiPicker({
       emojiVersion: 15,
       theme: "light",
       autoFocus: true,
-      dynamicWidth: false,
+      dynamicWidth: true,
       perLine: 8,
       previewPosition: "none",
       skinTonePosition: "search",

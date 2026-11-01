@@ -8,10 +8,14 @@
   ],
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev",
+    "dev": "node infra/scripts/dev.mjs",
     "lint": "turbo run lint",
     "check-types": "turbo run check-types",
-    "clean": "turbo run clean"
+    "clean": "turbo run clean",
+    "configure:vapid": "node infra/scripts/configure-vapid.mjs",
+    "infra:up": "docker compose -f infra/docker/docker-compose.yml up -d --wait redis",
+    "infra:down": "docker compose -f infra/docker/docker-compose.yml stop redis",
+    "db:check": "node infra/scripts/check-mongodb.mjs"
   },
   "devDependencies": {
     "turbo": "^2.4.0",

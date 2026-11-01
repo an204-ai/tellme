@@ -1,0 +1,13 @@
+{
+  "name": "tellme-landing",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@9.15.0",
+  "engines": { "node": ">=22" },
+  "scripts": { "dev": "next dev --hostname 127.0.0.1 --port 3002", "build": "next build", "start": "node scripts/serve.mjs", "check-types": "tsc --noEmit" },
+  "dependencies": {
+    "@fontsource/be-vietnam-pro": "5.3.0", "@fontsource/poppins": "5.3.0", "@tanstack/react-query": "5.105.0", "lucide-react": "0.468.0", "next": "15.5.28", "react": "19.3.1", "react-dom": "19.3.1", "zod": "3.25.76", "zustand": "5.0.16"
+  },
+  "devDependencies": { "@tailwindcss/postcss": "4.3.3", "@types/node": "22.20.5", "@types/react": "19.3.0", "@types/react-dom": "19.3.0", "postcss": "8.5.32", "tailwindcss": "4.3.3", "typescript": "5.9.3" }
+}
