@@ -4722,6 +4722,8 @@ textarea::placeholder,
   margin: 17px -8px -6px;
   max-height: 50dvh;
   overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
 }
 .popover-notice {
   display: flex;
@@ -4734,13 +4736,14 @@ textarea::placeholder,
 .popover-notice.unread {
   background: #f5f5f5;
 }
-.popover-notice > span:nth-child(2) {
+.popover-notice-copy {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 7px;
   font-size: 14px;
   line-height: 1.7;
+  min-width: 0;
 }
 .popover-notice strong {
   font-weight: 500;
@@ -4754,6 +4757,62 @@ textarea::placeholder,
   background: #07327f;
   border-radius: 50%;
 }
+.notification-group-count {
+  flex: 0 0 auto;
+  min-width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  padding-inline: 5px;
+  border-radius: 999px;
+  background: #e8eef8;
+  color: #07327f;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.notification-feed-sentinel { height: 1px; }
+.notification-feed-state {
+  margin: 0;
+  padding: 22px 12px;
+  color: #596b86;
+  text-align: center;
+  font-size: 14px;
+}
+.notification-feed-retry,
+.notification-feed-more,
+.notification-older-button,
+.notification-scope-back {
+  border: 0;
+  background: transparent;
+  color: #07327f;
+  cursor: pointer;
+  font: inherit;
+}
+.notification-feed-retry { width: 100%; }
+.notification-feed-more,
+.notification-older-button,
+.notification-scope-back {
+  display: block;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+.notification-scope-back { padding: 4px 0 8px; text-align: left; }
+.notification-older-button { width: 100%; margin-top: 8px; }
+.notification-feed.page .notification-feed-list {
+  max-height: calc(100dvh - 300px);
+  min-height: 240px;
+  margin: 12px 0 0;
+}
+.notification-older-button:hover,
+.notification-scope-back:hover,
+.notification-feed-more:hover { text-decoration: underline; }
+.notification-feed-retry:focus-visible,
+.notification-feed-more:focus-visible,
+.notification-older-button:focus-visible,
+.notification-scope-back:focus-visible { outline: 2px solid #07327f; outline-offset: 2px; }
 .popover-no-notices {
   padding: 25px 12px;
   font-size: 14px;
@@ -5129,7 +5188,7 @@ textarea::placeholder,
     padding: 17px;
     max-height: 75dvh;
   }
-  .popover-notice > span:nth-child(2) {
+  .popover-notice-copy {
     font-size: 14px;
   }
   .composer-prompt > button {
@@ -5168,6 +5227,10 @@ textarea::placeholder,
 }
 
 @media (max-width: 640px) {
+  .notification-feed.page .notification-feed-list {
+    max-height: calc(100dvh - 250px);
+    min-height: 200px;
+  }
   .guest-auth-actions {
     margin-left: 0;
   }

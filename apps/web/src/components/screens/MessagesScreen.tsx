@@ -3,11 +3,12 @@ import { useChatScroll } from "@/hooks/use-chat-scroll";
 import { TooltipIconButton } from "@/components/ui/TooltipIconButton";
 import { ConversationTools } from "@/components/app/ConversationTools";
 import { usePresenceStore } from "@/stores/presence.store";
+import { useQueryClient } from "@tanstack/react-query";
 import { GroupComposer } from "@/components/app/GroupComposer";
 import { DEFAULT_GROUP_AVATAR } from "@/lib/social-assets";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   PanelRight,
@@ -16,11 +17,10 @@ import {
   Send,
   Users,
 } from "lucide-react";
-import { useCommunity } from "@/hooks/use-community";
-import { SharedPostPreview } from "@/components/app/SharedPostPreview";
-import { StoryReplyPreview } from "@/components/app/StoryReply";
+import { communityKey, useCommunity } from "@/hooks/use-community";
+import { MessageHistory } from "@/components/chat/MessageHistory";
 import type { Conversation, AppData } from "@/lib/types";
-import { newId, timeOf } from "@/lib/api-repository";
+import { apiRepository, newId, timeOf } from "@/lib/api-repository";
 import { messageDraftSchema } from "@/lib/validation";
 import { getTellmeSticker } from "@tellme/shared/stickers";
 import { TellmeStickerButton, TellmeStickerDraft, TellmeStickerSuggestions, type TellmeSticker } from "@/components/ui/TellmeStickers";
@@ -69,11 +69,14 @@ export function MessagesScreen({
   conversationId?: string;
 }) {
   const { data, update, saving } = useCommunity();
+  const queryClient = useQueryClient();
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [text, setText] = useState("");
   const [stickerId, setStickerId] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [sending, setSending] = useState(false);
+  const sendingRef = useRef(false);
   const [creating, setCreating] = useState(false);
   const [creatingGroup, setCreatingGroup] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -88,10 +91,12 @@ export function MessagesScreen({
   const conversation = conversationId
     ? conversations.find((entry) => entry.id === conversationId)
     : conversations[0];
-  const person = conversationPerson(data, conversation);
+  const activeConversationId = useRef(conversation?.id);
+  activeConversationId.current = conversation?.id;
+  const person = useMemo(() => conversationPerson(data, conversation), [data, conversation]);
   const online = usePresenceStore((state) => !!person?.id && !!state.online[person.id]);
   useEffect(() => { setDetailsOpen(false); }, [conversation?.id]);
-  useEffect(() => { setStickerId(null); setText(""); setError(""); }, [conversation?.id]);
+  useEffect(() => { setStickerId(null); setText(""); setError(""); setSending(false); sendingRef.current = false; }, [conversation?.id]);
   const selectSticker = (sticker: TellmeSticker) => {
     setStickerId(sticker.id);
     setError("");
@@ -206,48 +211,13 @@ export function MessagesScreen({
                 <button type="button" ref={detailsButton} className={`icon-button chat-details-toggle ${detailsOpen ? "active" : ""}`} aria-label={detailsOpen ? "Đóng thông tin trò chuyện" : "Mở thông tin và chức năng trò chuyện"} aria-controls={detailsId} aria-expanded={detailsOpen} onClick={() => detailsOpen ? closeDetails() : setDetailsOpen(true)}><PanelRight size={21} /></button>
               </header>
               <div className="chat-messages" ref={chatScroll.viewport} role="region" aria-label="Lịch sử tin nhắn" tabIndex={0}>
-                <div className="chat-message-history" ref={chatScroll.history}>
-                <div className="chat-intro">
-                  <ChatAvatar data={data} chat={conversation} large />
-                  <strong>{person.name}</strong>
-                  <span>Bắt chuyện bằng một lời chào nhé.</span>
-                </div>
-                <span className="chat-day-label">Cuộc trò chuyện của bạn</span>
-                {conversation.messages.map((message) => {
-                  const sticker = getTellmeSticker(message.stickerId);
-                  return (
-                  <div
-                    key={message.id}
-                    className={`message-row ${message.own ? "own" : ""}`}
-                  >
-                    {!message.own && (
-                      <Avatar
-                        person={
-                          data.people.find((p) => p.id === message.userId) ||
-                          person
-                        }
-                        size="xs"
-                      />
-                    )}
-                    <div>
-                      {message.storyReply && <StoryReplyPreview reply={message.storyReply}/>}
-                      {sticker && <img className="message-sticker" src={sticker.src} alt={`Sticker ${sticker.label}`} width={sticker.width} height={sticker.height} loading="lazy" />}
-                      {message.postId ? (
-                        <SharedPostPreview id={message.postId} />
-                      ) : (
-                        message.text ? <p className="message-bubble">{message.text}</p> : null
-                      )}
-                      <time>{timeOf(message.at)}</time>
-                    </div>
-                  </div>
-                ); })}
-                </div>
+                <MessageHistory ref={chatScroll.history} data={data} conversation={conversation} person={person} />
               </div>
               {canSend ? <form
                 className="chat-composer"
                 onSubmit={async (event) => {
                   event.preventDefault();
-                  if (saving) return;
+                  if (saving || sendingRef.current) return;
                   const parsed = messageDraftSchema.safeParse({ text, stickerId: stickerId || undefined });
                   if (!parsed.success) {
                     setError(
@@ -256,25 +226,48 @@ export function MessagesScreen({
                     );
                     return;
                   }
+                  const message = {
+                    id: newId(),
+                    text: parsed.data.text,
+                    ...(parsed.data.stickerId ? { stickerId: parsed.data.stickerId } : {}),
+                    own: true as const,
+                    at: new Date().toISOString(),
+                  };
+                  sendingRef.current = true;
+                  setSending(true);
+                  setText("");
+                  setStickerId(null);
+                  setError("");
+                  queryClient.setQueryData<AppData>(communityKey, (current) => current && ({
+                    ...current,
+                    conversations: current.conversations.map((entry) => entry.id === conversation.id
+                      ? { ...entry, messages: [...entry.messages, message] }
+                      : entry),
+                  }));
                   try {
-                    await update((draft) => {
-                      const target = draft.conversations.find(
-                        (entry) => entry.id === conversation.id,
-                      );
-                      if (target)
-                        target.messages.push({
-                          id: newId(),
-                          text: parsed.data.text,
-                          ...(parsed.data.stickerId ? { stickerId: parsed.data.stickerId } : {}),
-                          own: true,
-                          at: new Date().toISOString(),
-                        });
+                    await apiRepository.sendMessage(conversation.id, {
+                      id: message.id,
+                      text: message.text,
+                      ...(parsed.data.stickerId ? { stickerId: parsed.data.stickerId } : {}),
                     });
-                    setText("");
-                    setStickerId(null);
-                    setError("");
-                  } catch {
-                    /* mutation handles errors */
+                    void queryClient.invalidateQueries({ queryKey: communityKey });
+                  } catch (sendError) {
+                    queryClient.setQueryData<AppData>(communityKey, (current) => current && ({
+                      ...current,
+                      conversations: current.conversations.map((entry) => entry.id === conversation.id
+                        ? { ...entry, messages: entry.messages.filter((item) => item.id !== message.id) }
+                        : entry),
+                    }));
+                    if (activeConversationId.current === conversation.id) {
+                      setText((current) => current || parsed.data.text);
+                      setStickerId((current) => current || parsed.data.stickerId || null);
+                      setError(sendError instanceof Error ? sendError.message : "Chưa gửi được tin nhắn. Bạn thử lại nhé.");
+                    }
+                  } finally {
+                    if (activeConversationId.current === conversation.id) {
+                      sendingRef.current = false;
+                      setSending(false);
+                    }
                   }
                 }}
               >
@@ -293,7 +286,7 @@ export function MessagesScreen({
                       requestAnimationFrame(() => inputRef.current?.focus());
                     }}
                   />
-                  <TellmeStickerButton key={conversation.id} label="Thêm sticker Tellme vào tin nhắn" disabled={saving} onSelect={selectSticker} showLabels={false} />
+                  <TellmeStickerButton key={conversation.id} label="Thêm sticker Tellme vào tin nhắn" disabled={saving || sending} onSelect={selectSticker} showLabels={false} />
                   <input
                     ref={inputRef}
                     aria-label="Nhập tin nhắn"
@@ -312,7 +305,7 @@ export function MessagesScreen({
                   <button
                     type="submit"
                     aria-label="Gửi tin nhắn"
-                    disabled={(!text.trim() && !stickerId) || saving}
+                    disabled={(!text.trim() && !stickerId) || saving || sending}
                   >
                     <Send size={20} />
                   </button>

@@ -77,6 +77,12 @@ html {
 .feed-controls {
   justify-content: flex-end;
 }
+html[data-input-modality="pointer"] :is(button, a, summary, input, textarea, select, [tabindex]):focus-visible {
+  outline: none !important;
+}
+html[data-input-modality="pointer"] .journey-stop:focus-visible .journey-stop-image {
+  outline: none !important;
+}
 /* The source confirmation ring no longer crosses the Like label. */
 .uiv-heart-tooltip .trigger.with-label {
   animation: none;
@@ -784,8 +790,10 @@ html {
   .share-networks > a,
   .share-networks > button {
     font-size: 11px;
-    padding: 12px 3px;
+    gap: 6px;
+    padding: 9px 3px;
   }
+  .share-networks svg { width: 19px; height: 19px; }
   .share-create-group {
     padding: 12px;
   }

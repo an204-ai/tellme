@@ -223,7 +223,6 @@ export function ProfileJourney({ personId, isMe }: { personId: string; isMe: boo
         })}
       </div>
     </div>
-    <footer className="journey-footer"><p className="journey-hint"><span>Vuốt qua nửa khung để đổi tháng</span><span>Chạm ảnh để xem lại</span></p></footer>
     <div className="journey-corner journey-corner-left" aria-hidden="true">
       <svg viewBox="0 0 180 80" preserveAspectRatio="none"><path d="M0 80V28C14 8 40 8 52 32C67 18 92 22 101 42C121 25 152 31 163 51C170 47 176 48 180 52V80Z" /></svg>
       <img src="/brand/stickers/tellme-hello.png" alt="" width="56" height="56" loading="lazy" draggable={false} />

@@ -2,9 +2,10 @@
 .tellme-reaction-image { display: inline-block; flex: 0 0 auto; object-fit: contain; vertical-align: middle; user-select: none; }
 .tellme-reaction-control { display: flex; align-items: stretch; justify-content: center; min-width: 0; color: #000; }
 .tellme-reaction-main, .tellme-reaction-more { display: flex; align-items: center; justify-content: center; gap: 6px; border: 0; background: transparent; color: inherit; padding: 9px 4px; cursor: pointer; font: inherit; font-size: 15px; }
-.tellme-reaction-main { min-width: 0; -webkit-touch-callout: none; user-select: none; touch-action: pan-y; }
+.tellme-reaction-main { min-width: 0; -webkit-touch-callout: none; user-select: none; touch-action: none; }
 .tellme-reaction-main > span { white-space: nowrap; }
 .tellme-reaction-main > img { width: 28px; height: 28px; }
+.tellme-reaction-main > svg { width: 22px; height: 22px; flex: 0 0 auto; }
 .tellme-reaction-more { width: 28px; flex: 0 0 auto; }
 .tellme-reaction-control.selected { color: var(--primary); font-weight: 600; }
 .tellme-reaction-control.compact { width: fit-content; border: 1px solid var(--line); border-radius: 24px; padding-inline: 10px 4px; }
@@ -15,7 +16,8 @@
 .tellme-reaction-picker:popover-open { display: flex; align-items: center; gap: 1px; }
 .tellme-reaction-picker > button { display: grid; flex: 0 0 44px; touch-action: manipulation; place-items: center; width: 44px; height: 44px; min-width: 0; min-height: 0; padding: 2px; border: 0; border-radius: 50%; color: #000; background: transparent; cursor: pointer; }
 .tellme-reaction-picker > button > img { width: 40px; height: 40px; transition: transform 160ms ease-out; }
-.tellme-reaction-picker > button:is(:hover, :focus-visible) > img { transform: translateY(-4px) scale(1.12); }
+.tellme-reaction-picker > button:is(:hover, :focus-visible, .is-drag-target) > img { transform: translateY(-4px) scale(1.12); }
+.tellme-reaction-picker > button.is-drag-target { background: #edf2fa; }
 .tellme-reaction-picker > button[aria-pressed="true"] { background: #edf2fa; }
 .tellme-reaction-picker > button:focus-visible { outline: 2px solid var(--primary); outline-offset: -1px; }
 .tellme-reaction-burst {

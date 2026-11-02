@@ -8,7 +8,7 @@ import { pageSchema } from "../../backend/validation.js";
 import { audit, auditPeople, idSchema, isAdmin, moderateContent, reasonSchema, suspendAccount, transaction } from "./admin.service.js";
 const escaped = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const queryText = (value?: string) => z.string().trim().max(100).parse(value || "");
-const userProjection = { name: 1, username: 1, avatar: 1, email: 1, emailVerifiedAt: 1, createdAt: 1, lastActiveAt: 1, suspension: 1 };
+const userProjection = { name: 1, username: 1, avatar: 1, email: 1, emailVerifiedAt: 1, createdAt: 1, suspension: 1 };
 function userDTO(user: User) { return { ...user, suspended: isSuspended(user), admin: isAdmin(user) }; }
 export function registerManagementRoutes(api: Hono<Env>) {
   api.get("/admin/users", async (c) => {

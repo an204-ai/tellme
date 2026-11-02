@@ -5,7 +5,7 @@ import { weatherVoice } from "@/lib/weather";
 import { useTimelineRefresh } from "@/hooks/use-timeline-refresh";
 import Link from "next/link";
 import type { CSSProperties } from "react";
-import { ArrowUpRight, Camera, Music2, Plus } from "lucide-react";
+import { Camera, Music2, Plus } from "lucide-react";
 import { useStoryPages } from "@/hooks/use-posts";
 import { InfiniteTrigger } from "@/components/app/InfiniteTrigger";
 import { GuestInvitation } from "@/components/app/GuestInvitation";
@@ -161,16 +161,6 @@ export function TodayScreen({ onlyMine = false }: { onlyMine?: boolean }) {
                     );
                   })}
                 </div>
-                <footer className="daily-entry-footer">
-                  <span>
-                    {timeOf(story.items[0]!.at)}
-                    {story.items.length > 1 && ` — ${timeOf(last.at)}`}
-                  </span>
-                  <button onClick={() => viewStory(story.id)}>
-                    Mở dòng thời gian
-                    <ArrowUpRight size={17} />
-                  </button>
-                </footer>
               </div>
             </article>
           );

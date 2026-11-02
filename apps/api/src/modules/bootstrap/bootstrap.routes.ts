@@ -31,11 +31,12 @@ export function registerBootstrapRoutes(api: Hono<Env>) {
       ]);
       const missing = days.map((story) => story.userId).filter((id) => !people.some((p) => p._id === id));
       const extra = missing.length ? await users.find({ _id: { $in: missing } }, { projection: { passwordHash: 0, email: 0 } }).toArray() : [];
-      return c.json({ version: 1, authenticated: false, features: { pushPublicKey: config.VAPID_PUBLIC_KEY || null, emailEnabled: !!config.SMTP_URL }, people: [...people, ...extra].map((p) => personDTO(p, me)), posts: [], stories: days.map((s) => storyDTO(s, me)).filter((s) => s.items.length), conversations: [], notifications: [], following: [], connections: [], blocked: [], hiddenPosts: [], reports: [], settings: { ...defaults }, postCounts: {}, topicStats: topics.map((t) => ({ name: t._id, count: t.count })) });
+      return c.json({ version: 1, authenticated: false, features: { pushPublicKey: config.VAPID_PUBLIC_KEY || null, emailEnabled: !!config.SMTP_URL }, people: [...people, ...extra].map((p) => personDTO(p, me)), posts: [], stories: days.map((s) => storyDTO(s, me)).filter((s) => s.items.length), conversations: [], notifications: [], unreadNotifications: 0, following: [], connections: [], blocked: [], hiddenPosts: [], reports: [], settings: { ...defaults }, postCounts: {}, topicStats: topics.map((t) => ({ name: t._id, count: t.count })) });
     }
     await registerSystemRecipient(me._id, me.settings.notifySystem !== false).catch(() => undefined);
     const systemNotices = await listSystemNotices(me._id).catch(() => []);
-    const [people, days, chats, notifications, reportList, counts, topics] =
+    const recentCutoff = new Date(Date.now() - 7 * 86400000).toISOString();
+    const [people, days, chats, notifications, unreadNotificationCount, reportList, counts, topics] =
       await Promise.all([
         users
           .find({}, { projection: { passwordHash: 0, email: 0 } })
@@ -53,10 +54,11 @@ export function registerBootstrapRoutes(api: Hono<Env>) {
           .limit(100)
           .toArray(),
         notices
-          .find({ recipientId: me._id, userId: { $nin: r.blocked } })
+          .find({ recipientId: me._id, userId: { $nin: r.blocked }, at: { $gte: recentCutoff } })
           .sort({ at: -1 })
-          .limit(100)
+          .limit(50)
           .toArray(),
+        notices.countDocuments({ recipientId: me._id, userId: { $nin: r.blocked }, read: false }),
         reports.find({ userId: me._id }).limit(100).toArray(),
         posts
           .aggregate<{
@@ -104,11 +106,13 @@ export function registerBootstrapRoutes(api: Hono<Env>) {
       notifications: [...notifications.map((n) => ({
         id: n._id,
         userId: externalId(n.userId, me),
+        kind: n.kind || "like",
         text: n.text,
         read: n.read,
         at: n.at,
         ...(n.postId ? { postId: n.postId } : {}),
       })), ...systemNotices].sort((a, b) => b.at.localeCompare(a.at)).slice(0, 100),
+      unreadNotifications: unreadNotificationCount + systemNotices.filter((notice) => !notice.read).length,
       following: me.following,
       connections: r.mutual,
       blocked: me.blocked,

@@ -1,11 +1,8 @@
 "use client";
 import Link from "next/link";
-import { NoticeAvatar } from "@/components/app/NoticeAvatar";
 import { useEffect, useState } from "react";
 import {
-  Bell,
   Check,
-  CheckCheck,
   MessageCircle,
   Search,
   UserPlus,
@@ -13,8 +10,9 @@ import {
 } from "lucide-react";
 import { usePost } from "@/hooks/use-posts";
 import { useCommunity } from "@/hooks/use-community";
-import { canView, timeAgo, visiblePosts } from "@/lib/api-repository";
+import { canView, visiblePosts } from "@/lib/api-repository";
 import { useAppStore } from "@/stores/app.store";
+import { NotificationList, useReadAllNotifications } from "@/components/app/NotificationList";
 import {
   Avatar,
   Button,
@@ -26,11 +24,9 @@ import {
 import { PostCard } from "@/components/app/PostCard";
 
 export function NotificationsScreen() {
-  const { data, update } = useCommunity();
+  const { data } = useCommunity();
+  const markAll = useReadAllNotifications();
   if (!data) return <Loader />;
-  const notices = data.notifications.filter(
-    (notice) => !data.blocked.includes(notice.userId),
-  );
   return (
     <>
       <header className="page-heading page-heading-action social-page-title">
@@ -40,63 +36,14 @@ export function NotificationsScreen() {
         </div>
         <button
           className="text-link"
-          onClick={() =>
-            void update((draft) => {
-              draft.notifications.forEach((notice) => {
-                notice.read = true;
-              });
-            }).catch(() => undefined)
-          }
+          disabled={!data.unreadNotifications}
+          onClick={() => void markAll().catch(() => undefined)}
         >
-          <CheckCheck size={17} />
+          <Check size={17} />
           Đọc tất cả
         </button>
       </header>
-      <section className="notification-list">
-        {notices.length ? (
-          notices.map((notice) => {
-            const person = data.people.find(
-              (entry) => entry.id === notice.userId,
-            );
-            return (
-              <Link
-                href={
-                  notice.kind === "system" ? notice.url || "/community/today" : notice.postId
-                    ? `/post/${notice.postId}`
-                    : `/community/profile/${person?.username}`
-                }
-                className={`notification-row ${notice.read ? "" : "unread"}`}
-                key={notice.id}
-                onClick={() =>
-                  void update((draft) => {
-                    const target = draft.notifications.find(
-                      (entry) => entry.id === notice.id,
-                    );
-                    if (target) target.read = true;
-                  }).catch(() => undefined)
-                }
-              >
-                <NoticeAvatar notice={notice} person={person} />
-                <span>
-                  <span>
-                    <strong>{notice.kind === "system" ? notice.title : person?.name}</strong> {notice.text}
-                  </span>
-                  <small>{timeAgo(notice.at)}</small>
-                </span>
-                {!notice.read && (
-                  <span className="notice-indicator" aria-label="Chưa đọc" />
-                )}
-              </Link>
-            );
-          })
-        ) : (
-          <Empty
-            icon={<Bell size={30} />}
-            title="Bạn đã đọc hết thông báo"
-            text="Những tương tác mới sẽ xuất hiện ở đây."
-          />
-        )}
-      </section>
+      <NotificationList active fullPage />
     </>
   );
 }

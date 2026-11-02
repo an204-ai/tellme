@@ -21,7 +21,6 @@ export async function createAdminFixture() {
   await db.stories.insertOne({ _id: ids.story, userId: ids.user, day: today, privacy: "public", items: [{ id: randomUUID(), image: "/brand/stickers/bubu-work.png", caption: "Một ngày làm việc QA", at: now, reactions: {} }], updatedAt: now });
   await db.reports.insertMany([{ _id: ids.report, userId: ids.admin, postId: ids.post, reason: "spam", at: now }, { _id: ids.accountReport, userId: ids.admin, postId: `user:${ids.user}`, targetType: "user", targetId: ids.user, reason: "harassment", at: now }]);
   await db.outbox.insertOne({ _id: ids.job, kind: "media.process", data: { sensitive: "not-returned" }, error: "Not public", status: "failed", createdAt: new Date(), availableAt: new Date(), attempts: 8, finishedAt: new Date() });
-  await db.serverLogs.insertOne({ _id: randomUUID(), at: new Date(), service: "api", level: "error", event: "qa.test-failure", requestId: randomUUID(), route: "/api/posts/:id", method: "GET", status: 503, durationMs: 120 });
   await db.messages.insertOne({ _id: randomUUID(), conversationId: randomUUID(), senderId: ids.user, text: "PRIVATE_QA_MESSAGE_MUST_NOT_LEAK", at: now });
   async function request(path: string, options: { actor?: keyof typeof tokens | "guest"; method?: string; body?: unknown; origin?: string } = {}) {
     const headers: Record<string, string> = { "Content-Type": "application/json", Origin: options.origin || "http://127.0.0.1:3111" };

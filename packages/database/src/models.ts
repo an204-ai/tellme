@@ -42,7 +42,6 @@ export interface User {
   savedStories?: string[];
   settings: Preferences;
   createdAt: string;
-  lastActiveAt?: string;
   suspension?: { reason: string; at: string; actorId: string; until?: string };
 }
 export interface ModerationState { hidden: boolean; reason: string; actorId: string; at: string }
@@ -54,7 +53,6 @@ export interface ServerLog {
 export interface AdminAudit {
   _id: string; at: Date; actorId: string; action: string; targetType: string; targetId: string; reason: string;
 }
-export interface ActivityDay { _id: string; userId: string; day: string; at: Date }
 export interface AuthToken {
   _id: string;
   userId: string;

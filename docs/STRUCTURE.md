@@ -22,7 +22,7 @@ Monorepo giữ bốn ứng dụng, package dùng chung và ba worker. Runtime g�
 | `apps/api/src/modules/` | Route nghiệp vụ và quản trị: auth, bootstrap, user, post, story, message, conversation, notification, media, music, admin |
 | `apps/api/tests/` | Kiểm tra API admin dùng dữ liệu kiểm thử riêng |
 | `apps/mobile/src/`, `apps/mobile/assets/` | Scaffold Expo/React Native và tài sản mobile |
-| `apps/admin/src/` | Dashboard người dùng, kiểm duyệt, báo cáo, job, hạ tầng, log, thống kê và audit |
+| `apps/admin/src/` | Dashboard người dùng, kiểm duyệt, báo cáo, tác vụ nền, chỉ số hạ tầng thiết yếu, thống kê sử dụng và audit |
 | `packages/database/` | MongoDB Atlas native driver, models/indexes, config, Redis/BullMQ, job và worker dùng chung |
 | `packages/shared/` | Kiểu/validator/hằng số dùng chung, độc lập nền tảng |
 | `packages/ui/` | Token/component DOM dùng chung đã có; phần lớn UI web hiện ở app web |

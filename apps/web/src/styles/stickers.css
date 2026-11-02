@@ -34,4 +34,4 @@
 .chat-input-line { gap: 6px; }
 .comments-section .text-box { scroll-margin-block: 90px; }
 .comment-media-preview > .icon-button { top: 0; right: -32px; width: 26px; height: 26px; padding: 0; border: 1px solid #e8edf3; background: #f5f7fa; }
-@media (max-width: 640px) { .chat-input-line { gap: 2px; } .chat-input-line > .icon-button { flex-shrink: 0; width: 36px; height: 40px; } }
+@media (max-width: 640px) { .chat-input-line { gap: 8px; } .chat-input-line > .icon-button { flex-shrink: 0; width: 36px; height: 40px; } }

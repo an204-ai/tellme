@@ -12,7 +12,7 @@ import { sessions, users } from "./database.js";
 import { config, origins } from "./config.js";
 import type { User } from "./models.js";
 import { defaults } from "./models.js";
-import { redis, prefix, eventChannel, stopWeatherWatch, isSuspended, trackActivity } from "@tellme/database";
+import { redis, prefix, eventChannel, stopWeatherWatch, isSuspended } from "@tellme/database";
 const scrypt = promisify(scryptCallback);
 // A disposable QA server on another localhost port must not replace a real session.
 export const cookieName = config.NODE_ENV === "test" ? "tellme_qa_session" : "tellme_session";
@@ -24,7 +24,6 @@ export const optionalAuthenticate: MiddlewareHandler<Env> = async (c, next) => {
   const user = session ? await users.findOne({ _id: session.userId }) : null;
   if (user && isSuspended(user)) throw new HTTPException(403, { message: "Tài khoản đang tạm khóa. Liên hệ quản trị Tellme để được hỗ trợ." });
   c.set("user", user || guestUser);
-  if (user && !c.req.path.startsWith("/api/admin/")) void trackActivity(user._id);
   await next();
 };
 const digest = (s: string) => createHash("sha256").update(s).digest("hex");

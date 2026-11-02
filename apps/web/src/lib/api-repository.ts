@@ -8,6 +8,10 @@ import type {
   PostPage,
   ProfileActivityPage,
   JourneyMonth,
+  Reaction,
+  Message,
+  NotificationPage,
+  Notice,
 } from "./types";
 import { validateImage } from "./images";
 export { canView, visiblePosts } from "./visibility";
@@ -63,6 +67,11 @@ const loadedPosts = new Map<string, Post>();
 const loadedStories = new Map<string, DayStory>();
 const knownPeople = new Map<string, Person>();
 let queue: Promise<unknown> = Promise.resolve();
+function enqueue<T>(run: () => Promise<T>): Promise<T> {
+  const result = queue.then(run, run);
+  queue = result.catch(() => undefined);
+  return result;
+}
 const equal = (a: unknown, b: unknown) =>
   JSON.stringify(a) === JSON.stringify(b);
 const acceptPosts = (items: Post[]) =>
@@ -90,6 +99,38 @@ export const apiRepository = {
   },
   snapshot() {
     return overview();
+  },
+  peekStory(id: string) {
+    return loadedStories.get(id);
+  },
+  reactToPost(id: string, reaction: Reaction | null) {
+    return enqueue(async () => {
+      await send(`/posts/${id}/reaction`, "PUT", { reaction });
+      return apiRepository.getPost(id);
+    });
+  },
+  reactToMoment(storyId: string, itemId: string, reaction: Reaction | null) {
+    return enqueue(async () => {
+      await send(`/stories/${storyId}/moments/${itemId}/reaction`, "PUT", { reaction });
+      return apiRepository.getStory(storyId);
+    });
+  },
+  sendMessage(conversationId: string, message: Pick<Message, "id" | "text" | "stickerId">) {
+    return send(`/conversations/${encodeURIComponent(conversationId)}/messages`, "POST", message);
+  },
+  getNotificationsPage(scope: "recent" | "older", cursor = 0, limit = 20) {
+    const query = new URLSearchParams({ scope, cursor: String(cursor), limit: String(limit) });
+    return request<NotificationPage>(`/notifications/inbox?${query}`);
+  },
+  markNotificationGroupRead(notice: Notice) {
+    if (notice.kind === "system") return send("/notifications/read", "PUT", { ids: [notice.id] });
+    return send("/notifications/group-read", "PUT", {
+      userId: notice.userId,
+      kind: notice.kind || "like",
+    });
+  },
+  markAllNotificationsRead() {
+    return send("/notifications/read-all", "PUT");
   },
   clear() {
     metadata = undefined;
@@ -330,9 +371,7 @@ export const apiRepository = {
       }
       return refresh();
     };
-    const result = queue.then(run, run);
-    queue = result.catch(() => undefined);
-    return result;
+    return enqueue(run);
   },
 };
 export function timeAgo(value: string) {

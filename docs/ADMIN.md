@@ -15,23 +15,21 @@ Cấp quyền bằng cấu hình server; không có nút tự nâng quyền tron
 | Khu vực | Chức năng |
 | --- | --- |
 | Tổng quan | Tổng số tài khoản, bài viết, chuỗi ảnh, báo cáo chờ; trạng thái worker và outbox; liên kết tra cứu |
-| Hạ tầng | Uptime/phiên bản API, RAM tiến trình/máy, CPU/load, đĩa của máy/container API, ping MongoDB/Redis, dung lượng MongoDB khi được cấp quyền đọc dbStats, heartbeat worker, số job BullMQ, cấu hình tích hợp, yêu cầu dựng lại bảng tin |
-| Log server | Log ứng dụng API/worker theo mức độ, dịch vụ, thời gian 1–168 giờ, request ID/route/sự kiện/job; phân trang và bật/tắt cập nhật |
-| Tác vụ nền | Lọc trạng thái/nhóm, số lần thử và thời gian; tra log; chạy lại job đã lỗi sau retry tự động |
+| Hạ tầng | RAM API/máy, dung lượng đĩa và MongoDB Atlas, request/phút, lỗi và tốc độ phản hồi, kết nối MongoDB/Redis, heartbeat worker và số job BullMQ; yêu cầu dựng lại bảng tin |
+| Tác vụ nền | Lọc trạng thái/nhóm, số lần thử và thời gian; chạy lại job đã lỗi sau retry tự động |
 | Người dùng | Tìm tên/username/ID/email; lọc xác thực/tạm khóa; chi tiết mức sử dụng, phiên còn hạn, lịch sử quản trị; khóa 1/7/30 ngày hoặc đến khi mở, mở khóa, thu hồi phiên |
 | Nội dung | Bài viết, Tell me now, bình luận; tìm lời kể, lọc tác giả/trạng thái; xem đầy đủ nội dung/ảnh; ẩn hoặc khôi phục |
 | Báo cáo | Lọc loại/trạng thái, xem đối tượng, bỏ qua, ẩn nội dung hoặc tạm khóa tài khoản được báo cáo; chống xử lý trùng |
-| Sử dụng ứng dụng | Biểu đồ và bảng 7/30/90 ngày; đăng ký, hoạt động, bài viết, chuỗi ảnh, khoảnh khắc, bình luận, số tin gửi; CSV, xác thực email, phiên, bản ghi ảnh |
+| Sử dụng ứng dụng | Biểu đồ và bảng 7/30/90 ngày; đăng ký, bài viết, chuỗi ảnh, khoảnh khắc, bình luận, số tin gửi; CSV, xác thực email, phiên, bản ghi ảnh |
 | Nhật ký quản trị | Tra ai đã thao tác, thời điểm, đối tượng và lý do; chỉ đọc, không có API sửa/xóa nhật ký |
 
 ## Dữ liệu và giới hạn đo lường
 
-- Log mới được tạo từ khi triển khai phần ghi log; không nhập ngược stdout/container log cũ. Log HTTP chứa route mẫu, mã request sinh ở server, method/status/thời gian; log worker có loại/mã lỗi và job ID. Không thu query string, header, body, cookie, token, nội dung trò chuyện hoặc error/stack thô. Chỉ nhận metadata theo schema cố định.
-- `server_logs` có TTL 7 ngày, ghi theo lô 100 mỗi 2 giây, bộ đệm tối đa 500 bản ghi/tiến trình. Mất kết nối DB sẽ thử ghi lại trong giới hạn bộ đệm; restart tiến trình hoặc quá tải có thể làm mất log chưa ghi. Stdout vẫn có sự kiện/cảnh báo/lỗi chuẩn hóa. Đây là log ứng dụng, không phải trình đọc journald/Docker hay shell từ trình duyệt.
-- Mã `X-Request-Id` do API sinh mới giúp liên kết lỗi và log. Request quản trị thành công không ghi lại vào log HTTP để tránh vòng lặp khi polling. Lỗi truy cập vẫn ghi nhận. Request metrics là bộ đếm trong tiến trình API, cửa sổ 15 phút, reset khi API khởi động lại; không cộng dồn nhiều replica.
-- Hoạt động người dùng ghi theo ngày Việt Nam, tối đa một bản ghi/user/ngày trong `activity_days`, giữ 365 ngày. `lastActiveAt` cập nhật tối đa mỗi 5 phút. Định nghĩa là tài khoản có request xác thực (gồm polling), không phải lượt truy cập, thời gian dùng hay online hiện tại. Ngày trước khi có ghi nhận để trống, không giả định bằng 0. Không có dữ liệu lịch sử trước khi triển khai bộ theo dõi.
+- Log chi tiết được xem trực tiếp trong stdout/container logs của Coolify; admin không giữ bộ đệm log, không đọc log của worker và không ghi log vận hành vào MongoDB. API chỉ ghi sự kiện lỗi/vận hành đã lọc dữ liệu nhạy cảm ra stdout. Không thu query string, header, body, cookie, token, nội dung trò chuyện hoặc error/stack thô.
+- Mã `X-Request-Id` do API sinh mới giúp liên kết lỗi trong Coolify. Request metrics là bộ đếm trong RAM của từng tiến trình API, cửa sổ 15 phút, reset khi API khởi động lại; số liệu không cộng dồn nhiều replica. Hạ tầng hiển thị trung bình request/phút từ cửa sổ này.
+- Tellme không ghi lịch sử truy cập hoặc `lastActiveAt`; trang admin không suy diễn số người đang hoạt động từ polling.
 - Thống kê bài/chuỗi/bình luận/tin nhắn tổng hợp từ bản ghi còn lưu; không tính lại nội dung đã xóa. Tin nhắn chỉ đếm số bản ghi, không trả nội dung. Phiên còn hạn không đồng nghĩa đang online. Số ảnh là bản ghi media, không phải dung lượng/tổng hóa đơn nhà cung cấp.
-- SMTP, Web Push, Cloudinary, Giphy, thời tiết và nhạc chỉ báo có cấu hình; không khẳng định nhà cung cấp hoạt động. Thống kê CPU/RAM/đĩa là máy/container của API; không thay thế giám sát host khác. dbStats thiếu quyền sẽ hiện không có số liệu.
+- RAM API và disk là của container API; RAM máy phụ thuộc giới hạn mà môi trường container báo về, không thay thế giám sát host. Dung lượng ảnh Cloudinary không được tính vào disk VPS. dbStats Atlas thiếu quyền sẽ hiện không có số liệu.
 - Admin phụ thuộc xác thực MongoDB. Khi MongoDB hoặc API không phục vụ được, cần dùng health check/log triển khai ở hạ tầng ngoài ứng dụng. Trang không có chức năng thực thi shell, sửa bí mật môi trường, khởi động lại host hoặc tự động khôi phục backup.
 
 ## Tạm khóa và kiểm duyệt
@@ -43,6 +41,14 @@ Nội dung có `moderation.hidden=true` bị loại khỏi truy vấn hiển th�
 Mỗi thao tác thay đổi cần lý do 5–500 ký tự. Bản ghi `admin_audit` được ghi cùng transaction với thay đổi MongoDB; nếu ghi nhật ký thất bại, thay đổi cũng không commit. Xử lý báo cáo có kiểm tra xung đột; job chỉ được retry ở trạng thái lỗi. Dispatcher xử lý lại BullMQ theo outbox, không chạy đè job đang hoạt động. Job dựng bảng tin được gộp theo phút. Không có API quản trị đọc nội dung chat riêng.
 
 ## Kiểm tra và QA
+
+### Dọn dữ liệu giám sát cũ một lần
+
+Phiên bản trước lưu log và lượt hoạt động trong hai collection không còn được dùng. Sau khi xác nhận `MONGODB_DB` trong `.env` là database Tellme mong muốn, chạy lệnh dưới đây sau khi API và worker đã chạy bản không còn các bộ ghi cũ. Bản cũ có thể tạo lại collection khi còn chạy. Lệnh chỉ xóa `server_logs`, `activity_days`, index `lastActiveAt_-1` và trường `lastActiveAt`; các collection/nội dung khác không bị đụng tới.
+
+```sh
+node packages/database/scripts/drop-monitoring-data.mjs --confirm-drop-monitoring
+```
 
 ```sh
 pnpm --filter @tellme/database build

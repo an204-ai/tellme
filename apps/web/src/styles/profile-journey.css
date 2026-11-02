@@ -4,7 +4,7 @@
   position: relative;
   isolation: isolate;
   display: grid;
-  grid-template-rows: 48px 40px minmax(0, 1fr) 28px;
+  grid-template-rows: 48px 40px minmax(0, 1fr);
   gap: 8px;
   height: 520px;
   min-height: 520px;
@@ -70,9 +70,6 @@
 .journey-stop:focus-visible { outline: none; }
 .journey-stop:focus-visible .journey-stop-image { outline: 2px solid var(--primary); outline-offset: 3px; }
 .journey-navigation button:focus-visible, .journey-add:focus-visible, .journey-status button:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
-.journey-footer { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; gap: 12px; min-width: 0; }
-.journey-hint { max-width: calc(100% - 108px); margin: 0; color: #586982; font-size: 10px; line-height: 1.35; text-align: center; }
-.journey-hint > span { display: block; }
 .journey-corner { position: absolute; z-index: auto; bottom: -1px; width: clamp(116px, 25%, 190px); height: 64px; pointer-events: none; }
 .journey-corner-left { left: -1px; }
 .journey-corner-right { right: -1px; }
@@ -83,13 +80,15 @@
 .journey-corner-right img { right: 24px; transform: rotate(7deg); }
 @keyframes journey-reveal { from { opacity: .3; } to { opacity: 1; } }
 @media (max-width: 640px) {
-  .profile-journey { height: 500px; min-height: 500px; max-height: 500px; grid-template-rows: 48px 40px minmax(0, 1fr) 28px; margin-block: 20px; padding: 12px 8px; border-radius: 24px; }
+  .profile-journey { height: 500px; min-height: 500px; max-height: 500px; grid-template-rows: 48px 36px minmax(0, 1fr); margin-block: 20px; padding: 12px 8px; border-radius: 24px; }
   .journey-heading { gap: 10px; padding-inline: 4px; }
   .journey-brand { flex-basis: 36px; width: 36px; height: 36px; border-radius: 12px; }
   .journey-brand img { width: 25px; height: 25px; }
   .journey-heading h2 { font-size: 18px; }
   .journey-heading p { font-size: 11px; }
-  .journey-navigation { max-width: 280px; }
+  .journey-navigation { max-width: 260px; height: 36px; }
+  .journey-navigation button { flex-basis: 32px; width: 32px; height: 32px; }
+  .journey-navigation > span { font-size: 13px; }
   .journey-stop time { font-size: 9px; }
   .journey-corner { height: 52px; }
   .journey-corner img { width: 44px; height: 44px; }

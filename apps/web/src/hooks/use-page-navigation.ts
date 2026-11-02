@@ -1,14 +1,12 @@
 "use client";
 import { useCallback, useEffect, useRef, useState, useTransition, type RefObject } from "react";
 import { useRouter } from "next/navigation";
-import { useQueryClient } from "@tanstack/react-query";
 
 type Intent = { id: number; href: string; label: string; from: string };
 
 /** Wait for the route AND its first data, never for pagination/background refresh. */
 export function usePageNavigation(pathname: string, content: RefObject<HTMLDivElement | null>) {
   const router = useRouter();
-  const client = useQueryClient();
   const [routing, startTransition] = useTransition();
   const [intent, setIntent] = useState<Intent | null>(null);
   const latest = useRef<Intent | null>(null);
@@ -44,11 +42,8 @@ export function usePageNavigation(pathname: string, content: RefObject<HTMLDivEl
         // A redirect is also a committed navigation; a superseded attempt is not.
         if (pathname !== target.pathname && pathname === intent.from) return;
         if (node.querySelector('[data-route-loading="true"]')) return;
-        const waitingForFirstData = client.getQueryCache().findAll().some((query) =>
-          query.isActive() && query.queryKey[0] === "tellme" && query.state.status === "pending" &&
-          query.state.data === undefined && query.state.fetchStatus !== "paused",
-        );
-        if (waitingForFirstData) return;
+        // Only this route's loading boundary owns its veil. A weather request or
+        // another pane's first query must never hold the destination inert.
         latest.current = null;
         setIntent(null);
       });
@@ -56,10 +51,9 @@ export function usePageNavigation(pathname: string, content: RefObject<HTMLDivEl
     // Query observers attach during commit. Check on the next frame, not a timer.
     const observer = new MutationObserver(check);
     observer.observe(node, { childList: true, subtree: true, attributes: true, attributeFilter: ["data-route-loading"] });
-    const unsubscribe = client.getQueryCache().subscribe(check);
     check();
-    return () => { observer.disconnect(); unsubscribe(); cancelAnimationFrame(frame); };
-  }, [intent, pathname, routing, client, content]);
+    return () => { observer.disconnect(); cancelAnimationFrame(frame); };
+  }, [intent, pathname, routing, content]);
   useEffect(() => {
     const cancel = () => { latest.current = null; setIntent(null); };
     window.addEventListener("popstate", cancel);

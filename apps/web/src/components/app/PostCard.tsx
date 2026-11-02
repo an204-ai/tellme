@@ -19,6 +19,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useCommunity } from "@/hooks/use-community";
+import { useReaction } from "@/hooks/use-reaction";
 import { reactorIds } from "@/lib/visibility";
 import { PostLikers, SharePost } from "./PostDialogs";
 import { newId, timeAgo } from "@/lib/api-repository";
@@ -56,6 +57,7 @@ export function PostCard({
   expanded?: boolean;
 }) {
   const { update, saving } = useCommunity();
+  const reaction = useReaction({ kind: "post", id: post.id }, data.authenticated !== false);
   const notify = useAppStore((state) => state.notify);
   const author =
     data.people.find((person) => person.id === post.authorId) ||
@@ -311,9 +313,7 @@ export function PostCard({
         <span>{post.shares} lượt chia sẻ</span>
       </div>
       <div className="post-actions">
-        <ReactionControl selected={post.reaction} disabled={saving} flightTarget={reactionCount} onChange={(reaction) => {
-          void changePost((target) => { target.reaction = reaction; }).catch(() => undefined);
-        }} />
+        <ReactionControl selected={post.reaction} disabled={saving || reaction.pending} flightTarget={reactionCount} onChange={reaction.change} />
         <button
           className="post-action"
           type="button"

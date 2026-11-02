@@ -10,7 +10,7 @@ import { users } from "./database.js";
 import { deliverSystemNotification, scheduleSystemNotifications } from "./system-notifications.js";
 import type { JobKind } from "./models.js";
 import { expireYouTubeMetadata } from "./story-music.js";
-import { logEvent, startLogWriter, flushServerLogs } from "./observability.js";
+import { logEvent } from "./observability.js";
 
 export async function handleJob(kind: JobKind, data: Record<string, unknown>, id: string) {
   switch (kind) {
@@ -33,7 +33,6 @@ export async function runWorker(name: "media" | "feed" | "notification") {
   const startup = new AbortController();
   let worker: ReturnType<typeof createWorker> | undefined;
   let stopDispatcher = () => {};
-  let stopLogs = () => {};
   let beat: ReturnType<typeof setInterval> | undefined;
   let timer: ReturnType<typeof setInterval> | undefined;
   let stopping = false, scheduling = false;
@@ -42,10 +41,9 @@ export async function runWorker(name: "media" | "feed" | "notification") {
     stopping = true;
     startup.abort();
     clearInterval(timer); clearInterval(beat); stopDispatcher();
-    logEvent({ service: name, level: "info", event: "process.stopping" }); stopLogs();
+    logEvent({ service: name, level: "info", event: "process.stopping" });
     if (worker) await worker.close();
     await redis.del(`${prefix}:worker:${name}`).catch(() => undefined);
-    await flushServerLogs();
     await Promise.allSettled([closeQueues(), mongo.close()]);
     process.exit(code);
   };
@@ -56,7 +54,6 @@ export async function runWorker(name: "media" | "feed" | "notification") {
       signal: startup.signal,
       onRetry: (failure, attempt, delay) => console.warn(`MongoDB chưa kết nối được; ${name} worker sẽ tự thử lại.`, { ...failure, attempt, retryInSeconds: Math.ceil(delay / 1000) }),
     });
-    stopLogs = startLogWriter();
     await connectRedis();
     startup.signal.throwIfAborted();
     worker = createWorker(name, handleJob);

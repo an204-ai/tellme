@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Activity, ArrowUpRight, Flag, LayoutDashboard, LogOut, Users, Server, ScrollText, ShieldCheck, ChartColumn, FileText } from "lucide-react";
+import { Activity, ArrowUpRight, Flag, LayoutDashboard, LogOut, Users, Server, ShieldCheck, ChartColumn, FileText } from "lucide-react";
 import { api, send, ApiError, type Admin } from "./api";
 import { ErrorState } from "./components";
 import logo from "../../web/public/brand/logos/tellme-wordmark-on-light.png";
@@ -10,7 +10,6 @@ const Reports = lazy(() => import("./pages/Reports").then((module) => ({ default
 const UsersPage = lazy(() => import("./pages/Users").then((module) => ({ default: module.UsersPage })));
 const Jobs = lazy(() => import("./pages/Jobs").then((module) => ({ default: module.Jobs })));
 const Infrastructure = lazy(() => import("./pages/Infrastructure").then((module) => ({ default: module.Infrastructure })));
-const Logs = lazy(() => import("./pages/Logs").then((module) => ({ default: module.Logs })));
 const Audit = lazy(() => import("./pages/Audit").then((module) => ({ default: module.Audit })));
 const Moderation = lazy(() => import("./pages/Moderation").then((module) => ({ default: module.Moderation })));
 const Analytics = lazy(() => import("./pages/Analytics").then((module) => ({ default: module.Analytics })));
@@ -18,7 +17,6 @@ const Analytics = lazy(() => import("./pages/Analytics").then((module) => ({ def
 const sections = [
   { id: "overview", label: "Tổng quan", icon: LayoutDashboard },
   { id: "infrastructure", label: "Hạ tầng", icon: Server },
-  { id: "logs", label: "Log server", icon: ScrollText },
   { id: "jobs", label: "Tác vụ nền", icon: Activity },
   { id: "users", label: "Người dùng", icon: Users },
   { id: "content", label: "Nội dung", icon: FileText },
@@ -68,7 +66,7 @@ export function App() {
     <div className="admin-content"><header className="admin-header"><span>{admin.name}<small>{admin.email}</small></span><button className="secondary" disabled={busy} onClick={() => void logout()}><LogOut size={16} />Đăng xuất</button></header>
       <main id="admin-main" tabIndex={-1}><h1>{sections.find((item) => item.id === section)?.label}</h1>{!admin.verified && <p role="alert" className="admin-notice">Xác thực email để thực hiện thao tác quản trị. <a href={`${admin.webUrl}/auth/verify-email`}>Nhập mã xác thực</a></p>}{error && <p className="error" role="alert">{error}</p>}
         {admin.environment === "test" && <p className="admin-notice">Môi trường kiểm thử · Dữ liệu minh họa trong cơ sở dữ liệu riêng, không phải dữ liệu vận hành thật.</p>}
-        {admin.verified && <Suspense fallback={<p role="status">Đang mở trang…</p>}>{section === "overview" ? <Dashboard /> : section === "reports" ? <Reports canWrite={admin.verified} /> : section === "users" ? <UsersPage webUrl={admin.webUrl} /> : section === "infrastructure" ? <Infrastructure /> : section === "logs" ? <Logs /> : section === "audit" ? <Audit /> : section === "content" ? <Moderation /> : section === "analytics" ? <Analytics /> : <Jobs canWrite={admin.verified} />}</Suspense>}
+        {admin.verified && <Suspense fallback={<p role="status">Đang mở trang…</p>}>{section === "overview" ? <Dashboard /> : section === "reports" ? <Reports canWrite={admin.verified} /> : section === "users" ? <UsersPage webUrl={admin.webUrl} /> : section === "infrastructure" ? <Infrastructure /> : section === "audit" ? <Audit /> : section === "content" ? <Moderation /> : section === "analytics" ? <Analytics /> : <Jobs canWrite={admin.verified} />}</Suspense>}
       </main>
     </div>
   </div>;

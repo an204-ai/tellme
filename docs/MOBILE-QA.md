@@ -1,40 +1,54 @@
-# Web mobile regression — 03/11/2026
+# Mobile layout và độ phản hồi — 03/11/2026
 
-Phạm vi: picker cảm xúc, chat và bàn phím, modal chuỗi trong ngày, camera, nav nổi và tỉ lệ bảng tin. Giữ Poppins, navy Tellme, API, quyền xem, MongoDB Atlas và dữ liệu production.
+Phản hồi thiết kế: khôi phục desktop/laptop về tỷ lệ trước `aaf3f80`, chỉ tinh chỉnh bố cục điện thoại. Bỏ các badge số thứ tự, dòng mô tả, câu kết mới trong modal chuỗi từ `aaf3f80`. Giữ bản sửa picker, bàn phím, cuộn chat, camera và nav nổi.
 
-## Kiểm tra giao diện thực tế
+## Kiểm tra bố cục
 
-Dùng Next dev ở cổng 3100, cache riêng `.next-mobile-review`, API fixture tạm thời và ảnh nội bộ. Không đăng bài, gửi tin nhắn hoặc sửa tài khoản thật. Tất cả route/asset fixture được xóa trước khi build production.
+Dùng Next dev với cache riêng `.next-mobile-polish` và API giả lập tại localhost:4101. Không truy cập Atlas, không thao tác tài khoản thật. Ảnh/dữ liệu fixture và công cụ đo chỉ phục vụ QA; xóa trước build production.
 
-| Kiểm tra Chromium | Kết quả |
+| Kiểm tra | Kết quả |
 | --- | --- |
-| Bảng tin ở 320, 390, 402, 440, 768, 1440px | Không tràn ngang; nội dung 15px; cột bài tối đa 680px |
-| Modal ngày tại sáu chiều rộng trên | Dialog trong viewport, nội dung nằm trong dialog, thông báo nhạc không tràn |
-| Thumbnail đầu, giữa, cuối | Đồng bộ ảnh và chỉ số 1/3, 2/3, 3/3 |
-| Picker bài viết và khoảnh khắc | Khung 234×54px, năm lựa chọn 44×44px; dùng chung component |
-| Chat ở 320, 402, 768, 1440px | Header/composer trong viewport, lịch sử cuộn riêng |
-| Touch chat qua Chrome CDP | Vuốt xuống giảm scrollTop để xem tin cũ; vuốt lên tăng scrollTop để về tin mới |
-| Giả lập viewport bàn phím: 402×760 → 402×420 khi input focus | `data-keyboard-open=true`, header chat ở y=0, composer kết thúc y=420, input kết thúc y=412; header toàn cục và nav ẩn |
-| Camera dùng Canvas stream giả lập | Không có combobox lens; facing `environment` ↔ `user`; 2× digital cho ảnh 600×450 từ video 1200×900 |
-| Track zoom có min=1, base=2, max=4 | 0.5× gọi hardware zoom=1; camera trước 2× gọi zoom=4 |
-| Chụm hai ngón camera qua Chrome CDP | Zoom thay đổi liên tục theo khoảng cách hai ngón |
+| Feed tại 320, 390, 402, 440px | Không tràn ngang; bài viết rộng bằng viewport; nội dung 15px |
+| Desktop 1440px | Cột giữa và bài viết cùng rộng 805px; max-width none; margin trái 0; nội dung 16px/29.6px; padding header bài 19px 20px 12px như trước aaf3f80 |
+| Profile tại 320/402px | Không tràn ngang; tên 21px |
+| Thẻ tạo khoảnh khắc | Thẻ 116×184px, nhãn nằm trong thẻ |
+| Modal ngày tại 320/402/768/1440px | Không còn `.day-sequence-summary`, `.day-nav-index`, `.day-moment-position`, `.day-timeline-end`; giữ ngày, giờ, ảnh và thao tác |
+| Cảm xúc bài viết | Trạng thái và số đếm đổi ngay; sau lỗi giả lập, tự về trạng thái/số đếm trước đó |
+| Cảm xúc khoảnh khắc | Phản hồi ngay cả khi timeline vừa mở từ placeholder cache và còn đang lấy bản mới |
+| Nhập tin nhắn | Counter render của history giữ 2→2 trong lượt gõ “Một lời chào hôm nay” (hai render ban đầu do Strict Mode); counter được gỡ sau thử |
 
-Ảnh local trong `.impeccable/review/`: `iphone-timeline-refined.png`, `iphone-chat-keyboard-refined.png`, `desktop-feed-scale-refined.png`. Dữ liệu trong ảnh chỉ là fixture kiểm tra, không đưa vào Git/runtime.
+Ảnh trong `.impeccable/review/` (không đưa vào Git): `desktop-width-restored.png`, `mobile-feed-dense.png`, `mobile-timeline-minimal.png`. Nội dung và avatar trong ảnh là dữ liệu QA, không phải phần trang trí mới của sản phẩm.
 
-## Kiểm tra có thể chạy lại
+## Đo phản hồi trước/sau
+
+API thử cố định trễ **350ms cho mỗi HTTP request**. Công cụ tạm dùng `performance.now()` từ click đến trạng thái cảm xúc được vẽ ở frame tiếp theo. Đây là lượt đo local có kiểm soát, không phải INP thực địa hoặc số đo VPS.
+
+| Luồng | Trước | Sau |
+| --- | --- | --- |
+| Phản hồi cảm xúc | 1488ms | 27ms, trong lúc request còn pending |
+| Request do một thao tác tạo ra (không tính polling độc lập) | PUT reaction → GET post → GET bootstrap → GET feed | PUT reaction → GET đúng post |
+| Chuyển tới tab đã tải, có một query nền chờ 5 giây | Code cũ chờ mọi query Tellme active/pending | 152ms trong lượt thử; query nền vẫn pending, trang đích `aria-busy=false`, không inert |
+
+Không thay endpoint, quyền xem hoặc logic backend. Lưu cảm xúc vẫn được máy chủ kiểm tra. Adapter dùng cùng queue cho lệnh cũ và lệnh cảm xúc; request lỗi không làm tắc các lệnh kế tiếp. Cache được cập nhật theo từng entity và chỉ hoàn tác trường cảm xúc, tránh làm mất bình luận hoặc thay đổi khác đang đến.
+
+Timeline có thể dùng ngay dữ liệu đã đọc trước đó, vẫn yêu cầu bản mới từ server. Nếu server trả 403/404, ẩn chuỗi không còn khả dụng. Lớp chờ điều hướng chỉ chờ loading boundary của trang đích. Lịch sử chat được memo riêng, không dựng lại khi chỉ sửa draft.
+
+Tham khảo kỹ thuật: [React optimistic UI](https://react.dev/reference/react/useOptimistic), [web.dev về độ trễ tương tác](https://web.dev/articles/optimize-inp). Không suy đoán cách triển khai nội bộ của Facebook từ ảnh giao diện.
+
+## Kiểm tra chạy lại
 
 ```sh
-node --test apps/web/src/lib/camera.test.mjs
+node --test apps/web/src/lib/api-repository.test.mjs apps/web/src/lib/reaction-cache.test.mjs apps/web/src/lib/camera.test.mjs
 pnpm --filter @tellme/web check-types
 TELLME_LOW_MEMORY_BUILD=1 pnpm --filter @tellme/web build
 ```
 
-Kết quả cuối: 4/4 test camera thành công; TypeScript exit 0; build production Next.js thành công, tạo đủ 23 trang tĩnh và các route động. Bản build không có route API hay trang camera giả lập. `git diff --check` thành công.
+Kết quả cuối: 11/11 test qua; TypeScript và build production Next.js thành công (23 trang tĩnh và các route động), `git diff --check` qua. Không có route/asset QA trong bản build.
 
-Test camera kiểm tra crop 4:3, crop 2× ở giữa, giới hạn kích thước, zoom không hợp lệ, selfie mirror và khớp tọa độ preview/ảnh chụp. Không yêu cầu webcam hay truy cập database.
+11 test kiểm tra: số request hẹp, queue đồng thời/lỗi, optimistic count, đổi/bỏ cảm xúc, rollback giữ dữ liệu khác, cache feed/detail/profile/story, đối soát dữ liệu server, crop 4:3/zoom và ảnh selfie. Không dùng database hoặc webcam.
 
-## Giới hạn và xác nhận trên thiết bị
+## Giới hạn
 
-Các phép thử responsive và touch ở trên dùng Chromium, không phải Safari trên iPhone vật lý. Việc thu viewport chỉ mô phỏng ảnh hưởng của bàn phím, không mở bàn phím iOS thật. Stream/capability camera là giả lập; quyền camera, lựa chọn ống kính của Safari và chất lượng ảnh cần kiểm tra thêm trên iPhone 17 Pro sau deploy.
+Responsive và thao tác được thử bằng Chromium, không phải iPhone vật lý. Cần xác nhận Safari sau deploy cho bàn phím thật, safe area và capability camera. Các số phản hồi trên là mẫu đo local trong điều kiện cố định, không đảm bảo cùng kết quả trên mạng/thiết bị thật. Không thay cấu hình hạ tầng, MongoDB Atlas hoặc dữ liệu production.
 
-Trên iPhone, mở lại picker ở feed/modal; nhập và đóng bàn phím chat; vuốt hai hướng; thử camera trước/sau, 1×/2×, chụm zoom và so preview với ảnh chụp. 0.5× phụ thuộc capability mà Safari trả về; nếu không hỗ trợ thì ẩn mức này thay vì hiển thị lựa chọn không hoạt động. Giữ khả năng pinch-zoom trang ngoài viewfinder.
+Detector CSS báo ba heuristic về separator 6px. Đây là đường phân vùng xám trung tính toàn chiều rộng theo ảnh tham khảo; các khối trên điện thoại đã đặt border-radius: 0, được kiểm tra bằng giao diện render, không phải accent border trên card bo góc.

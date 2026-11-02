@@ -177,6 +177,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const selectionPath = navigation.pendingHref?.split("?")[0] || pathname;
   const me = data?.people.find((person) => person.id === "me");
   useRealtime(data?.authenticated === true, data?.connections || []);
+  useEffect(() => {
+    const root = document.documentElement;
+    const pointer = () => { root.dataset.inputModality = "pointer"; };
+    const keyboard = (event: KeyboardEvent) => {
+      if (["Tab", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key))
+        root.dataset.inputModality = "keyboard";
+    };
+    document.addEventListener("pointerdown", pointer, true);
+    document.addEventListener("keydown", keyboard, true);
+    return () => {
+      document.removeEventListener("pointerdown", pointer, true);
+      document.removeEventListener("keydown", keyboard, true);
+      delete root.dataset.inputModality;
+    };
+  }, []);
   const publicPage = /^\/community\/(today|feed|explore|profile\/(?!me$)[^/]+)$/.test(pathname) || pathname.startsWith("/post/");
   const accountHref = (href: string) => data?.authenticated === false && !/^\/community\/(today|feed|explore)$/.test(href) ? `/auth/login?next=${encodeURIComponent(href)}` : href;
   useEffect(() => {

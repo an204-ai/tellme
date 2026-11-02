@@ -210,27 +210,6 @@
   outline: 2px solid var(--primary);
   outline-offset: 3px;
 }
-.daily-entry-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 13px;
-}
-.daily-entry-footer > span {
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-}
-.daily-entry-footer > button {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  color: var(--primary);
-  font-size: 13px;
-  background: none;
-  border: 0;
-  padding: 7px 0;
-}
 /* The complete day remains visible in chronological order, rather than a slideshow. */
 .day-timeline-dialog {
   width: 1080px;
@@ -661,16 +640,6 @@
   .daily-photo-fan.photos-2:is(:hover, :focus-within) {
     --fan-spread: 22%;
     --fan-angle: 0.3;
-  }
-  .daily-entry-footer {
-    margin-top: 6px;
-  }
-  .daily-entry-footer > span {
-    font-size: 11px;
-  }
-  .daily-entry-footer > button {
-    font-size: 12px;
-    gap: 5px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

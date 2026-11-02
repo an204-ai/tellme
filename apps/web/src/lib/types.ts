@@ -137,6 +137,13 @@ export interface Notice {
   read: boolean;
   at: string;
   postId?: string;
+  groupCount?: number;
+  unreadCount?: number;
+}
+export interface NotificationPage {
+  items: Notice[];
+  nextCursor: number | null;
+  olderAvailable: boolean;
 }
 export interface Preferences {
   audience: Privacy;
@@ -155,6 +162,7 @@ export interface AppData {
   stories: DayStory[];
   conversations: Conversation[];
   notifications: Notice[];
+  unreadNotifications?: number;
   following: string[];
   connections: string[];
   blocked: string[];

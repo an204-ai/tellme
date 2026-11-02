@@ -1,73 +1,44 @@
 /* Social reading scale: compact metadata, readable copy, full-size touch targets. */
-:root { --social-copy: 15px; --social-meta: 12px; --social-label: 14px; }
-.main-content .posts-list, .main-content .feed-composer,
-.main-content .feed-controls, .main-content .daily-space { width: 100%; max-width: 680px; margin-inline: auto; }
-.posts-list { gap: 16px; }
-.post-header { padding: 14px 16px 10px; gap: 10px; }
-.post-header .avatar, .daily-person > .avatar { flex: 0 0 40px; width: 40px; height: 40px; }
-.post-author, .daily-person > div { gap: 2px; }
-.post-author-line, .post-header .person-name, .daily-person .person-name { font-size: var(--social-copy); line-height: 1.45; }
-.post-meta, .post-statistics, .daily-person > div > span, .daily-entry-footer > span { font-size: var(--social-meta); line-height: 1.5; }
-.post-content { padding: 0 16px 12px; }
-.post-content > p, .daily-caption { font-size: var(--social-copy); line-height: 1.6; }
-.post-statistics { padding: 10px 16px; }
-.post-actions { min-height: 46px; gap: 2px; }
-.post-action, .tellme-reaction-main { min-height: 44px; font-size: var(--social-label); }
-.tellme-reaction-more { width: 44px; }
-.post-photo { max-height: 560px; }
-.post-photo > img { position: absolute; inset: 0; max-height: none; }
-.daily-entry { padding-block: 20px; }
-.daily-caption { margin-top: 12px; }
-.daily-entry-footer > button { min-height: 44px; font-size: 13px; }
-.today-friends-strip { gap: 10px; }
-.today-friend-story { flex-basis: 132px; width: 132px; height: 206px; }
-.today-create-label { padding: 8px 8px 12px; font-size: 13px; line-height: 1.4; }
-.today-friend-person strong { font-size: 13px; }
-.today-friend-person small, .today-friend-time { font-size: 11px; }
-.message-bubble { font-size: 15px; line-height: 1.55; padding: 9px 13px; }
-.message-row time { font-size: 11px; }
-.chat-input-line > input { min-height: 44px; font-size: 16px; }
-.chat-input-line > button:last-child { flex: 0 0 44px; width: 44px; height: 44px; }
-.chat-header { padding: 12px 16px; }
-.chat-header .person-name { font-size: 15px; }
-.chat-header > .chat-details-toggle { flex: 0 0 44px; width: 44px; height: 44px; }
-.chat-header small { font-size: 12px; line-height: 1.4; }
-.chat-intro { padding-block: 12px; gap: 8px; }
-.chat-intro > span:last-child { font-size: 13px; line-height: 1.5; text-align: center; }
+/* Typography, spacing and social layout refinements are phone-only. */
+@media (max-width: 640px) {
+  :root { --social-copy: 15px; --social-meta: 12px; --social-label: 14px; }
+  .post-header { padding: 14px 16px 10px; gap: 10px; }
+  .post-header .avatar, .daily-person > .avatar { flex: 0 0 40px; width: 40px; height: 40px; }
+  .post-author, .daily-person > div { gap: 2px; }
+  .post-author-line, .post-header .person-name, .daily-person .person-name { font-size: var(--social-copy); line-height: 1.45; }
+  .post-meta, .post-statistics, .daily-person > div > span { font-size: var(--social-meta); line-height: 1.5; }
+  .post-content { padding: 0 16px 12px; }
+  .post-content > p, .daily-caption { font-size: var(--social-copy); line-height: 1.6; }
+  .post-statistics { padding: 10px 16px; }
+  .post-actions { min-height: 46px; gap: 2px; }
+  .post-action, .tellme-reaction-main { min-height: 44px; font-size: var(--social-label); }
+  .tellme-reaction-more { width: 44px; }
+  .post-photo { max-height: 560px; }
+  .post-photo > img { position: absolute; inset: 0; max-height: none; }
+  .daily-entry { padding-block: 20px; }
+  .daily-caption { margin-top: 12px; }
+  .today-friends-strip { gap: 10px; }
+  .today-friend-story { flex-basis: 132px; width: 132px; height: 206px; }
+  .today-create-label { padding: 26px 8px 8px; font-size: 13px; line-height: 1.4; }
+  .today-friend-person strong { font-size: 13px; }
+  .today-friend-person small, .today-friend-time { font-size: 11px; }
+  .message-bubble { font-size: 15px; line-height: 1.55; padding: 9px 13px; }
+  .message-row time { font-size: 11px; }
+  .chat-input-line > input { min-height: 44px; font-size: 16px; }
+  .chat-input-line > button:last-child { flex: 0 0 44px; width: 44px; height: 44px; }
+  .chat-header { padding: 12px 16px; }
+  .chat-header .person-name { font-size: 15px; }
+  .chat-header > .chat-details-toggle { flex: 0 0 44px; width: 44px; height: 44px; }
+  .chat-header small { font-size: 12px; line-height: 1.4; }
+  .chat-intro { padding-block: 12px; gap: 8px; }
+  .chat-intro > span:last-child { font-size: 13px; line-height: 1.5; text-align: center; }
+}
 .story-header-music { flex-wrap: wrap; }
 .story-music-error { flex: 0 0 100%; min-width: 0; max-width: 100%; margin: 0; color: #8e1730; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
 .moment-viewfinder { touch-action: none; }
 .moment-camera-zoom { display: flex; justify-content: center; gap: 8px; margin-top: -8px; }
 .moment-camera-zoom > button { display: grid; place-items: center; min-width: 44px; height: 44px; padding: 0 10px; border: 0; border-radius: 50%; background: #f1f4f9; color: var(--primary); font-size: 13px; font-weight: 500; touch-action: manipulation; }
 .moment-camera-zoom > button[aria-pressed="true"] { background: var(--primary); color: #fff; }
-.day-sequence-summary { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 16px; flex: 0 0 auto; padding: 10px 24px; border-bottom: 1px solid var(--line); font-size: 12px; line-height: 1.5; }
-.day-sequence-summary > strong { color: var(--primary); font-weight: 600; }
-.day-sequence-summary > span { font-size: 11px; }
-.day-nav-index { display: none; }
-.day-moment-position { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 12px; }
-.day-moment-position > strong { display: grid; place-items: center; min-width: 28px; height: 28px; border-radius: 50%; color: var(--primary); background: #edf2fa; font-size: 12px; font-variant-numeric: tabular-nums; }
-.day-moment-time::after { width: 2px; background: #dce5f3; }
-.day-moment-time > span { margin-top: 28px; }
-.day-moment-caption > p { font-size: 15px; line-height: 1.6; }
-.day-timeline-dialog .dialog-header > .icon-button { width: 44px; height: 44px; }
-.day-timeline-dialog .dialog-header { grid-template-columns: minmax(0, 1fr) 44px; }
-.day-timeline-dialog { height: min(900px, calc(100dvh - 24px)); max-height: calc(100dvh - 24px); }
-.day-timeline-dialog > .dialog-content { height: 100%; max-height: 100%; }
-@media (max-width: 700px) {
-  .day-timeline-dialog { max-width: 100vw; }
-  .day-sequence-summary { padding: 8px 16px; }
-  .day-timeline-dialog .day-timeline-aside { gap: 8px; padding: 12px 12px 8px; }
-  .day-timeline-aside .day-timeline-nav { position: relative; gap: 16px; align-items: start; }
-  .day-timeline-nav > button { display: grid; grid-template-columns: 1fr; justify-items: center; gap: 5px; padding: 5px; flex: 0 0 62px; min-height: 80px; }
-  .day-timeline-nav > button > img { grid-column: 1; grid-row: 1; width: 52px; height: 40px; border-radius: 7px; }
-  .day-timeline-nav .day-nav-dot { display: none; }
-  .day-timeline-nav > button > time { grid-column: 1; grid-row: 2; font-size: 11px; }
-  .day-nav-index { position: absolute; top: 2px; left: 1px; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--primary); color: white; font-size: 9px; }
-  .day-timeline-nav > button:not(:last-child)::after { display: block; left: calc(100% + 1px); top: 24px; bottom: auto; width: 14px; height: 2px; background: #b6c8e6; }
-  .day-timeline-scroll { padding: 14px 12px 16px 0; }
-  .day-moment { grid-template-columns: 43px minmax(0, 1fr); }
-  .day-moment-time > time { font-size: 10px; }
-}
 @media (max-width: 640px) {
   .app-frame { --site-header-height: 60px; }
   .header-inner { padding-inline: 14px; }
@@ -75,16 +46,14 @@
   .header-actions > .icon-button, .header-actions > .mobile-search-button { width: 40px; height: 44px; }
   .post-author-line, .post-header .person-name, .daily-person .person-name { font-size: 14px; }
   .post-content > p, .daily-caption, .comment-bubble p, .message-bubble { font-size: 15px; line-height: 1.6; }
-  .post-meta, .post-statistics, .daily-person > div > span, .daily-entry-footer > span { font-size: 12px; }
+  .post-meta, .post-statistics, .daily-person > div > span { font-size: 12px; }
   .post-action, .tellme-reaction-main { font-size: 13px; gap: 4px; }
   .post-actions svg { width: 19px; height: 19px; }
   .post-photo { max-height: 480px; }
   .today-friend-story { flex-basis: 116px; width: 116px; height: 184px; }
-  .today-create-label { font-size: 12px; line-height: 1.35; padding-bottom: 14px; }
+  .today-create-label { padding: 26px 8px 8px; font-size: 12px; line-height: 1.35; }
   .today-friend-person strong { font-size: 12px; }
   .daily-entry { padding-block: 18px; }
-  .daily-entry-footer { gap: 8px; margin-top: 8px; }
-  .daily-entry-footer > button { font-size: 12px; }
   .daily-photo-fan.photos-2 { height: clamp(195px, 58vw, 260px); }
   .daily-space .daily-compose-field { min-height: 48px; padding-block: 4px; }
   .daily-space .daily-compose-prompt { font-size: 14px; line-height: 1.5; }
@@ -96,11 +65,58 @@
   .messages-frame[data-keyboard-open="true"] .tellme-sticker-suggestions { padding: 4px 6px; margin-bottom: 6px; }
   .messages-frame[data-keyboard-open="true"] .tellme-sticker-suggestion-list img { width: 44px; height: 44px; }
   .messages-frame[data-keyboard-open="true"] .tellme-sticker-suggestion-heading .icon-button { width: 28px; height: 28px; }
-  .chat-input-line { gap: 2px; }
+  .chat-input-line { gap: 8px; }
   .chat-input-line > .icon-button { flex: 0 0 44px; width: 44px; height: 44px; }
   .chat-input-line > input { padding: 10px 12px; font-size: 16px; }
   .chat-input-line > input:focus-visible { outline-width: 2px; outline-offset: 0; }
   .chat-messages { padding: 12px; }
+  .day-timeline-dialog { max-width: 100vw; height: calc(100dvh - 24px); max-height: calc(100dvh - 24px); }
+  .day-timeline-dialog > .dialog-content { height: 100%; max-height: 100%; }
   .day-timeline-dialog .dialog-heading h2 { font-size: 16px; line-height: 1.45; }
   .day-moment-caption > p { font-size: 14px; line-height: 1.6; }
+}
+
+/* Phone feed: use the screen for content, with one compact rhythm across sections. */
+@media (max-width: 640px) {
+  .app-frame:has(.pull-refresh) > .app-shell { padding-inline: 0; padding-top: 0; }
+  .main-content .posts-list, .main-content .feed-composer,
+  .main-content .feed-controls, .main-content .daily-space { width: 100%; max-width: none; margin-inline: 0; }
+  .posts-list { gap: 0; }
+  .post-card { border: 0; border-bottom: 6px solid #edf0f5; border-radius: 0; }
+  .post-header { padding: 12px 12px 8px; }
+  .post-content { padding-inline: 12px; padding-bottom: 10px; }
+  .post-content > p { font-size: 15px; line-height: 1.5; }
+  .post-photo { width: 100%; margin-inline: 0; border-radius: 0; }
+  .post-statistics { padding: 8px 12px; }
+  .post-actions { margin-inline: 8px; }
+  .feed-composer { margin: 0; padding: 12px; border: 0; border-bottom: 6px solid #edf0f5; border-radius: 0; }
+  .composer-prompt { gap: 10px; }
+  .composer-prompt > .avatar { width: 40px; height: 40px; flex: 0 0 40px; }
+  .composer-prompt > button { font-size: 15px; line-height: 1.5; min-height: 44px; }
+  .feed-composer-bottom { margin-top: 8px; padding-top: 8px; }
+  .feed-controls { padding-inline: 8px; margin-block: 0; min-height: 44px; }
+  .daily-space .daily-compose { margin: 0; border: 0; border-bottom: 6px solid #edf0f5; border-radius: 0; }
+  .today-friends { padding: 12px 0; border-bottom: 6px solid #edf0f5; }
+  .today-friends > header { padding-inline: 12px; }
+  .today-community-heading { padding-inline: 12px; font-size: 16px; }
+  .today-friends-strip { padding-inline: 12px; }
+  .daily-entry { padding: 14px 12px; border-bottom: 6px solid #edf0f5; }
+  .daily-person { gap: 10px; }
+  .comments-section { padding: 12px; }
+  .comment-row { gap: 8px; }
+  .comment-bubble { padding: 8px 10px; }
+  .comment-bubble p { font-size: 14px; line-height: 1.5; }
+  .comment-bubble .person-name { font-size: 13px; }
+  .comment-actions, .comment-meta { font-size: 12px; }
+  .conversation-list > header { padding: 12px; }
+  .conversation-row { min-height: 72px; padding: 10px 12px; gap: 12px; }
+  .conversation-row > .avatar { width: 48px; height: 48px; flex: 0 0 48px; }
+  .conversation-row-name strong { font-size: 15px; line-height: 1.4; }
+  .conversation-preview { font-size: 13px; line-height: 1.5; }
+  .profile-journal .profile-main h1 { font-size: 21px; line-height: 1.35; }
+  .profile-journal .profile-bio { font-size: 15px; line-height: 1.5; }
+  .profile-personal h2 { font-size: 16px; }
+  .profile-personal dl { gap: 14px; }
+  .profile-personal dd { font-size: 14px; line-height: 1.5; }
+  .day-timeline-dialog .day-timeline-nav > button { min-height: 52px; }
 }

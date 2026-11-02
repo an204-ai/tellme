@@ -2,7 +2,7 @@
 import { StoryMusic } from "@/components/music/StoryMusic";
 import { Select } from "@/components/ui/Select";
 import { useQuery } from "@tanstack/react-query";
-import { apiRepository } from "@/lib/api-repository";
+import { apiRepository, ApiError } from "@/lib/api-repository";
 import { useEffect, useRef, useState } from "react";
 import { Camera, Check, MoreHorizontal, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useCommunity } from "@/hooks/use-community";
@@ -35,10 +35,12 @@ export function StoryTimeline({
   const storyQuery = useQuery({
     queryKey: ["tellme", "story", storyId],
     queryFn: () => apiRepository.getStory(storyId),
+    placeholderData: () => apiRepository.peekStory(storyId),
     retry: false,
   });
+  const unavailable = storyQuery.error instanceof ApiError && [403, 404].includes(storyQuery.error.status);
   const story =
-    storyQuery.data &&
+    !unavailable && storyQuery.data &&
     data &&
     canView(storyQuery.data.userId, storyQuery.data.privacy, data)
       ? storyQuery.data
@@ -144,10 +146,6 @@ export function StoryTimeline({
       onClose={() => viewStory(null)}
       className="day-timeline-dialog"
     >
-      <div className="day-sequence-summary" aria-live="polite">
-        <strong>Khoảnh khắc {Math.max(1, items.findIndex((item) => item.id === active) + 1)} / {items.length}</strong>
-        <span>{timeOf(items[0]!.at)} — {timeOf(items[items.length - 1]!.at)} · Cùng một ngày, nối tiếp nhau</span>
-      </div>
       <div className="day-timeline-layout">
         <aside className="day-timeline-aside">
           <div className="day-person">
@@ -190,7 +188,6 @@ export function StoryTimeline({
                 }}
               >
                 <span className="day-nav-dot" />
-                <span className="day-nav-index" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
                 <time dateTime={item.at}>{timeOf(item.at)}</time>
                 <img src={item.image} alt="" loading="lazy" />
                 <span className="day-nav-caption">
@@ -238,7 +235,6 @@ export function StoryTimeline({
                 <span />
               </div>
               <div className="day-moment-content">
-                <div className="day-moment-position"><strong>{String(i + 1).padStart(2, "0")}</strong><span>Khoảnh khắc {i + 1} / {items.length}</span></div>
                 <div className="day-moment-media">
                   <img
                     className="day-moment-photo"
@@ -322,10 +318,7 @@ export function StoryTimeline({
               </div>
             </section>
           ))}
-          <div className="day-timeline-end">
-            <span />
-            Một ngày, {items.length} khoảnh khắc. Mình giữ lại ở đây nhé.
-          </div>
+
         </div>
       </div>
     </Modal>

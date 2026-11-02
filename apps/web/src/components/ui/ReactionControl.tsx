@@ -1,10 +1,9 @@
 "use client";
 import Image from "next/image";
 import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type RefObject } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ThumbsUp } from "lucide-react";
 import type { Reaction } from "@/lib/types";
 import { reactionOptions } from "@/lib/social-assets";
-import { enableLongPress } from "@/lib/long-press";
 
 export function ReactionIcon({ value, size = 28 }: { value: Reaction; size?: number }) {
   const option = reactionOptions.find((entry) => entry.value === value) || reactionOptions[0]!;
@@ -27,7 +26,13 @@ export function ReactionControl({ selected, onChange, disabled = false, compact 
   const burstSequence = useRef(0);
   const [burst, setBurst] = useState<{ value: Reaction; x: number; y: number; key: number; flight?: { dx: number; dy: number; arc: number; size: number } } | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const gesture = useRef<{ id: number; x: number; y: number; opened: boolean; value: Reaction | null; timer?: ReturnType<typeof setTimeout> } | null>(null);
+  const suppressClick = useRef(false);
+  const suppressClickTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const chooseRef = useRef<(value: Reaction | null, source: HTMLButtonElement) => void>(() => {});
+  const closeRef = useRef<() => void>(() => {});
   const [open, setOpen] = useState(false);
+  const [dragReaction, setDragReaction] = useState<Reaction | null>(null);
   const choice = reactionOptions.find((option) => option.value === selected);
   const cancelClose = () => clearTimeout(timer.current);
   const close = () => popup.current?.hidePopover();
@@ -52,6 +57,8 @@ export function ReactionControl({ selected, onChange, disabled = false, compact 
     }
     onChange(value);
   };
+  chooseRef.current = choose;
+  closeRef.current = close;
   useLayoutEffect(() => {
     if (!burst) return;
     // The top layer also clears clipped post images and the story timeline dialog.
@@ -81,11 +88,59 @@ export function ReactionControl({ selected, onChange, disabled = false, compact 
     });
     if (focus) requestAnimationFrame(() => popup.current?.querySelector<HTMLButtonElement>("button")?.focus({ preventScroll: true }));
   };
-  useEffect(() => () => clearTimeout(timer.current), []);
+  useEffect(() => () => { clearTimeout(timer.current); clearTimeout(suppressClickTimer.current); }, []);
   useEffect(() => {
-    if (disabled || !main.current) return;
-    return enableLongPress(main.current, () => show());
-  }, [disabled]);
+    const move = (event: PointerEvent) => {
+      const current = gesture.current;
+      if (!current || current.id !== event.pointerId) return;
+      if (!current.opened) {
+        if (Math.hypot(event.clientX - current.x, event.clientY - current.y) > 12) {
+          if (current.timer) clearTimeout(current.timer);
+          gesture.current = null;
+        }
+        return;
+      }
+      const node = document.elementFromPoint(event.clientX, event.clientY);
+      const button = node?.closest<HTMLButtonElement>(".tellme-reaction-picker > button[data-reaction]");
+      const value = button?.dataset.reaction as Reaction | undefined;
+      const next = value && reactionOptions.some((option) => option.value === value) ? value : null;
+      current.value = next;
+      setDragReaction(next);
+    };
+    const finish = (event: PointerEvent) => {
+      const current = gesture.current;
+      if (!current || current.id !== event.pointerId) return;
+      if (current.timer) clearTimeout(current.timer);
+      gesture.current = null;
+      if (!current.opened) return;
+      if (event.type !== "pointerup") {
+        setDragReaction(null);
+        closeRef.current();
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      suppressClick.current = true;
+      clearTimeout(suppressClickTimer.current);
+      suppressClickTimer.current = setTimeout(() => { suppressClick.current = false; }, 0);
+      setDragReaction(null);
+      if (current.value) {
+        const source = popup.current?.querySelector<HTMLButtonElement>(`button[data-reaction="${current.value}"]`);
+        if (source) chooseRef.current(current.value, source);
+        else closeRef.current();
+      } else closeRef.current();
+    };
+    document.addEventListener("pointermove", move, { capture: true, passive: true });
+    document.addEventListener("pointerup", finish, true);
+    document.addEventListener("pointercancel", finish, true);
+    return () => {
+      document.removeEventListener("pointermove", move, true);
+      document.removeEventListener("pointerup", finish, true);
+      document.removeEventListener("pointercancel", finish, true);
+      if (gesture.current?.timer) clearTimeout(gesture.current.timer);
+      gesture.current = null;
+    };
+  }, []);
   useEffect(() => {
     if (!open) return;
     const dismiss = () => popup.current?.hidePopover();
@@ -118,8 +173,21 @@ export function ReactionControl({ selected, onChange, disabled = false, compact 
   }, [open]);
   return <>
     <div ref={trigger} className={`tellme-reaction-control ${compact ? "compact" : ""} ${selected ? "selected" : ""}`} onPointerLeave={(event) => { if (event.pointerType === "mouse") scheduleClose(); }}>
-      <button ref={main} type="button" className="tellme-reaction-main" onPointerEnter={(event) => { if (event.pointerType === "mouse") show(); }} disabled={disabled} aria-pressed={!!selected} aria-haspopup="true" aria-controls={id} aria-expanded={open} onClick={(event) => choose(selected ? null : "like", event.currentTarget)}>
-        <ReactionIcon value={selected || "like"} /><span>{choice?.label || "Thích"}</span>
+      <button ref={main} type="button" className="tellme-reaction-main" onPointerDown={(event) => {
+        if (disabled || event.button !== 0 || event.isPrimary === false) return;
+        if (gesture.current?.timer) clearTimeout(gesture.current.timer);
+        const current: NonNullable<typeof gesture.current> = { id: event.pointerId, x: event.clientX, y: event.clientY, opened: false, value: null };
+        current.timer = setTimeout(() => {
+          if (gesture.current !== current) return;
+          current.opened = true;
+          show();
+        }, 320);
+        gesture.current = current;
+      }} onPointerEnter={(event) => { if (event.pointerType === "mouse") show(); }} onContextMenu={(event) => event.preventDefault()} disabled={disabled} aria-pressed={!!selected} aria-haspopup="true" aria-controls={id} aria-expanded={open} onClick={(event) => {
+        if (suppressClick.current) { suppressClick.current = false; event.preventDefault(); return; }
+        choose(selected ? null : "like", event.currentTarget);
+      }}>
+        {selected ? <ReactionIcon value={selected} /> : <ThumbsUp size={22} strokeWidth={2} aria-hidden="true" />}<span>{choice?.label || "Thích"}</span>
       </button>
       <button type="button" className="tellme-reaction-more" disabled={disabled} aria-label="Chọn cảm xúc" aria-controls={id} aria-expanded={open} onClick={() => open ? close() : show(true)}><ChevronDown size={14} /></button>
     </div>
@@ -128,7 +196,10 @@ export function ReactionControl({ selected, onChange, disabled = false, compact 
       const index = entries.indexOf(document.activeElement as HTMLButtonElement);
       if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) { event.preventDefault(); entries[event.key === "Home" ? 0 : event.key === "End" ? entries.length - 1 : (index + (event.key === "ArrowRight" ? 1 : -1) + entries.length) % entries.length]?.focus({ preventScroll: true }); }
     }}>
-      {reactionOptions.map((option) => <button key={option.value} type="button" aria-pressed={selected === option.value} aria-label={option.label} onClick={(event) => choose(selected === option.value ? null : option.value, event.currentTarget)}><ReactionIcon value={option.value} size={40} /></button>)}
+      {reactionOptions.map((option) => <button key={option.value} type="button" data-reaction={option.value} className={dragReaction === option.value ? "is-drag-target" : undefined} aria-pressed={selected === option.value} aria-label={option.label} onClick={(event) => {
+        if (suppressClick.current) { suppressClick.current = false; event.preventDefault(); return; }
+        choose(selected === option.value ? null : option.value, event.currentTarget);
+      }}><ReactionIcon value={option.value} size={40} /></button>)}
     </div>
     {burst && <div ref={burstLayer} popover="manual" className="tellme-reaction-burst" aria-hidden="true" style={{ left: burst.x, top: burst.y, "--burst-rise": `${Math.max(20, Math.min(76, burst.y - 24))}px`, ...(burst.flight ? { "--flight-dx": `${burst.flight.dx}px`, "--flight-dy": `${burst.flight.dy}px`, "--flight-arc": `${burst.flight.arc}px`, "--flight-size": `${burst.flight.size}px` } : {}) } as CSSProperties}>
       {burst.flight ? <span key={burst.key} className="reaction-flight-icon"><ReactionIcon value={burst.value} size={48} /></span> : <div key={burst.key} className="reaction-burst-scene" data-reaction={burst.value}>

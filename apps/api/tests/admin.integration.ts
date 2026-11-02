@@ -81,12 +81,12 @@ test("analytics uses Vietnam days, counts stored data and never includes message
   const response = await fixture.request("/api/admin/analytics?days=7"), text = await response.text(); assert.equal(response.status, 200); assert.ok(!text.includes("PRIVATE_QA_MESSAGE"));
   const result = JSON.parse(text); assert.equal(result.series.length, 7); const today = result.series.find((d: { day: string }) => d.day === fixture.today); assert.equal(today.posts, 1); assert.equal(today.messages, 1); assert.equal(today.comments, 2);
 });
-test("log filtering, request ids, redaction, audit and infrastructure work without secret configuration output", async () => {
+test("request ids, redaction, audit and infrastructure work without secret configuration output", async () => {
   const { safeLogText, isSuspended } = fixture.db;
   const safe = safeLogText("token=abcdef Bearer xyz mongodb+srv://user:pass@host/path https://example.test?key=private");
   for (const secret of ["abcdef", "xyz", "pass@", "key=private"]) assert.ok(!safe.includes(secret));
   assert.equal(isSuspended({ suspension: { at: "", actorId: "", reason: "", until: new Date(Date.now()-1000).toISOString() } }), false);
-  const response = await fixture.request("/api/admin/logs?level=error&service=api&q=qa.test"); assert.ok(response.headers.get("x-request-id")); assert.equal((await response.json()).total, 1);
+  const removedLogs = await fixture.request("/api/admin/logs"); assert.equal(removedLogs.status, 404);
   const audit = await (await fixture.request("/api/admin/audit?q=user.suspend")).json(); assert.equal(audit.total, 1); assert.equal(audit.items[0].reason, reason);
   const infra = await fixture.request("/api/admin/infrastructure"); const text = await infra.text(); assert.equal(infra.status, 200);
   for (const key of ["MONGODB_URI", "CLOUDINARY_URL", "GIPHY_API_KEY", "SMTP_URL"]) assert.ok(!text.includes(key));
@@ -97,12 +97,8 @@ test("nested comment hiding cascades and invalid suspension expiry fails closed"
   assert.deepEqual([...hidden].sort(), ["child", "grandchild", "root"]);
   assert.equal(fixture.db.isSuspended({ suspension: { reason, actorId: "admin", at: "", until: "invalid" } }), true);
 });
-test("full content review and structured log persistence do not expose payloads or query strings", async () => {
+test("full content review remains available without exposing comments", async () => {
   const text = "Lời kể đầy đủ ".repeat(100);
   await fixture.db.posts.updateOne({ _id: fixture.ids.post }, { $set: { content: text } });
   const detail = await (await fixture.request(`/api/admin/content/post/${fixture.ids.post}`)).json(); assert.equal(detail.text, text); assert.equal(detail.images.length, 1); assert.ok(!("comments" in detail));
-  const response = await fixture.request(`/api/posts/${randomUUID()}?secret=DO_NOT_LOG_THIS`, { actor: "guest" });
-  await fixture.db.flushServerLogs(); await fixture.db.flushServerLogs();
-  const entry = await fixture.db.serverLogs.findOne({ requestId: response.headers.get("x-request-id")! });
-  assert.equal(entry?.status, 404); assert.equal(entry?.route, "/api/posts/:id"); assert.ok(!JSON.stringify(entry).includes("DO_NOT_LOG_THIS"));
 });
