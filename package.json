@@ -13,8 +13,8 @@
     "check-types": "turbo run check-types",
     "clean": "turbo run clean",
     "configure:vapid": "node infra/scripts/configure-vapid.mjs",
-    "infra:up": "docker compose -f infra/docker/docker-compose.yml up -d --wait redis",
-    "infra:down": "docker compose -f infra/docker/docker-compose.yml stop redis",
+    "infra:up": "docker compose -f infra/dev/compose.yaml up -d --wait redis",
+    "infra:down": "docker compose -f infra/dev/compose.yaml stop redis",
     "db:check": "node infra/scripts/check-mongodb.mjs"
   },
   "devDependencies": {

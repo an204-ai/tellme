@@ -4,7 +4,7 @@ This production stack runs the main app, landing page, admin, API, three workers
 
 ## Before you start
 
-- A VPS with Docker managed by Coolify. For this all-in-one stack, plan for at least 4 vCPU, 8 GB RAM and 80 GB SSD; more is useful for image processing and database growth. Confirm the actual plan before production if it is smaller.
+- A VPS with Docker managed by Coolify. For a 5 GB RAM VPS, follow the sequential build settings below. Actual headroom depends on traffic, Coolify, Docker and other workloads.
 - A Git repository containing these deployment files, pushed to the branch you will select in Coolify.
 - DNS control for `tellme.my` and its subdomains.
 - Cloudinary and Giphy credentials, plus a working SMTP sender. SMTP and `AUTH_CODE_SECRET` are required because account creation requires an emailed verification code.
@@ -35,7 +35,7 @@ Tellme uses multi-document transactions. MongoDB supports them on replica sets a
 4. Add the variables listed in `coolify-env.example` in the resource's Environment Variables screen. Mark secret values as secret/locked. Keep secrets runtime-only unless a value is explicitly used as a build argument. Never add credentials to the Compose file, Dockerfile, Git repository or build arguments.
 5. Generate separate random secrets locally. For `REDIS_PASSWORD` and `AUTH_CODE_SECRET`, use `openssl rand -hex 32`. Copy each result directly into its matching Coolify secret field.
 6. Keep the current `MONGODB_URI` secret unchanged, set `MONGODB_DB=tellme`, then set `CLOUDINARY_URL`, `GIPHY_API_KEY`, `SMTP_URL` and `EMAIL_FROM` to working production values. URL-encode special characters in URI credentials (especially `@`, `:`, `/`, `%` and `$`). Use the sender address approved by your mail provider. Fill both VAPID keys if you want web push. Do not enable the Epidemic Sound prototype key as a production music provider; the app intentionally disables that provider in production.
-7. Keep the domain/origin values exactly as in the example unless you change the public domain names. Ensure `ADMIN_EMAILS` includes `tellme@admin.com`.
+7. Keep the domain/origin values exactly as in the example unless you change the public domain names. Set `ADMIN_EMAILS` to the real, verified Tellme account email(s) that should administer this installation. There is no default administrator; an unset or empty list blocks Compose deployment.
 
 Coolify parses the Compose variables and validates required values. `${NAME:?…}` entries block deployment while required values are missing.
 
@@ -56,7 +56,7 @@ Use `https://` in each Coolify domain entry so its proxy requests TLS certificat
 1. Deploy the resource and follow Coolify Deployment Logs. Wait for `redis`, `api`, `web-app` and the three public edge/static services to become healthy. The API health check includes a database ping, so an Atlas IP allowlist, DNS, URI or credential problem keeps it unhealthy.
 2. If any service fails, inspect that service's Runtime Logs first. Common first-deploy problems are a missing Atlas Network Access entry, wrong Atlas URI/database user, outbound DNS/TCP restrictions, an invalid Cloudinary URL, an SMTP connection/sender rejection, an incorrect DNS record, or a VPS without enough RAM/disk.
 3. Verify `https://tellme.my`, `https://about.tellme.my` and `https://admin.tellme.my`. The admin login is a separate Tellme session on the admin subdomain.
-4. Register `tellme@admin.com` through the main app's normal registration flow and verify it from the mailbox. The address is allowlisted by the `ADMIN_EMAILS` value; no default password is created.
+4. Use an existing verified account named in `ADMIN_EMAILS`, or register that real address through the main app and verify it from its mailbox. No administrator account or password is created automatically.
 5. Sign in at `https://admin.tellme.my`. Check **Hạ tầng**: MongoDB, Redis and worker heartbeats should be healthy. Unconfigured optional integrations should remain clearly marked as unavailable.
 
 The database is the existing Atlas database, so current users, posts and sessions stay there. No data migration or database reset is part of deployment. Admin access requires the allowlisted account's email to be verified.
@@ -68,10 +68,29 @@ The database is the existing Atlas database, so current users, posts and session
 - Deploy code changes from Git through Coolify. Pin image versions and review release changes before upgrading Redis or application dependencies. Verify every domain, login, upload, Tell me now, chat/realtime and worker queue after deploying.
 - Coolify's admin interface and SSH are separate from `admin.tellme.my`; do not assign the same domain to both.
 
+Kết quả build, TypeScript và thử giới hạn RAM thực tế: [REVIEW.md](REVIEW.md).
+
+## Build on a VPS with 5 GB RAM
+
+The Next.js Docker builds use `TELLME_LOW_MEMORY_BUILD=1`: one static-generation worker, Webpack memory optimizations, and a 2048 MB old-space heap cap per Node process. This cap is not a total container RAM limit. Runtime behavior and TypeScript checks remain enabled.
+
+1. In Coolify **Servers → your VPS → Advanced**, set **Concurrent builds** to `1` so other deployments do not build at the same time. [Coolify build limits](https://coolify.io/docs/core/infrastructure/servers/manage-server)
+2. Set the application's **Custom Build Command** to `sh infra/deploy/build-images.sh docker compose`. Coolify injects its Compose file, environment file and project-directory flags into the `docker compose` prefix. The script then builds one service at a time, stopping on failure. Confirm those flags appear in Deployment Logs after saving. Keep the normal start command so Coolify still controls routing and health checks. [Coolify Compose custom commands](https://coolify.io/docs/applications/builds/docker-compose)
+3. The script deliberately passes only one service per build call: `--parallel 1` and `COMPOSE_BAKE=false` alone still built multiple targets concurrently with the Compose/Buildx version used during this review.
+4. Keep build cache enabled. Check `free -h` and `docker stats --no-stream` before deploying; 5 GB shared with Coolify and live app traffic is not a guaranteed build budget. If it still runs out of RAM, build on a separate Coolify build server or CI and deploy the prebuilt images. A small swap allocation can absorb spikes but does not replace RAM.
+
+For local image builds, supply the same command prefix explicitly:
+
+```sh
+ADMIN_EMAILS=compose-check@example.invalid sh infra/deploy/build-images.sh docker compose --progress plain --env-file infra/deploy/coolify-env.example -f infra/deploy/compose.yaml
+```
+
+The check address is an invalid example used only while building images; the real administrator address is mandatory in Coolify. [Next.js build memory guidance](https://nextjs.org/docs/app/guides/memory-usage)
+
 ## Local syntax/build checks
 
 ```sh
-docker compose --env-file infra/deploy/coolify-env.example -f infra/deploy/compose.yaml config --quiet
+ADMIN_EMAILS=compose-check@example.invalid docker compose --env-file infra/deploy/coolify-env.example -f infra/deploy/compose.yaml config --quiet
 pnpm --filter @tellme/api check-types
 pnpm --filter @tellme/web build
 pnpm --filter @tellme/admin build

@@ -28,6 +28,7 @@ EPIDEMIC_SOUND_API_KEY=
 APP_URL=https://tellme.my
 ADMIN_APP_URL=https://admin.tellme.my
 WEB_ORIGINS=https://tellme.my,https://admin.tellme.my
-ADMIN_EMAILS=tellme@admin.com
+# Required: actual verified account email(s), comma-separated. No default administrator.
+ADMIN_EMAILS=
 NEXT_PUBLIC_SITE_URL=https://about.tellme.my
 MEDIA_ORPHAN_HOURS=24

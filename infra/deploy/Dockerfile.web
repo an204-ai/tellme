@@ -6,6 +6,6 @@ RUN pnpm install --frozen-lockfile --filter @tellme/web...
 ARG API_INTERNAL_URL=http://api:4000
 ARG NEXT_PUBLIC_API_URL=/api
 ENV NODE_ENV=production NEXT_DIST_DIR=.next-production API_INTERNAL_URL=${API_INTERNAL_URL} NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
-RUN pnpm --filter @tellme/web build
+RUN TELLME_LOW_MEMORY_BUILD=1 NODE_OPTIONS=--max-old-space-size=2048 pnpm --filter @tellme/web build
 EXPOSE 3000
 CMD ["pnpm", "--filter", "@tellme/web", "start"]

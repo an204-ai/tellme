@@ -12,7 +12,7 @@ const open = await new Promise((resolve) => {
   socket.once("error", () => resolve(false)); socket.once("timeout", () => { socket.destroy(); resolve(false); });
 });
 if (!open && ["localhost", "127.0.0.1"].includes(redis.hostname)) {
-  const setup = spawnSync("docker", ["compose", "-f", "infra/docker/docker-compose.yml", "up", "-d", "--wait", "redis"], { stdio: "inherit" });
+  const setup = spawnSync("docker", ["compose", "-f", "infra/dev/compose.yaml", "up", "-d", "--wait", "redis"], { stdio: "inherit" });
   if (setup.status !== 0) { console.error("Mở Docker Desktop hoặc cấu hình REDIS_URL tới Redis đang chạy rồi thử lại."); process.exit(1); }
 }
 const child = spawn("pnpm", ["exec", "turbo", "run", "dev"], { stdio: "inherit", env: process.env });

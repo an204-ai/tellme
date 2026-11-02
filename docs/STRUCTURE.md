@@ -1,6 +1,6 @@
 # Tellme — Quy ước cấu trúc project
 
-Monorepo giữ bốn ứng dụng, package dùng chung và ba worker. Runtime đã triển khai là web Next.js và API Hono/Node.js với MongoDB, Cloudinary, Giphy. Mobile, Admin, workers và hạ tầng cũ còn là scaffold. Xem [FRONTEND.md](FRONTEND.md), [BACKEND.md](BACKEND.md) và [kiến trúc chính](../ARCHITECTURE.md) cho phạm vi đang chạy.
+Monorepo giữ bốn ứng dụng, package dùng chung và ba worker. Runtime gồm web Next.js, admin React/Vite, API Hono/Node.js, ba worker BullMQ, MongoDB Atlas, Redis và Cloudinary. Landing là Next.js static export độc lập; mobile còn là scaffold. Xem [FRONTEND.md](FRONTEND.md), [BACKEND.md](BACKEND.md) và [kiến trúc chính](../ARCHITECTURE.md) cho phạm vi đang chạy.
 
 ## Vai trò các thư mục
 
@@ -17,18 +17,22 @@ Monorepo giữ bốn ứng dụng, package dùng chung và ba worker. Runtime đ
 | `apps/web/src/styles/` | CSS nền, Uiverse, moments và refinements |
 | `apps/web/public/` | Brand, ảnh tĩnh và thông báo giấy phép |
 | `apps/api/src/app.ts` | Khởi tạo Hono, middleware và gắn route API |
-| `apps/api/src/main.ts` | Kết nối database, khởi động HTTP server loopback |
+| `apps/api/src/main.ts` | Kết nối database, khởi động HTTP/WebSocket server (loopback ở dev, 0.0.0.0 trong Docker) |
 | `apps/api/src/backend/` | Config, MongoDB/index, model, domain/DTO/quyền, session/security, validation và route helper |
-| `apps/api/src/modules/` | Các route nghiệp vụ `auth`, `bootstrap`, `user`, `post`, `story`, `message`, `notification`, `media` |
-| `apps/api/scripts/` | Browser QA dùng database riêng, có dọn dữ liệu kiểm tra |
+| `apps/api/src/modules/` | Route nghiệp vụ và quản trị: auth, bootstrap, user, post, story, message, conversation, notification, media, music, admin |
+| `apps/api/tests/` | Kiểm tra API admin dùng dữ liệu kiểm thử riêng |
 | `apps/mobile/src/`, `apps/mobile/assets/` | Scaffold Expo/React Native và tài sản mobile |
-| `apps/admin/src/` | Scaffold dashboard quản trị |
-| `packages/database/` | Scaffold Prisma/PostgreSQL cũ; không phải database adapter của API MongoDB hiện tại |
+| `apps/admin/src/` | Dashboard người dùng, kiểm duyệt, báo cáo, job, hạ tầng, log, thống kê và audit |
+| `packages/database/` | MongoDB Atlas native driver, models/indexes, config, Redis/BullMQ, job và worker dùng chung |
 | `packages/shared/` | Kiểu/validator/hằng số dùng chung, độc lập nền tảng |
 | `packages/ui/` | Token/component DOM dùng chung đã có; phần lớn UI web hiện ở app web |
 | `packages/config/` | Cấu hình công cụ dùng chung |
-| `workers/` | Scaffold media processor, feed generator, notification sender; chưa nối runtime |
-| `infra/` | Scaffold Docker/proxy/script; chưa phải cấu hình triển khai MongoDB đã xác minh |
+| `workers/` | Media processor, feed builder, notification sender nối MongoDB outbox và Redis/BullMQ |
+| `infra/dev/` | Compose Redis local, bind 127.0.0.1; project `docker` giữ volume Redis dev cũ |
+| `infra/docker/` | Hai Dockerfile dùng chung để build API và worker; production Compose tham chiếu trực tiếp |
+| `infra/deploy/` | Production Compose Coolify, image web/admin/landing, Nginx cho ba domain, mẫu env và hướng dẫn Atlas |
+| `infra/scripts/` | Công cụ dev: launcher, setup, kiểm tra kết nối Atlas, tạo VAPID |
+| `tellme-landing/` | Landing Next.js static export, pnpm project/lockfile độc lập |
 | `assets/brand/` | Tài sản thương hiệu gốc và ảnh tham chiếu |
 | `docs/`, `.impeccable/` | Tài liệu, nguồn UI, design sidecar và bằng chứng QA |
 
@@ -72,7 +76,7 @@ Xác thực được thực thi bởi API session, không suy ra từ tên thư 
 ## Ranh giới dữ liệu và phụ thuộc
 
 - Web gọi API, không import MongoDB hoặc worker. React Query giữ dữ liệu server; Zustand chỉ giữ UI.
-- API dùng Mongo native driver qua `src/backend/database.ts`; không chạy migration/seed Prisma để khởi động runtime này.
+- API và worker dùng Mongo native driver từ `packages/database`; không có MongoDB container, seed hay migration database trong Compose.
 - Khóa MongoDB/Cloudinary/Giphy ở môi trường API riêng, bị Git bỏ qua. `.env.example` chỉ ghi tên biến và placeholder.
 - `packages/shared` giữ độc lập với DOM, React Native và kết nối database. Mobile dùng component native riêng; không nhập trực tiếp component DOM.
 - `assets/brand/` giữ bản gốc; runtime từng app chỉ nhận bản cần phục vụ.
@@ -86,10 +90,10 @@ Xác thực được thực thi bởi API session, không suy ra từ tên thư 
 - Chủ đề tùy chọn giúp tìm/khám phá. API tính thống kê chủ đề từ nội dung công khai có quyền xem.
 - Follow là quan hệ một chiều; Bạn bè (`connections`) trong runtime hiện được API tính từ follow hai chiều. Chặn loại quyền xem/tương tác liên quan.
 - Quyền áp dụng ở API cho feed, tìm bài, chi tiết, hồ sơ, chuỗi ngày, bình luận và chia sẻ. UI không phải ranh giới bảo vệ dữ liệu.
-- Chuỗi ngày dùng múi giờ `Asia/Ho_Chi_Minh`. Chat/thông báo dùng polling, chưa có WebSocket/push.
+- Chuỗi ngày dùng múi giờ `Asia/Ho_Chi_Minh`. Chat và presence dùng WebSocket `/api/realtime`, polling dự phòng; thông báo push cần VAPID và quyền trình duyệt.
 
 ## Tài liệu và workspace
 
 [PRODUCT.md](PRODUCT.md) giữ mô tả sản phẩm gốc. [ARCHITECTURE.md ở gốc](../ARCHITECTURE.md) là bản kiến trúc hiện hành; `docs/ARCHITECTURE.md` dẫn tới bản chính. [DESIGN.md](DESIGN.md) ghi thế giới hình ảnh và token; [FRONTEND.md](FRONTEND.md) ghi luồng UI/cách chạy; [BACKEND.md](BACKEND.md) ghi API và giới hạn. Các tài liệu PostgreSQL/deployment cũ cần được đọc như lịch sử scaffold nếu khác runtime hiện tại.
 
-`pnpm-workspace.yaml` khai báo `apps/*`, `packages/*`, `workers/*`. `.gitkeep` giữ thư mục scaffold trống, không cần file code rỗng. Các kiểm tra hiện đã chạy cho web/API; không suy rộng kết quả đó sang Mobile/Admin/workers hoặc triển khai public.
+`pnpm-workspace.yaml` khai báo `apps/*`, `packages/*`, `workers/*`. `.gitkeep` giữ thư mục scaffold trống, không cần file code rỗng. Build/TypeScript workspace và build Docker là các bước kiểm tra riêng; kết quả triển khai thật cần được xác nhận trên VPS. Mobile còn là scaffold.

@@ -63,7 +63,7 @@ services:
       APP_URL: ${APP_URL:-https://tellme.my}
       WEB_ORIGINS: ${WEB_ORIGINS:-https://tellme.my,https://admin.tellme.my}
       ADMIN_APP_URL: ${ADMIN_APP_URL:-https://admin.tellme.my}
-      ADMIN_EMAILS: ${ADMIN_EMAILS:-tellme@admin.com}
+      ADMIN_EMAILS: ${ADMIN_EMAILS:?Set ADMIN_EMAILS to verified real administrator emails in Coolify}
       MEDIA_ORPHAN_HOURS: ${MEDIA_ORPHAN_HOURS:-24}
     depends_on:
       redis:

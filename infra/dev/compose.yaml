@@ -1,3 +1,6 @@
+# Preserve the original infra/docker project and its Redis volume after moving this file.
+name: docker
+
 services:
   redis:
     image: redis:7-alpine

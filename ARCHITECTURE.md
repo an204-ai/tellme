@@ -54,7 +54,7 @@ Thông báo trong ứng dụng hoạt động mặc định. Email chỉ bật k
 
 ## Vận hành
 
-Chạy tại gốc workspace bằng `pnpm install` rồi `pnpm dev`. Redis local cần Docker Desktop; có thể chạy riêng bằng `pnpm infra:up`. API mặc định cổng 4000, web 3000, admin 3001. Build workspace bằng `pnpm build`, kiểm tra TypeScript bằng `pnpm check-types`. Compose phát triển ở `infra/docker/docker-compose.yml` chỉ chạy Redis. Compose production cho Coolify tại `infra/deploy/compose.yaml` ghép web, landing, admin, API, workers và Redis, kết nối tới MongoDB Atlas hiện tại qua `MONGODB_URI`, rồi reverse proxy ba domain; xem [hướng dẫn deploy](infra/deploy/README.md).
+Chạy tại gốc workspace bằng `pnpm install` rồi `pnpm dev`. Redis local cần Docker Desktop; có thể chạy riêng bằng `pnpm infra:up`. API mặc định cổng 4000, web 3000, admin 3001. Build workspace bằng `pnpm build`, kiểm tra TypeScript bằng `pnpm check-types`. Compose phát triển ở `infra/dev/compose.yaml` chỉ chạy Redis. Compose production cho Coolify tại `infra/deploy/compose.yaml` ghép web, landing, admin, API, workers và Redis, kết nối tới MongoDB Atlas hiện tại qua `MONGODB_URI`, rồi reverse proxy ba domain; xem [hướng dẫn deploy](infra/deploy/README.md).
 
 Hướng dẫn API, biến môi trường và xử lý dữ liệu nằm trong [docs/BACKEND.md](docs/BACKEND.md). Web nằm trong [docs/FRONTEND.md](docs/FRONTEND.md). Bản PostgreSQL/Drizzle/R2 ban đầu được giữ trong [docs/references/architecture-original.md](docs/references/architecture-original.md) làm tài liệu lịch sử, không phải runtime hiện tại.
 

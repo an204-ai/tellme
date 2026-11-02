@@ -17,7 +17,7 @@ Hướng dẫn deploy production lên Coolify với `tellme.my`, `about.tellme.m
 - **`packages/ui`**: Design tokens dùng chung và component DOM cho Web/Admin; Mobile dùng component React Native riêng
 - **`packages/config`**: Cấu hình TypeScript, ESLint dùng chung
 - **`workers/`**: Background workers (Xử lý media, tính toán bảng tin, gửi push notification)
-- **`infra/`**: Docker compose, Nginx và setup script
+- **`infra/dev/`**: Redis local; **`infra/deploy/`**: production Coolify; **`infra/docker/`**: Dockerfile API/worker dùng chung; **`infra/scripts/`**: công cụ dev
 - **`docs/`**: Mô tả sản phẩm, quy ước cấu trúc, nhận diện và tài liệu kỹ thuật
 
 ## Đọc project
@@ -46,8 +46,8 @@ Khóa thật chỉ đặt trong file môi trường bị Git bỏ qua. Stack run
 
 ## Chuẩn bị push và deploy
 
-- Chỉ `.env.example` được đưa lên Git; cấu hình thật giữ trong `.env` gốc và điền lại trong môi trường của dịch vụ deploy.
+- Chỉ mẫu `.env.example` và `infra/deploy/coolify-env.example` được đưa lên Git; cấu hình thật giữ trong `.env` gốc và điền lại trong môi trường của dịch vụ deploy.
 - Chạy `pnpm install --frozen-lockfile`, `pnpm build` và `pnpm check-types` trước khi push. Giữ `pnpm-lock.yaml` để deploy dùng đúng phiên bản dependency.
 - `.next*`, `dist`, `node_modules`, cache, báo cáo kiểm tra và file riêng tư đã được loại trong `.gitignore`/`.dockerignore`. Không cần đưa build output từ máy cá nhân lên Git.
 - CI trên GitHub thực hiện build và kiểm tra TypeScript. Deploy dùng cấu hình của dịch vụ hosting; không còn workflow chỉ in thông báo deploy giả lập.
-- Docker API dùng build context ở gốc repo: `docker build -f infra/docker/api.Dockerfile .` (hoặc đường dẫn tương thích `apps/api/Dockerfile`). Worker dùng `infra/docker/worker.Dockerfile`.
+- Docker API dùng build context ở gốc repo: `docker build -f infra/docker/api.Dockerfile .`. Worker dùng `infra/docker/worker.Dockerfile`.

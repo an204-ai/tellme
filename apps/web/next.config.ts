@@ -10,6 +10,9 @@ const nextConfig: NextConfig = {
     (process.env.NODE_ENV === "production" ? ".next-production" : ".next"),
   devIndicators: false,
   experimental: {
+    ...(process.env.TELLME_LOW_MEMORY_BUILD === "1"
+      ? { cpus: 1, webpackMemoryOptimizations: true }
+      : {}),
     proxyTimeout: 180000,
   },
   async rewrites() {
