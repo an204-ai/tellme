@@ -33,6 +33,7 @@ Tellme uses multi-document transactions. MongoDB supports them on replica sets a
 2. In Coolify, create a Project and Production Environment, then add a **Docker Compose** resource from the Git repository. Keep the normal Coolify Compose deployment mode; do not select Raw Compose.
 3. Set **Base Directory** to `/` (repository root) and **Docker Compose Location** to `infra/deploy/compose.yaml`. Coolify passes the repository root as `--project-directory`. All eight `build.context` values are `.` relative to that root; Dockerfile paths are also relative to the repository root. Local Compose commands must use `--project-directory .` from the repository root to match Coolify. Coolify should show `web-edge`, `landing`, `admin-edge`, `api`, `redis`, the three workers and `web-app`; there are no MongoDB containers or MongoDB volumes in this resource.
 4. Add the variables listed in `coolify-env.example` in the resource's Environment Variables screen. Mark secret values as secret/locked. Keep secrets runtime-only unless a value is explicitly used as a build argument. Never add credentials to the Compose file, Dockerfile, Git repository or build arguments.
+   In **Advanced → Build → Build arguments**, select **Managed manually in Dockerfile**. All required public build arguments are already declared in the service Dockerfiles; keep database/provider credentials runtime-only. This avoids Coolify adding application secrets and `NODE_ENV` declarations to every build stage.
 5. Generate separate random secrets locally. For `REDIS_PASSWORD` and `AUTH_CODE_SECRET`, use `openssl rand -hex 32`. Copy each result directly into its matching Coolify secret field.
 6. Keep the current `MONGODB_URI` secret unchanged, set `MONGODB_DB=tellme`, then set `CLOUDINARY_URL`, `GIPHY_API_KEY`, `SMTP_URL` and `EMAIL_FROM` to working production values. URL-encode special characters in URI credentials (especially `@`, `:`, `/`, `%` and `$`). Use the sender address approved by your mail provider. Fill both VAPID keys if you want web push. Do not enable the Epidemic Sound prototype key as a production music provider; the app intentionally disables that provider in production.
 7. Keep the domain/origin values exactly as in the example unless you change the public domain names. Set `ADMIN_EMAILS` to the real, verified Tellme account email(s) that should administer this installation. There is no default administrator; an unset or empty list blocks Compose deployment.
@@ -98,6 +99,12 @@ pnpm --dir tellme-landing build
 ```
 
 `coolify-env.example` contains placeholders only; never copy production secrets into Git. The real production variables belong in Coolify.
+
+## Troubleshooting an admin build failure
+
+The build script forces plain Docker progress and reports the failing service and exit code. Expand Deployment Logs (including debug/build output) and read the compiler lines above the Dockerfile instruction; the final `exit code` line alone is not the root error.
+
+A Git-only admin build formerly failed with `TS2307` for two logo PNG imports: the local `src/vite-env.d.ts` was ignored by Git. `apps/admin/tsconfig.json` now declares `types: ["vite/client"]` explicitly, so a fresh checkout has the asset types. The image also installs build dependencies with `--prod=false` and runs TypeScript and Vite separately, even if a build argument sets `NODE_ENV=production`. TypeScript checking is still required.
 
 ## Official Coolify references
 

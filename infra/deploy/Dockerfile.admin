@@ -3,8 +3,10 @@ WORKDIR /workspace
 RUN corepack enable
 COPY . .
 # Admin imports web/src/styles/fonts.css, which resolves web's font packages.
-RUN pnpm install --frozen-lockfile --filter @tellme/admin... --filter @tellme/web...
-RUN pnpm --filter @tellme/admin build
+# Coolify may inject NODE_ENV=production; the builder still needs tsc/Vite/types.
+RUN pnpm install --frozen-lockfile --prod=false --filter @tellme/admin... --filter @tellme/web...
+RUN NODE_OPTIONS=--max-old-space-size=2048 pnpm --filter @tellme/admin exec tsc --noEmit --pretty false
+RUN NODE_ENV=production NODE_OPTIONS=--max-old-space-size=2048 pnpm --filter @tellme/admin exec vite build
 
 FROM nginx:1.30-alpine
 COPY infra/deploy/nginx/admin.conf /etc/nginx/conf.d/default.conf

@@ -25,3 +25,11 @@ Hai image Next.js (`Dockerfile.web`, `Dockerfile.landing`) đã được build l
 Dockerfile bật một worker Next.js, tối ưu bộ nhớ Webpack và heap old-space 2048 MB/process cho riêng bước build. Với VPS 5 GB, vẫn cần chừa RAM cho OS, Docker, Coolify và các container đang phục vụ người dùng. Kết quả arm64 này cho thấy build tuần tự khả thi trong ngân sách đã thử, nhưng không bảo đảm VPS đang có tải hoặc kiến trúc khác luôn đủ RAM.
 
 `--parallel 1` và `COMPOSE_BAKE=false` vẫn build nhiều target đồng thời ở Compose/Buildx trên máy kiểm tra. Vì thế `build-images.sh` gọi Compose riêng cho từng service, dừng ngay nếu lỗi. Coolify cần Concurrent builds = 1 và Custom Build Command như README. Builder kiểm tra đã được dừng, giữ nguyên cache volume.
+
+## Bổ sung: lỗi admin khi deploy từ Git
+
+Tái hiện bằng `git archive HEAD` (không đưa các file local bị Git ignore vào build context): bản cũ dừng đúng ở `pnpm --filter @tellme/admin build` với **exit 2**, `TS2307` cho hai logo PNG được import trong `App.tsx`. File local `apps/admin/src/vite-env.d.ts` bị rule `.gitignore` loại khỏi Git, nên lượt build local trước đây chưa phản ánh đúng fresh checkout trên Coolify.
+
+Bản sửa khai báo `types: ["vite/client"]` trong `apps/admin/tsconfig.json`. Dockerfile admin buộc cài build dependencies bằng `--prod=false`, giữ kiểm tra TypeScript, tách riêng bước TypeScript/Vite và giới hạn heap 2048 MB. Script build luôn bật plain progress, báo service lỗi và giữ nguyên exit code.
+
+Kiểm chứng mới: Docker build **Linux/amd64** từ source Git sạch cộng bản sửa, không có `vite-env.d.ts` local, đồng thời mô phỏng `ARG NODE_ENV=production`, đã thành công cả TypeScript, Vite và image Nginx. Build admin local và Compose config cũng thành công. Kiểm tra script với compiler giả trả lỗi 42 xác nhận dừng ở đúng service và giữ mã lỗi; không chạy bất kỳ service hoặc tác vụ database nào.
