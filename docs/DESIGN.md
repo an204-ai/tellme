@@ -36,9 +36,9 @@ typography:
     fontWeight: 600
   body:
     fontFamily: "Poppins, \"Be Vietnam Pro\", sans-serif"
-    fontSize: "16px"
+    fontSize: "15px"
     fontWeight: 400
-    lineHeight: 1.85
+    lineHeight: 1.6
     letterSpacing: "0.003em"
   button-label:
     fontFamily: "Poppins, \"Be Vietnam Pro\", sans-serif"
@@ -369,3 +369,18 @@ Modal chụp giữ header trắng/navy của hệ thống, khung camera 4:3 và 
 Ủng hộ dùng lời mời nhỏ không chặn trang, tự hiện một lần trên trình duyệt ở Tell me now/Khám phá. Icon cà phê, chữ đen và hành động navy; QR chỉ mở khi bấm. Khung vuông hiển thị phần chính của ảnh gốc không sửa pixel. Các nút lưu ảnh, sao chép tài khoản ở bên dưới. Nội dung modal cuộn riêng trên màn hình thấp, footer luôn trong viewport.
 
 Vùng cuộn của modal camera là div bao fieldset; cả hai đặt min-width: 0. Khung ngoài dùng overflow clip để focus không kéo lệch header; footer nền trắng nằm ngoài vùng cuộn.
+
+
+### Social scale và iPhone web — 03/11/2026
+
+`social-scale.css` là lớp tỉ lệ cuối cho bảng tin, Tell me now, chat và modal ngày. Tham khảo giao diện Facebook mobile/desktop qua trình duyệt và [mẫu Feed chính thức của Meta](https://about.fb.com/news/2025/12/making-it-easier-to-create-discover-and-share-content-on-facebook/); không đổi palette, font hoặc cơ chế quyền xem của Tellme.
+
+- Cột bài viết tối đa 680px. Nội dung 15px/1.6, tên người 14–15px, metadata 12px, nhãn hành động 13–14px; input mobile vẫn 16px để tránh tự zoom khi focus trên iOS.
+- Avatar bài viết 40px; story 132×206px desktop và 116×184px mobile. Ảnh bài viết giới hạn khung cao 560px/480px, ảnh phủ khung; bản đầy đủ vẫn mở trong viewer.
+- Nav mobile dùng cùng pill nổi trên mọi trang. Vùng cuộn bảng tin chạy tới đáy viewport, padding chống che nội dung đặt bên trong vùng cuộn thay vì tạo dải nền riêng bên dưới nav.
+- Chat bám visual viewport, tạm ẩn header toàn cục/nav khi bàn phím thu nhỏ vùng hiển thị. Chỉ lịch sử chat cuộn tự nhiên; các lớp bao không cuộn do focus. Khi đọc tin cũ, resize hoặc tin đến không tự kéo về cuối.
+- Picker cảm xúc có kích thước 234×54px; mỗi lựa chọn 44×44px, không cho native popover tự giãn chiều cao. Mở từ bài viết và khoảnh khắc dùng cùng component.
+- Modal ngày có chỉ số hiện tại/tổng, dải thumbnail đánh số và nối nhau; nội dung vẫn là timeline liên tục theo giờ. Thông báo phát nhạc nằm trong luồng bố cục, không neo dạng tooltip vào nút Play.
+- Camera chỉ đổi trước/sau. Zoom 1×/2× và chụm hai ngón; 0.5× chỉ hiện nếu capability thực tế cho phép. Khi không có zoom phần cứng, crop kỹ thuật số dùng cùng thông số cho preview và ảnh lưu, không giả lập góc rộng.
+
+Bằng chứng và giới hạn kiểm thử: [MOBILE-QA.md](MOBILE-QA.md).

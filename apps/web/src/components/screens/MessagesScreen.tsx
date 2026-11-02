@@ -1,4 +1,5 @@
 "use client";
+import { useChatScroll } from "@/hooks/use-chat-scroll";
 import { TooltipIconButton } from "@/components/ui/TooltipIconButton";
 import { ConversationTools } from "@/components/app/ConversationTools";
 import { usePresenceStore } from "@/stores/presence.store";
@@ -79,7 +80,6 @@ export function MessagesScreen({
   const detailsId = useId();
   const detailsButton = useRef<HTMLButtonElement>(null);
   const closeDetails = () => { setDetailsOpen(false); requestAnimationFrame(() => detailsButton.current?.focus({ preventScroll: true })); };
-  const bottom = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const conversations =
     data?.conversations.filter(
@@ -98,10 +98,8 @@ export function MessagesScreen({
     requestAnimationFrame(() => inputRef.current?.focus());
   };
   const canSend = !!data && !!conversation && canMessageConversation(conversation, data);
-  useEffect(() => {
-    const list = bottom.current?.parentElement;
-    if (list) list.scrollTop = list.scrollHeight;
-  }, [conversation?.messages.length, conversation?.id]);
+  const lastMessage = conversation?.messages.at(-1);
+  const chatScroll = useChatScroll(conversation?.id, lastMessage?.id, lastMessage?.own);
   useEffect(() => {
     if (conversation?.unread && (conversationId || window.innerWidth > 640)) {
       void update((draft) => {
@@ -207,7 +205,8 @@ export function MessagesScreen({
                 </div>
                 <button type="button" ref={detailsButton} className={`icon-button chat-details-toggle ${detailsOpen ? "active" : ""}`} aria-label={detailsOpen ? "Đóng thông tin trò chuyện" : "Mở thông tin và chức năng trò chuyện"} aria-controls={detailsId} aria-expanded={detailsOpen} onClick={() => detailsOpen ? closeDetails() : setDetailsOpen(true)}><PanelRight size={21} /></button>
               </header>
-              <div className="chat-messages">
+              <div className="chat-messages" ref={chatScroll.viewport} role="region" aria-label="Lịch sử tin nhắn" tabIndex={0}>
+                <div className="chat-message-history" ref={chatScroll.history}>
                 <div className="chat-intro">
                   <ChatAvatar data={data} chat={conversation} large />
                   <strong>{person.name}</strong>
@@ -242,7 +241,7 @@ export function MessagesScreen({
                     </div>
                   </div>
                 ); })}
-                <div ref={bottom} />
+                </div>
               </div>
               {canSend ? <form
                 className="chat-composer"

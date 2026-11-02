@@ -70,9 +70,14 @@ export function ReactionControl({ selected, onChange, disabled = false, compact 
     const rect = trigger.current.getBoundingClientRect();
     popup.current.showPopover();
     const { width, height } = popup.current.getBoundingClientRect();
+    const viewport = window.visualViewport;
+    const left = viewport?.offsetLeft || 0, top = viewport?.offsetTop || 0;
+    const right = left + (viewport?.width || window.innerWidth);
+    const bottom = top + (viewport?.height || window.innerHeight);
     Object.assign(popup.current.style, {
-      left: `${Math.max(12, Math.min(rect.left, window.innerWidth - width - 12))}px`,
-      top: `${Math.max(12, Math.min(rect.top >= height + 20 ? rect.top - height - 8 : rect.bottom + 8, window.innerHeight - height - 12))}px`,
+      right: "auto", bottom: "auto",
+      left: `${Math.max(left + 12, Math.min(rect.left, right - width - 12))}px`,
+      top: `${Math.max(top + 12, Math.min(rect.top >= top + height + 20 ? rect.top - height - 8 : rect.bottom + 8, bottom - height - 12))}px`,
     });
     if (focus) requestAnimationFrame(() => popup.current?.querySelector<HTMLButtonElement>("button")?.focus({ preventScroll: true }));
   };
@@ -101,10 +106,14 @@ export function ReactionControl({ selected, onChange, disabled = false, compact 
     window.addEventListener("scroll", dismiss, true);
     window.addEventListener("resize", dismiss);
     window.addEventListener("blur", dismiss);
+    window.visualViewport?.addEventListener("resize", dismiss);
+    window.visualViewport?.addEventListener("scroll", dismiss);
     return () => {
       document.removeEventListener("pointerdown", outside, true);
       document.removeEventListener("keydown", escape);
       window.removeEventListener("scroll", dismiss, true); window.removeEventListener("resize", dismiss); window.removeEventListener("blur", dismiss);
+      window.visualViewport?.removeEventListener("resize", dismiss);
+      window.visualViewport?.removeEventListener("scroll", dismiss);
     };
   }, [open]);
   return <>

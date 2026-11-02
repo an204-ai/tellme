@@ -25,19 +25,31 @@
 /* Inherit the same fixed left rail geometry used by every other section. */
 .messages-layout > .left-rail { min-height: 0; }
 .messages-frame .messages-layout > .main-content { height: 100%; min-height: 0; min-width: 0; overflow: hidden; }
+.messages-frame .messages-layout > .main-content > .route-content { height: 100%; min-height: 0; }
 .messages-frame .messages-layout > .main-content::before { top: 0; bottom: 0; }
 .messages-layout .messaging { height: 100%; min-height: 0; max-height: none; }
 .messages-layout .conversation-list,
-.messages-layout .chat-content { height: 100%; min-height: 0; min-width: 0; overflow: hidden; }
+.messages-layout .chat-content { height: 100%; min-height: 0; min-width: 0; overflow: clip; }
 .messages-layout .conversation-list > header,
 .messages-layout .conversation-list > .input-wrap,
 .messages-layout .chat-header,
 .messages-layout .chat-composer { flex: 0 0 auto; }
+.messages-layout .chat-messages { display: block; scroll-behavior: auto; overflow-anchor: none; touch-action: pan-y pinch-zoom; }
+.chat-message-history { display: flex; flex-direction: column; gap: 14px; }
+/* Message rows must retain their natural height in Safari's flex scroller. */
+.chat-message-history > * { flex: 0 0 auto; }
 .messages-layout .conversation-rows,
 .messages-layout .chat-messages { flex: 1 1 0; min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior-y: contain; -webkit-overflow-scrolling: touch; }
 @media (max-width: 640px) {
   .messages-frame .app-shell.messages-layout { grid-template-columns: minmax(0, 1fr); padding: 12px; }
-  .messages-frame > .mobile-nav { position: static; flex: 0 0 auto; width: 100%; }
+  .messages-frame .app-shell.messages-layout { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
+  .messages-frame[data-keyboard-open="true"] { --site-header-height: 0px; }
+  .messages-frame[data-keyboard-open="true"] > .global-header,
+  .messages-frame[data-keyboard-open="true"] > .mobile-nav { display: none; }
+  .messages-frame[data-keyboard-open="true"] .app-shell.messages-layout { padding: 0; }
+  .messages-frame[data-keyboard-open="true"] .messaging { border: 0; border-radius: 0; }
+  .messages-frame[data-keyboard-open="true"] .chat-header { padding-block: 8px; }
+  .messages-frame[data-keyboard-open="true"] .chat-composer { padding-bottom: 8px; }
   .messages-layout .chat-input-line > input,
   .messages-layout .conversation-list input { font-size: 16px; }
 }

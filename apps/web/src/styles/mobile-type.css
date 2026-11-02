@@ -3,9 +3,9 @@
   body {
     --mobile-heading: 1.125rem;
     --mobile-body: 1rem;
-    --mobile-control: .9375rem;
-    --mobile-meta: .875rem;
-    font-size: 18px;
+    --mobile-control: .875rem;
+    --mobile-meta: .8125rem;
+    font-size: 16px;
   }
   .uiv-button .button { font-size: var(--mobile-control); }
 
@@ -18,7 +18,7 @@
     font-size: var(--mobile-body);
   }
   .post-author-line { font-size: var(--mobile-body); }
-  .post-content > p { font-size: 17px; line-height: 1.8; }
+  .post-content > p { font-size: 15px; line-height: 1.6; }
   .daily-caption, .message-bubble, .comment-bubble p,
   .profile-journal .profile-bio, .journal-day > p,
   .dialog-body, .story-reply-preview strong,

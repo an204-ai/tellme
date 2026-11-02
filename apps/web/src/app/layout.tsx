@@ -1,5 +1,5 @@
 import { BRAND_DESCRIPTION } from "@/lib/brand";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { AppProviders } from "@/providers/AppProviders";
 import { BrandIntro } from "@/components/app/BrandIntro";
 import "../styles/globals.css";
@@ -24,6 +24,8 @@ import "../styles/support.css";
 import "../styles/profile-journey.css";
 import "../styles/stickers.css";
 import "../styles/brand-intro.css";
+import "../styles/social-scale.css";
+export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover", interactiveWidget: "resizes-content" };
 export const metadata: Metadata = {
   title: "Tellme — Your day. Your stories.",
   description: BRAND_DESCRIPTION,

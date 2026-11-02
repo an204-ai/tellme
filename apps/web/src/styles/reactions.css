@@ -10,9 +10,10 @@
 .tellme-reaction-control.compact { width: fit-content; border: 1px solid var(--line); border-radius: 24px; padding-inline: 10px 4px; }
 .tellme-reaction-control button:hover { background: #f5f6f8; border-radius: 8px; }
 .tellme-reaction-control button:disabled { cursor: wait; opacity: .6; }
-.tellme-reaction-picker { position: fixed; inset: auto; box-sizing: border-box; width: max-content; max-width: calc(100vw - 24px); margin: 0; padding: 4px; border: 1px solid var(--line); border-radius: 999px; color: #000; background: white; overflow: visible; }
-.tellme-reaction-picker:popover-open { display: grid; grid-template-columns: repeat(5, 44px); gap: 1px; }
-.tellme-reaction-picker > button { display: grid; place-items: center; width: 44px; height: 44px; min-width: 0; min-height: 0; padding: 2px; border: 0; border-radius: 50%; color: #000; background: transparent; cursor: pointer; }
+.tellme-reaction-picker { position: fixed; inset: auto; box-sizing: border-box; width: 234px; height: 54px; min-height: 0; max-height: 54px; max-width: calc(100vw - 24px); margin: 0; padding: 4px; border: 1px solid var(--line); border-radius: 999px; color: #000; background: white; overflow: visible; box-shadow: 0 6px 20px #07327f1c; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+/* Explicit block size bounds Safari’s native top-layer popover. */
+.tellme-reaction-picker:popover-open { display: flex; align-items: center; gap: 1px; }
+.tellme-reaction-picker > button { display: grid; flex: 0 0 44px; touch-action: manipulation; place-items: center; width: 44px; height: 44px; min-width: 0; min-height: 0; padding: 2px; border: 0; border-radius: 50%; color: #000; background: transparent; cursor: pointer; }
 .tellme-reaction-picker > button > img { width: 40px; height: 40px; transition: transform 160ms ease-out; }
 .tellme-reaction-picker > button:is(:hover, :focus-visible) > img { transform: translateY(-4px) scale(1.12); }
 .tellme-reaction-picker > button[aria-pressed="true"] { background: #edf2fa; }

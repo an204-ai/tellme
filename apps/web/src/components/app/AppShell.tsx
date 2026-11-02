@@ -1,4 +1,5 @@
 "use client";
+import { useChatViewport } from "@/hooks/use-chat-viewport";
 import Link from "next/link";
 import { WeatherWidget } from "@/components/weather/WeatherWidget";
 import { usePathname, useRouter } from "next/navigation";
@@ -195,25 +196,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const fullSection =
     pathname.includes("/messages") || pathname.includes("/settings") || pathname.includes("/archive");
   const messagingPage = pathname.startsWith("/community/messages");
-  useEffect(() => {
-    if (!messagingPage || !data) return;
-    const viewport = window.visualViewport;
-    const resize = () => {
-      frameRef.current?.style.setProperty("--messages-height", `${viewport?.height ?? window.innerHeight}px`);
-      frameRef.current?.style.setProperty("--messages-offset", `${viewport?.offsetTop ?? 0}px`);
-    };
-    resize();
-    window.addEventListener("resize", resize);
-    viewport?.addEventListener("resize", resize);
-    viewport?.addEventListener("scroll", resize);
-    return () => {
-      window.removeEventListener("resize", resize);
-      viewport?.removeEventListener("resize", resize);
-      viewport?.removeEventListener("scroll", resize);
-      frameRef.current?.style.removeProperty("--messages-height");
-      frameRef.current?.style.removeProperty("--messages-offset");
-    };
-  }, [messagingPage, !!data]);
+  useChatViewport(frameRef, messagingPage && !!data);
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key === "k") {

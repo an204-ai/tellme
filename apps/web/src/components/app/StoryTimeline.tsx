@@ -50,6 +50,7 @@ export function StoryTimeline({
   const initialId = story?.items.find((item) => item.id === initialMomentId)?.id || story?.items[initialIndex]?.id;
   const [active, setActive] = useState(initialId);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const navRef = useRef<HTMLElement>(null);
   const momentsRef = useRef(new Map<string, HTMLElement>());
   const reducedMotion = data?.settings.reducedMotion;
   useEffect(() => {
@@ -85,28 +86,34 @@ export function StoryTimeline({
   useEffect(() => {
     const root = scrollRef.current;
     if (!root) return;
-    const frame = requestAnimationFrame(() => {
-      const target = initialId ? momentsRef.current.get(initialId) : null;
-      if (target)
-        root.scrollTo({
-          top: initialId === story?.items[0]?.id ? 0 : target.offsetTop - 24,
-          behavior: "instant",
-        });
-    });
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const current = entries.find((entry) => entry.isIntersecting);
-        if (current)
-          setActive((current.target as HTMLElement).dataset.momentId);
-      },
-      { root, rootMargin: "-5% 0px -70% 0px", threshold: 0 },
-    );
-    momentsRef.current.forEach((node) => observer.observe(node));
-    return () => {
-      cancelAnimationFrame(frame);
-      observer.disconnect();
+    let frame = 0;
+    const updateCurrent = () => {
+      frame = 0;
+      const nodes = [...momentsRef.current.values()];
+      const line = root.getBoundingClientRect().top + 36;
+      const last = root.scrollTop + root.clientHeight >= root.scrollHeight - 4;
+      const current = last ? nodes.at(-1) : [...nodes].reverse().find((node) => node.getBoundingClientRect().top <= line) || nodes[0];
+      if (current) setActive(current.dataset.momentId);
     };
-  }, [initialId, storyId, story?.items[0]?.id]);
+    const scroll = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(updateCurrent);
+    };
+    frame = requestAnimationFrame(() => {
+      const target = initialId ? momentsRef.current.get(initialId) : null;
+      if (target) root.scrollTo({ top: initialId === story?.items[0]?.id ? 0 : target.offsetTop - 24, behavior: "instant" });
+      updateCurrent();
+    });
+    root.addEventListener("scroll", scroll, { passive: true });
+    return () => { cancelAnimationFrame(frame); root.removeEventListener("scroll", scroll); };
+  }, [initialId, storyId, story?.items[0]?.id, items.length]);
+  useEffect(() => {
+    const nav = navRef.current;
+    const button = nav?.querySelector<HTMLElement>('[aria-current="true"]');
+    if (nav && button && nav.scrollWidth > nav.clientWidth) {
+      nav.scrollTo({ left: button.offsetLeft - nav.offsetLeft - (nav.clientWidth - button.offsetWidth) / 2, behavior: reducedMotion ? "instant" : "smooth" });
+    }
+  }, [active, reducedMotion]);
   if (storyQuery.isPending)
     return (
       <Modal title="Đang mở dòng thời gian…" onClose={() => viewStory(null)}>
@@ -137,6 +144,10 @@ export function StoryTimeline({
       onClose={() => viewStory(null)}
       className="day-timeline-dialog"
     >
+      <div className="day-sequence-summary" aria-live="polite">
+        <strong>Khoảnh khắc {Math.max(1, items.findIndex((item) => item.id === active) + 1)} / {items.length}</strong>
+        <span>{timeOf(items[0]!.at)} — {timeOf(items[items.length - 1]!.at)} · Cùng một ngày, nối tiếp nhau</span>
+      </div>
       <div className="day-timeline-layout">
         <aside className="day-timeline-aside">
           <div className="day-person">
@@ -149,6 +160,7 @@ export function StoryTimeline({
           </div>
           <nav
             className="day-timeline-nav"
+            ref={navRef}
             aria-label="Các mốc thời gian trong ngày"
           >
             {items.map((item, i) => (
@@ -178,6 +190,7 @@ export function StoryTimeline({
                 }}
               >
                 <span className="day-nav-dot" />
+                <span className="day-nav-index" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
                 <time dateTime={item.at}>{timeOf(item.at)}</time>
                 <img src={item.image} alt="" loading="lazy" />
                 <span className="day-nav-caption">
@@ -225,6 +238,7 @@ export function StoryTimeline({
                 <span />
               </div>
               <div className="day-moment-content">
+                <div className="day-moment-position"><strong>{String(i + 1).padStart(2, "0")}</strong><span>Khoảnh khắc {i + 1} / {items.length}</span></div>
                 <div className="day-moment-media">
                   <img
                     className="day-moment-photo"
@@ -310,7 +324,7 @@ export function StoryTimeline({
           ))}
           <div className="day-timeline-end">
             <span />
-            Vậy là thêm một ngày đi làm được lưu lại.
+            Một ngày, {items.length} khoảnh khắc. Mình giữ lại ở đây nhé.
           </div>
         </div>
       </div>

@@ -51,7 +51,7 @@ export function Modal({
       <section className="dialog-content">
         <header className="dialog-header">
           {subtitle || headerExtra ? <div className="dialog-heading"><h2 id={titleId}>{title}</h2>{subtitle && <div className="dialog-subtitle">{subtitle}</div>}{headerExtra}</div> : <h2 id={titleId}>{title}</h2>}
-          <IconButton label="Đóng" onClick={onClose}>
+          <IconButton label="Đóng" tooltip={false} onClick={onClose}>
             <X size={21} />
           </IconButton>
         </header>

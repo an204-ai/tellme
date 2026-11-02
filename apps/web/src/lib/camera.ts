@@ -1,7 +1,7 @@
 /** Center crop matches the 4:3 camera viewfinder without stretching the image. */
-export function cameraCrop(width: number, height: number) {
+export function cameraCrop(width: number, height: number, zoom = 1) {
   if (width <= 0 || height <= 0) throw new Error("Camera chưa sẵn sàng. Bạn đợi một chút nhé.");
-  const sourceWidth = Math.min(width, height * 4 / 3);
+  const sourceWidth = Math.min(width, height * 4 / 3) / Math.max(1, Number.isFinite(zoom) ? zoom : 1);
   const sourceHeight = sourceWidth * 3 / 4;
   const outputWidth = Math.min(1600, Math.floor(sourceWidth));
   return {
@@ -28,9 +28,9 @@ export function cameraError(error: unknown) {
   return error instanceof Error ? error.message : "Chưa mở được camera. Bạn thử lại nhé.";
 }
 
-export async function capturePhoto(video: HTMLVideoElement, mirrored = false): Promise<File> {
+export async function capturePhoto(video: HTMLVideoElement, mirrored = false, zoom = 1): Promise<File> {
   if (video.readyState < 2) throw new Error("Camera chưa sẵn sàng. Bạn đợi một chút nhé.");
-  const crop = cameraCrop(video.videoWidth, video.videoHeight);
+  const crop = cameraCrop(video.videoWidth, video.videoHeight, zoom);
   const canvas = document.createElement("canvas");
   canvas.width = crop.width;
   canvas.height = crop.height;
