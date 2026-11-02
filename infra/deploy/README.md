@@ -31,7 +31,7 @@ Tellme uses multi-document transactions. MongoDB supports them on replica sets a
 
 1. Push this branch to the Git host and make sure the VPS can clone the repository.
 2. In Coolify, create a Project and Production Environment, then add a **Docker Compose** resource from the Git repository. Keep the normal Coolify Compose deployment mode; do not select Raw Compose.
-3. Set **Base Directory** to `/` (repository root) and **Docker Compose Location** to `infra/deploy/compose.yaml`. The `../..` build contexts in Compose resolve from this file back to the repository root. Coolify should show `web-edge`, `landing`, `admin-edge`, `api`, `redis`, the three workers and `web-app`; there are no MongoDB containers or MongoDB volumes in this resource.
+3. Set **Base Directory** to `/` (repository root) and **Docker Compose Location** to `infra/deploy/compose.yaml`. Coolify passes the repository root as `--project-directory`. All eight `build.context` values are `.` relative to that root; Dockerfile paths are also relative to the repository root. Local Compose commands must use `--project-directory .` from the repository root to match Coolify. Coolify should show `web-edge`, `landing`, `admin-edge`, `api`, `redis`, the three workers and `web-app`; there are no MongoDB containers or MongoDB volumes in this resource.
 4. Add the variables listed in `coolify-env.example` in the resource's Environment Variables screen. Mark secret values as secret/locked. Keep secrets runtime-only unless a value is explicitly used as a build argument. Never add credentials to the Compose file, Dockerfile, Git repository or build arguments.
 5. Generate separate random secrets locally. For `REDIS_PASSWORD` and `AUTH_CODE_SECRET`, use `openssl rand -hex 32`. Copy each result directly into its matching Coolify secret field.
 6. Keep the current `MONGODB_URI` secret unchanged, set `MONGODB_DB=tellme`, then set `CLOUDINARY_URL`, `GIPHY_API_KEY`, `SMTP_URL` and `EMAIL_FROM` to working production values. URL-encode special characters in URI credentials (especially `@`, `:`, `/`, `%` and `$`). Use the sender address approved by your mail provider. Fill both VAPID keys if you want web push. Do not enable the Epidemic Sound prototype key as a production music provider; the app intentionally disables that provider in production.
@@ -79,10 +79,10 @@ The Next.js Docker builds use `TELLME_LOW_MEMORY_BUILD=1`: one static-generation
 3. The script deliberately passes only one service per build call: `--parallel 1` and `COMPOSE_BAKE=false` alone still built multiple targets concurrently with the Compose/Buildx version used during this review.
 4. Keep build cache enabled. Check `free -h` and `docker stats --no-stream` before deploying; 5 GB shared with Coolify and live app traffic is not a guaranteed build budget. If it still runs out of RAM, build on a separate Coolify build server or CI and deploy the prebuilt images. A small swap allocation can absorb spikes but does not replace RAM.
 
-For local image builds, supply the same command prefix explicitly:
+For local image builds, run from the repository root and supply the same command prefix explicitly:
 
 ```sh
-ADMIN_EMAILS=compose-check@example.invalid sh infra/deploy/build-images.sh docker compose --progress plain --env-file infra/deploy/coolify-env.example -f infra/deploy/compose.yaml
+ADMIN_EMAILS=compose-check@example.invalid sh infra/deploy/build-images.sh docker compose --project-directory . --progress plain --env-file infra/deploy/coolify-env.example -f infra/deploy/compose.yaml
 ```
 
 The check address is an invalid example used only while building images; the real administrator address is mandatory in Coolify. [Next.js build memory guidance](https://nextjs.org/docs/app/guides/memory-usage)
@@ -90,7 +90,7 @@ The check address is an invalid example used only while building images; the rea
 ## Local syntax/build checks
 
 ```sh
-ADMIN_EMAILS=compose-check@example.invalid docker compose --env-file infra/deploy/coolify-env.example -f infra/deploy/compose.yaml config --quiet
+ADMIN_EMAILS=compose-check@example.invalid docker compose --project-directory . --env-file infra/deploy/coolify-env.example -f infra/deploy/compose.yaml config --quiet
 pnpm --filter @tellme/api check-types
 pnpm --filter @tellme/web build
 pnpm --filter @tellme/admin build
