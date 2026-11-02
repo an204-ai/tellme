@@ -20,7 +20,9 @@ import { SharedPostPreview } from "@/components/app/SharedPostPreview";
 import { StoryReplyPreview } from "@/components/app/StoryReply";
 import type { Conversation, AppData } from "@/lib/types";
 import { newId, timeOf } from "@/lib/api-repository";
-import { replySchema } from "@/lib/validation";
+import { messageDraftSchema } from "@/lib/validation";
+import { getTellmeSticker } from "@tellme/shared/stickers";
+import { TellmeStickerButton, TellmeStickerDraft, TellmeStickerSuggestions, type TellmeSticker } from "@/components/ui/TellmeStickers";
 import { canMessageConversation, canMessagePerson } from "@/lib/chat-policy";
 import {
   Avatar,
@@ -69,6 +71,7 @@ export function MessagesScreen({
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [text, setText] = useState("");
+  const [stickerId, setStickerId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [creating, setCreating] = useState(false);
   const [creatingGroup, setCreatingGroup] = useState(false);
@@ -88,6 +91,12 @@ export function MessagesScreen({
   const person = conversationPerson(data, conversation);
   const online = usePresenceStore((state) => !!person?.id && !!state.online[person.id]);
   useEffect(() => { setDetailsOpen(false); }, [conversation?.id]);
+  useEffect(() => { setStickerId(null); setText(""); setError(""); }, [conversation?.id]);
+  const selectSticker = (sticker: TellmeSticker) => {
+    setStickerId(sticker.id);
+    setError("");
+    requestAnimationFrame(() => inputRef.current?.focus());
+  };
   const canSend = !!data && !!conversation && canMessageConversation(conversation, data);
   useEffect(() => {
     const list = bottom.current?.parentElement;
@@ -152,7 +161,7 @@ export function MessagesScreen({
                         className={`conversation-preview ${entry.unread ? "has-unread" : ""}`}
                       >
                         {last
-                          ? `${last.own ? "Bạn: " : ""}${last.text}`
+                          ? `${last.own ? "Bạn: " : ""}${last.stickerId ? `Sticker · ${getTellmeSticker(last.stickerId)?.label || "Tellme"}${last.text ? " · " : ""}` : ""}${last.text}`
                           : "Bắt đầu câu chuyện…"}
                       </span>
                     </span>
@@ -205,7 +214,9 @@ export function MessagesScreen({
                   <span>Bắt chuyện bằng một lời chào nhé.</span>
                 </div>
                 <span className="chat-day-label">Cuộc trò chuyện của bạn</span>
-                {conversation.messages.map((message) => (
+                {conversation.messages.map((message) => {
+                  const sticker = getTellmeSticker(message.stickerId);
+                  return (
                   <div
                     key={message.id}
                     className={`message-row ${message.own ? "own" : ""}`}
@@ -221,22 +232,24 @@ export function MessagesScreen({
                     )}
                     <div>
                       {message.storyReply && <StoryReplyPreview reply={message.storyReply}/>}
+                      {sticker && <img className="message-sticker" src={sticker.src} alt={`Sticker ${sticker.label}`} width={sticker.width} height={sticker.height} loading="lazy" />}
                       {message.postId ? (
                         <SharedPostPreview id={message.postId} />
                       ) : (
-                        <p className="message-bubble">{message.text}</p>
+                        message.text ? <p className="message-bubble">{message.text}</p> : null
                       )}
                       <time>{timeOf(message.at)}</time>
                     </div>
                   </div>
-                ))}
+                ); })}
                 <div ref={bottom} />
               </div>
               {canSend ? <form
                 className="chat-composer"
                 onSubmit={async (event) => {
                   event.preventDefault();
-                  const parsed = replySchema.safeParse(text);
+                  if (saving) return;
+                  const parsed = messageDraftSchema.safeParse({ text, stickerId: stickerId || undefined });
                   if (!parsed.success) {
                     setError(
                       parsed.error.issues[0]?.message ||
@@ -252,18 +265,22 @@ export function MessagesScreen({
                       if (target)
                         target.messages.push({
                           id: newId(),
-                          text: parsed.data,
+                          text: parsed.data.text,
+                          ...(parsed.data.stickerId ? { stickerId: parsed.data.stickerId } : {}),
                           own: true,
                           at: new Date().toISOString(),
                         });
                     });
                     setText("");
+                    setStickerId(null);
                     setError("");
                   } catch {
                     /* mutation handles errors */
                   }
                 }}
               >
+                {stickerId ? <TellmeStickerDraft id={stickerId} onRemove={() => setStickerId(null)} />
+                  : <TellmeStickerSuggestions key={conversation.id} text={text} onSelect={selectSticker} showLabels={false} />}
                 <div className="chat-input-line">
                   <EmojiButton
                     label="Thêm biểu cảm vào tin nhắn"
@@ -277,6 +294,7 @@ export function MessagesScreen({
                       requestAnimationFrame(() => inputRef.current?.focus());
                     }}
                   />
+                  <TellmeStickerButton key={conversation.id} label="Thêm sticker Tellme vào tin nhắn" disabled={saving} onSelect={selectSticker} showLabels={false} />
                   <input
                     ref={inputRef}
                     aria-label="Nhập tin nhắn"
@@ -295,7 +313,7 @@ export function MessagesScreen({
                   <button
                     type="submit"
                     aria-label="Gửi tin nhắn"
-                    disabled={!text.trim() || saving}
+                    disabled={(!text.trim() && !stickerId) || saving}
                   >
                     <Send size={20} />
                   </button>

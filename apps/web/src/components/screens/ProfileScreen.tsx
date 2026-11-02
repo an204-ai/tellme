@@ -3,7 +3,6 @@ import Link from "next/link";
 import { useState } from "react";
 import {
   Camera,
-  ArrowUpRight,
   Check,
   MapPin,
   MessageCircle,
@@ -17,9 +16,9 @@ import {
   Utensils,
   MessageSquarePlus,
 } from "lucide-react";
-import { DAILY_TITLE } from "@/lib/brand";
 import { localDay } from "@/lib/validation";
-import { useProfileActivity, useProfilePerson } from "@/hooks/use-posts";
+import { usePostPages, useProfilePerson } from "@/hooks/use-posts";
+import { ProfileJourney } from "@/components/profile/ProfileJourney";
 import { InfiniteTrigger } from "@/components/app/InfiniteTrigger";
 import { useCommunity } from "@/hooks/use-community";
 import { newId, canView, ApiError } from "@/lib/api-repository";
@@ -33,7 +32,6 @@ import { useRouter } from "next/navigation";
 export function ProfileScreen({ username }: { username: string }) {
   const { data, update, saving } = useCommunity();
   const open = useAppStore((state) => state.open);
-  const viewStory = useAppStore((state) => state.viewStory);
   const router = useRouter();
   const [connections, setConnections] = useState<"followers" | "following" | null>(null);
   const profileQuery = useProfilePerson(username, !!data);
@@ -41,7 +39,7 @@ export function ProfileScreen({ username }: { username: string }) {
   const profilePerson = profileUnavailable
     ? undefined
     : profileQuery.data || data?.people.find((entry) => entry.username === username);
-  const activity = useProfileActivity(profilePerson?.id);
+  const activity = usePostPages({ view: "profile", authorId: profilePerson?.id }, !!profilePerson);
   if (data && profileQuery.isError && !profileUnavailable) return (
     <Empty icon={<Users size={30}/>} title="Chưa tải được hồ sơ"
       text={profileQuery.error.message || "Kết nối tạm gián đoạn. Bạn thử lại nhé."}
@@ -70,7 +68,7 @@ export function ProfileScreen({ username }: { username: string }) {
   const isMe = person.id === "me";
   const following = data.following.includes(person.id);
   const friend = data.connections.includes(person.id);
-  const entries = activity.items;
+  const entries = activity.posts;
   const stories = data.stories
     .filter(
       (story) =>
@@ -191,6 +189,7 @@ export function ProfileScreen({ username }: { username: string }) {
           {![person.location, person.birthday, person.occupation, person.interests, person.favoriteLunch, person.favoriteDrink].some(Boolean) && <p>{isMe ? <button type="button" className="text-link" onClick={() => open("edit-personal")}>Thêm vài điều về mình</button> : "Những điều nhỏ sẽ được chia sẻ ở đây."}</p>}
         </section>
       </section>
+      <ProfileJourney key={person.id} personId={person.id} isMe={isMe} />
       {isMe && (
         <button className="journal-composer" onClick={() => open("composer")}>
           <Avatar person={person} size="sm" />
@@ -199,104 +198,29 @@ export function ProfileScreen({ username }: { username: string }) {
         </button>
       )}
       <div className="profile-journal-stream">
-        {entries.map((entry, index) => {
-          const day =
-            entry.kind === "day"
-              ? entry.story.day
-              : localDay(new Date(entry.at));
+        {entries.map((post, index) => {
+          const day = localDay(new Date(post.createdAt));
           const previous = entries[index - 1];
-          const previousDay = previous
-            ? previous.kind === "day"
-              ? previous.story.day
-              : localDay(new Date(previous.at))
-            : null;
+          const previousDay = previous ? localDay(new Date(previous.createdAt)) : null;
           const label = new Intl.DateTimeFormat("vi-VN", {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
+            day: "numeric", month: "long", year: "numeric",
           }).format(new Date(`${day}T12:00:00+07:00`));
-          return (
-            <div className="journal-activity" key={entry.id}>
-              {day !== previousDay && (
-                <div className="journal-date">
-                  <span />
-                  <time dateTime={day}>{label}</time>
-                </div>
-              )}
-              {entry.kind === "post" ? (
-                <PostCard post={entry.post} data={data} />
-              ) : (
-                <article className="journal-day">
-                  <header>
-                    <div>
-                      <Camera size={19} />
-                      <strong>
-                        {day === localDay() ? DAILY_TITLE : "Một ngày đã qua"}
-                      </strong>
-                      <span>{entry.story.items.length} khoảnh khắc</span>
-                    </div>
-                    <button
-                      aria-label={`Mở dòng thời gian ngày ${label}`}
-                      onClick={() => viewStory(entry.story.id)}
-                    >
-                      <ArrowUpRight size={19} />
-                    </button>
-                  </header>
-                  <div
-                    className={`journal-collage count-${Math.min(3, entry.story.items.length)}`}
-                  >
-                    {entry.story.items.slice(-3).map((item, i) => (
-                      <button
-                        key={item.id}
-                        aria-label={`Xem ảnh ${Math.max(0, entry.story.items.length - 3) + i + 1} ngày ${label}`}
-                        onClick={() =>
-                          viewStory(
-                            entry.story.id,
-                            Math.max(0, entry.story.items.length - 3) + i,
-                          )
-                        }
-                      >
-                        <img
-                          src={item.image}
-                          alt={
-                            item.caption || `Khoảnh khắc trong ngày ${label}`
-                          }
-                          loading="lazy"
-                        />
-                        {entry.story.items.length > 3 && i === 2 && (
-                          <span className="journal-more">
-                            +{entry.story.items.length - 3}
-                          </span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                  {entry.story.items.at(-1)?.caption && (
-                    <p>{entry.story.items.at(-1)?.caption}</p>
-                  )}
-                  <button
-                    className="journal-open-day"
-                    onClick={() => viewStory(entry.story.id)}
-                  >
-                    Xem trọn một ngày
-                    <ArrowUpRight size={16} />
-                  </button>
-                </article>
-              )}
-            </div>
-          );
+          return <div className="journal-activity" key={post.id}>
+            {day !== previousDay && <div className="journal-date"><span /><time dateTime={day}>{label}</time></div>}
+            <PostCard post={post} data={data} />
+          </div>;
         })}
       </div>
       {entries.length === 0 && !activity.isPending && !activity.isError && (
         <Empty
           icon={<Camera size={30} />}
-          title={isMe ? "Lưu lại ngày đi làm đầu tiên nhé" : "Chưa có câu chuyện nào"}
-          text="Ảnh và những chuyện đi làm bạn chia sẻ sẽ ở đây để xem lại."
+          title={isMe ? "Kể câu chuyện đầu tiên nhé" : "Chưa có bài viết nào"}
+          text="Những bài viết bạn chia sẻ sẽ xuất hiện ở đây."
           action={
             isMe ? (
-              <Button onClick={() => open("moment")}>
-                <Camera size={17} />
-                Ghi lại hôm nay
+              <Button onClick={() => open("composer")}>
+                <MessageSquarePlus size={17} />
+                Viết câu chuyện
               </Button>
             ) : undefined
           }

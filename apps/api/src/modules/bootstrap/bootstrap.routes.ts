@@ -26,8 +26,8 @@ export function registerBootstrapRoutes(api: Hono<Env>) {
     if (me._id === "guest") {
       const [people, days, topics] = await Promise.all([
         users.find({}, { projection: { passwordHash: 0, email: 0 } }).sort({ createdAt: -1 }).limit(500).toArray(),
-        stories.find({ privacy: "public" }).sort({ updatedAt: -1 }).limit(100).toArray(),
-        posts.aggregate<{ _id: string; count: number }>([{ $match: { privacy: "public", topic: { $ne: "" } } }, { $group: { _id: "$topic", count: { $sum: 1 } } }, { $sort: { count: -1 } }, { $limit: 20 }]).toArray(),
+        stories.find({ privacy: "public", "moderation.hidden": { $ne: true } }).sort({ updatedAt: -1 }).limit(100).toArray(),
+        posts.aggregate<{ _id: string; count: number }>([{ $match: { privacy: "public", "moderation.hidden": { $ne: true }, topic: { $ne: "" } } }, { $group: { _id: "$topic", count: { $sum: 1 } } }, { $sort: { count: -1 } }, { $limit: 20 }]).toArray(),
       ]);
       const missing = days.map((story) => story.userId).filter((id) => !people.some((p) => p._id === id));
       const extra = missing.length ? await users.find({ _id: { $in: missing } }, { projection: { passwordHash: 0, email: 0 } }).toArray() : [];

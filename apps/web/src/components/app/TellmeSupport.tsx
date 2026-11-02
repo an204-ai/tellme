@@ -54,14 +54,19 @@ export function SupportModal() {
   return <Modal title="Góp một chút cho Tellme" className="donation-dialog" onClose={() => open(null)}>
     <div className="donation-scroll">
       <p className="donation-intro">Nếu Tellme làm ngày đi làm của bạn vui hơn một chút, bạn có thể gửi một ly cà phê để mình tiếp tục chăm chút ứng dụng.</p>
-      <div className="donation-qr"><img src={tellmeSupport.qr} alt="Mã VietQR ủng hộ Tellme, người nhận NGUYEN THANH AN, tài khoản 0765638196" /></div>
-      <div className="donation-recipient"><span>Người nhận</span><strong>{tellmeSupport.recipient}</strong><span>Số tài khoản</span><div><strong>{tellmeSupport.account}</strong><button type="button" className="donation-copy" aria-label={copied ? "Đã sao chép số tài khoản" : "Sao chép số tài khoản"} onClick={async () => {
-        try { await navigator.clipboard.writeText(tellmeSupport.account); setCopied(true); setError(""); }
-        catch { setError("Bạn nhấn giữ số tài khoản để sao chép nhé."); }
-      }}>{copied ? <Check size={17} /> : <Copy size={17} />}{copied ? "Đã chép" : "Sao chép"}</button></div></div>
-      {error && <p className="field-error" role="alert">{error}</p>}
-      <p className="donation-hint">Quét QR bằng ứng dụng ngân hàng. Nếu đang dùng điện thoại, lưu ảnh QR rồi chọn ảnh đó trong ứng dụng ngân hàng nhé.</p>
-      <a className="donation-download" href={tellmeSupport.qr} download="tellme-donate-qr.jpg"><Download size={17} />Lưu ảnh QR</a>
+      <div className="donation-layout">
+        <div className="donation-qr"><img src={tellmeSupport.qr} alt="Mã VietQR ủng hộ Tellme, người nhận NGUYEN THANH AN, tài khoản 0765638196" /></div>
+        <div className="donation-details">
+          <div className="donation-mascot" aria-hidden="true"><img src="/brand/stickers/tellme-please.png" alt="" width="1254" height="1254" /></div>
+          <div className="donation-recipient"><span>Người nhận</span><strong>{tellmeSupport.recipient}</strong><span>Số tài khoản</span><div><strong>{tellmeSupport.account}</strong><button type="button" className="donation-copy" aria-label={copied ? "Đã sao chép số tài khoản" : "Sao chép số tài khoản"} onClick={async () => {
+            try { await navigator.clipboard.writeText(tellmeSupport.account); setCopied(true); setError(""); }
+            catch { setError("Bạn nhấn giữ số tài khoản để sao chép nhé."); }
+          }}>{copied ? <Check size={17} /> : <Copy size={17} />}{copied ? "Đã chép" : "Sao chép"}</button></div></div>
+          {error && <p className="field-error" role="alert">{error}</p>}
+          <p className="donation-hint">Quét QR bằng ứng dụng ngân hàng. Nếu đang dùng điện thoại, lưu ảnh QR rồi chọn ảnh đó trong ứng dụng ngân hàng nhé.</p>
+          <a className="donation-download" href={tellmeSupport.qr} download="tellme-vietqr.jpg"><Download size={17} />Lưu ảnh QR</a>
+        </div>
+      </div>
     </div>
     <footer className="donation-footer"><span><HeartHandshake size={18} />Cảm ơn bạn đã ở đây cùng Tellme.</span><Button variant="secondary" onClick={() => open(null)}>Để lúc khác</Button></footer>
   </Modal>;

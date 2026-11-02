@@ -31,7 +31,7 @@ flowchart LR
 | `workers/media-processor` | Tạo thumbnail, ảnh feed và blurhash; dọn ảnh Cloudinary mồ côi. |
 | `workers/feed-builder` | Làm mới cache feed công khai và chủ đề thịnh hành. |
 | `workers/notification-sender` | Ghi thông báo, gửi email qua SMTP và push qua VAPID khi các dịch vụ đó được cấu hình. |
-| `apps/admin` | React/Vite: đăng nhập, tổng quan dịch vụ, xem và xử lý báo cáo, tìm người dùng, theo dõi/retry tác vụ nền. API chỉ cấp cho email trong `ADMIN_EMAILS`. |
+| `apps/admin` | React/Vite: tổng quan, hạ tầng, log server, tác vụ nền, người dùng, kiểm duyệt nội dung/báo cáo, thống kê sử dụng và nhật ký quản trị. API giới hạn email quản trị đã xác thực trong `ADMIN_EMAILS`; thay đổi dữ liệu và nhật ký cùng transaction. Xem [ADMIN.md](docs/ADMIN.md). |
 | `apps/mobile` | Ngoài phạm vi, chưa kết nối backend này. |
 
 Các khóa cấu hình nằm trong một `.env` ở gốc workspace; `.env.example` chỉ chứa giá trị mẫu. `pnpm dev` đọc cấu hình gốc, khởi động Redis bằng Docker Compose nếu Redis cục bộ chưa chạy, rồi chạy các workspace có tác vụ phát triển.
@@ -54,7 +54,7 @@ Thông báo trong ứng dụng hoạt động mặc định. Email chỉ bật k
 
 ## Vận hành
 
-Chạy tại gốc workspace bằng `pnpm install` rồi `pnpm dev`. Redis local cần Docker Desktop; có thể chạy riêng bằng `pnpm infra:up`. API mặc định cổng 4000, web 3000, admin 3001. Build workspace bằng `pnpm build`, kiểm tra TypeScript bằng `pnpm check-types`. API và worker có Dockerfile; compose hiện cung cấp Redis, còn MongoDB/Cloudinary/SMTP/VAPID được truyền từ môi trường triển khai.
+Chạy tại gốc workspace bằng `pnpm install` rồi `pnpm dev`. Redis local cần Docker Desktop; có thể chạy riêng bằng `pnpm infra:up`. API mặc định cổng 4000, web 3000, admin 3001. Build workspace bằng `pnpm build`, kiểm tra TypeScript bằng `pnpm check-types`. Compose phát triển ở `infra/docker/docker-compose.yml` chỉ chạy Redis. Compose production cho Coolify tại `infra/deploy/compose.yaml` ghép web, landing, admin, API, workers và Redis, kết nối tới MongoDB Atlas hiện tại qua `MONGODB_URI`, rồi reverse proxy ba domain; xem [hướng dẫn deploy](infra/deploy/README.md).
 
 Hướng dẫn API, biến môi trường và xử lý dữ liệu nằm trong [docs/BACKEND.md](docs/BACKEND.md). Web nằm trong [docs/FRONTEND.md](docs/FRONTEND.md). Bản PostgreSQL/Drizzle/R2 ban đầu được giữ trong [docs/references/architecture-original.md](docs/references/architecture-original.md) làm tài liệu lịch sử, không phải runtime hiện tại.
 

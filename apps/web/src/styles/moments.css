@@ -34,6 +34,7 @@
   color: #000;
   text-align: left;
 }
+.daily-compose-field { display: flex; align-items: center; flex: 1; min-width: 0; gap: 8px; }
 /* Match the first sidebar navigation row at the top of the content. */
 @media (min-width: 641px) {
   .daily-compose {
@@ -604,14 +605,12 @@
     padding: 9px 0;
   }
   .daily-compose {
-    gap: 11px;
-    padding: 10px 0 22px;
-  }
-  .daily-compose-prompt { font-size: 13px; }
-  .daily-compose-action { gap: 6px; font-size: 12px; padding-left: 4px; }
-  .daily-compose .avatar {
-    width: 37px;
-    height: 37px;
+    gap: 10px;
+    margin: 8px 0 12px;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: #fff;
   }
   .daily-entry {
     padding: 23px 0 18px;
@@ -715,17 +714,6 @@
   font-weight: 600;
   line-height: 1.5;
 }
-.today-friends > header p {
-  margin-top: 3px;
-  font-size: 12px;
-  line-height: 1.6;
-}
-.today-friends > header > span {
-  flex: 0 0 auto;
-  color: var(--primary);
-  font-size: 11px;
-  font-weight: 500;
-}
 .today-friends-strip {
   display: flex;
   gap: 12px;
@@ -774,7 +762,7 @@
 }
 .today-friend-story.today-create-story {
   display: grid;
-  grid-template-rows: minmax(0, 1fr) 74px;
+  grid-template-rows: minmax(0, 1fr) 88px;
   border: 1px solid var(--line);
   background: #fff;
   color: #000;
@@ -807,10 +795,13 @@
   transform: translateX(-50%);
 }
 .today-create-label {
-  padding: 32px 12px 12px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 28px 10px 10px;
   font-size: 13px;
   font-weight: 600;
-  line-height: 1.6;
+  line-height: 1.35;
 }
 .today-friend-story > img,
 .today-friend-shade {
@@ -1215,7 +1206,6 @@
 .saved-moment-preview small { font-size: 12px; }
 @media (max-width: 600px) {
   .today-friends > header { align-items: flex-start; }
-  .today-friends > header p { max-width: 26ch; }
   .today-friend-person { left: 12px; right: 12px; bottom: 14px; gap: 8px; }
   .today-friend-person > svg { display: none; }
   .today-friend-person strong { font-size: 12px; }

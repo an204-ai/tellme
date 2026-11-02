@@ -1,0 +1,33 @@
+# Add these as environment variables to the Coolify Docker Compose resource.
+# Put the existing Atlas connection string in Coolify as a secret; don't commit it.
+MONGODB_URI=mongodb+srv://DB_USER:URL_ENCODED_PASSWORD@cluster.example.mongodb.net/?retryWrites=true&w=majority&appName=Tellme
+MONGODB_DB=tellme
+
+# Redis is private to the Compose network and is not published on the VPS.
+REDIS_PASSWORD=GENERATE_HEX_SECRET
+REDIS_MAXMEMORY=512mb
+AUTH_CODE_SECRET=GENERATE_HEX_SECRET
+
+# Existing Tellme provider credentials; required by the current API config.
+CLOUDINARY_URL=cloudinary://API_KEY:API_SECRET@CLOUD_NAME
+GIPHY_API_KEY=YOUR_GIPHY_API_KEY
+
+# Configure a real sender before deployment so new accounts can verify email.
+SMTP_URL=smtps://USERNAME:APP_PASSWORD@smtp.example.com:465
+EMAIL_FROM=Tellme <noreply@tellme.my>
+
+# Optional integrations. Push requires both VAPID keys.
+VAPID_PUBLIC_KEY=
+VAPID_PRIVATE_KEY=
+VAPID_SUBJECT=mailto:noreply@tellme.my
+OPENWEATHER_API_KEY=
+YOUTUBE_API_KEY=
+EPIDEMIC_SOUND_API_KEY=
+
+# Public application addresses and authenticated origins.
+APP_URL=https://tellme.my
+ADMIN_APP_URL=https://admin.tellme.my
+WEB_ORIGINS=https://tellme.my,https://admin.tellme.my
+ADMIN_EMAILS=tellme@admin.com
+NEXT_PUBLIC_SITE_URL=https://about.tellme.my
+MEDIA_ORPHAN_HOURS=24

@@ -42,7 +42,19 @@ export interface User {
   savedStories?: string[];
   settings: Preferences;
   createdAt: string;
+  lastActiveAt?: string;
+  suspension?: { reason: string; at: string; actorId: string; until?: string };
 }
+export interface ModerationState { hidden: boolean; reason: string; actorId: string; at: string }
+export interface ServerLog {
+  _id: string; at: Date; level: "info" | "warn" | "error"; service: string; event: string;
+  requestId?: string; route?: string; method?: string; status?: number; durationMs?: number;
+  actorId?: string; jobId?: string; jobKind?: string; code?: string;
+}
+export interface AdminAudit {
+  _id: string; at: Date; actorId: string; action: string; targetType: string; targetId: string; reason: string;
+}
+export interface ActivityDay { _id: string; userId: string; day: string; at: Date }
 export interface AuthToken {
   _id: string;
   userId: string;
@@ -68,6 +80,7 @@ export interface Comment {
   createdAt: string;
   parentId?: string;
   likedBy: string[];
+  moderation?: ModerationState;
   media?: {
     id: string;
     kind: "gif" | "sticker";
@@ -92,6 +105,7 @@ export interface Post {
   comments: Comment[];
   savedBy: string[];
   sharedBy: string[];
+  moderation?: ModerationState;
 }
 export interface Moment {
   id: string;
@@ -121,6 +135,7 @@ export interface Story {
   /** A single user-selected track for the whole day; never persist expiring stream URLs. */
   music?: StoryMusic;
   updatedAt: string;
+  moderation?: ModerationState;
 }
 export interface Conversation {
   ownerId?: string;
@@ -136,6 +151,7 @@ export interface Conversation {
   updatedAt: string;
 }
 export interface Message {
+  stickerId?: string;
   _id: string;
   conversationId: string;
   senderId: string;
@@ -188,7 +204,7 @@ export interface Report {
   postId: string;
   reason: string;
   at: string;
-  resolution?: { action: "dismiss" | "remove-post"; actorId: string; at: string };
+  resolution?: { action: "dismiss" | "remove-post" | "hide-content" | "suspend-user"; actorId: string; at: string; reason?: string };
 }
 export const defaults: Preferences = {
   audience: "public",

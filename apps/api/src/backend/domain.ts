@@ -10,7 +10,7 @@ import {
 } from "./database.js";
 import { fail } from "./security.js";
 import type { User, Post, Story, Conversation, Privacy, Message } from "./models.js";
-import { enqueue, visibleStoryMusic } from "@tellme/database";
+import { enqueue, visibleStoryMusic, hiddenCommentIds } from "@tellme/database";
 import { normalizeReaction } from "./social-assets.js";
 import { canChatTogether, canSendInConversation } from "./chat-policy.js";
 export const now = () => new Date().toISOString();
@@ -50,6 +50,7 @@ export async function visibility(
 ): Promise<Record<string, unknown>> {
   const r = await relations(me);
   return {
+    "moderation.hidden": { $ne: true },
     [field]: { $nin: r.blocked },
     $or: [
       { [field]: me._id },
@@ -81,6 +82,7 @@ export function personDTO(
   };
 }
 export function postDTO(post: Post, me: User) {
+  const hidden = hiddenCommentIds(post.comments);
   return {
     id: post._id,
     authorId:
@@ -101,8 +103,8 @@ export function postDTO(post: Post, me: User) {
     reaction: normalizeReaction(post.reactions[me._id]),
     reactorReactions: Object.fromEntries(Object.entries(post.reactions).map(([id, reaction]) => [externalId(id, me), normalizeReaction(reaction)])),
     comments: post.comments
-      .filter((comment) => !me.blocked.includes(comment.userId))
-      .map(({ likedBy, ...comment }) => ({
+      .filter((comment) => !hidden.has(comment.id) && !me.blocked.includes(comment.userId))
+      .map(({ likedBy, moderation: _moderation, ...comment }) => ({
         ...comment,
         userId: post.anonymous && comment.userId === post.authorId ? "anonymous" : externalId(comment.userId, me),
         ...(post.anonymous && comment.userId === post.authorId ? { isAuthor: true } : {}),
@@ -248,6 +250,7 @@ export async function messageDTO(message: Message, me: User) {
     id: message._id,
     userId: externalId(message.senderId, me),
     text: message.text,
+    ...(message.stickerId ? { stickerId: message.stickerId } : {}),
     own: message.senderId === me._id,
     at: message.at,
     ...(message.postId ? { postId: message.postId } : {}),

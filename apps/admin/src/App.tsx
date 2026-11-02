@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Activity, ArrowUpRight, Flag, LayoutDashboard, LogOut, Users } from "lucide-react";
+import { Activity, ArrowUpRight, Flag, LayoutDashboard, LogOut, Users, Server, ScrollText, ShieldCheck, ChartColumn, FileText } from "lucide-react";
 import { api, send, ApiError, type Admin } from "./api";
 import { ErrorState } from "./components";
 import logo from "../../web/public/brand/logos/tellme-wordmark-on-light.png";
@@ -9,12 +9,22 @@ const Dashboard = lazy(() => import("./pages/Dashboard").then((module) => ({ def
 const Reports = lazy(() => import("./pages/Reports").then((module) => ({ default: module.Reports })));
 const UsersPage = lazy(() => import("./pages/Users").then((module) => ({ default: module.UsersPage })));
 const Jobs = lazy(() => import("./pages/Jobs").then((module) => ({ default: module.Jobs })));
+const Infrastructure = lazy(() => import("./pages/Infrastructure").then((module) => ({ default: module.Infrastructure })));
+const Logs = lazy(() => import("./pages/Logs").then((module) => ({ default: module.Logs })));
+const Audit = lazy(() => import("./pages/Audit").then((module) => ({ default: module.Audit })));
+const Moderation = lazy(() => import("./pages/Moderation").then((module) => ({ default: module.Moderation })));
+const Analytics = lazy(() => import("./pages/Analytics").then((module) => ({ default: module.Analytics })));
 
 const sections = [
   { id: "overview", label: "Tổng quan", icon: LayoutDashboard },
-  { id: "reports", label: "Báo cáo", icon: Flag },
-  { id: "users", label: "Người dùng", icon: Users },
+  { id: "infrastructure", label: "Hạ tầng", icon: Server },
+  { id: "logs", label: "Log server", icon: ScrollText },
   { id: "jobs", label: "Tác vụ nền", icon: Activity },
+  { id: "users", label: "Người dùng", icon: Users },
+  { id: "content", label: "Nội dung", icon: FileText },
+  { id: "reports", label: "Báo cáo", icon: Flag },
+  { id: "analytics", label: "Sử dụng ứng dụng", icon: ChartColumn },
+  { id: "audit", label: "Nhật ký quản trị", icon: ShieldCheck },
 ] as const;
 type Section = typeof sections[number]["id"];
 export function App() {
@@ -26,7 +36,7 @@ export function App() {
   const [error, setError] = useState("");
   const auth = useQuery({ queryKey: ["admin", "me"], queryFn: () => api<Admin>("/admin/me"), retry: false, staleTime: 30000 });
   useEffect(() => {
-    const sync = () => { const found = sections.find((item) => `#${item.id}` === location.hash); setSection(found?.id || "overview"); };
+    const sync = () => { const found = sections.find((item) => `#${item.id}` === location.hash.split("?")[0]); setSection(found?.id || "overview"); };
     sync(); window.addEventListener("hashchange", sync);
     const favicon = document.createElement("link"); favicon.rel = "icon"; favicon.href = icon; document.head.append(favicon);
     return () => { window.removeEventListener("hashchange", sync); favicon.remove(); };
@@ -53,11 +63,12 @@ export function App() {
   }
   const admin = auth.data;
   return <div className="admin-shell">
-    <a className="skip-link" href="#admin-main">Đến nội dung chính</a>
-    <aside className="admin-sidebar"><a href="#overview" aria-label="Tellme quản trị"><img src={logo} alt="Tellme" /></a><span className="admin-workspace">Quản trị cộng đồng</span><nav aria-label="Điều hướng quản trị">{sections.map(({ id, label, icon: Icon }) => <a key={id} href={`#${id}`} aria-current={section === id ? "page" : undefined}><Icon size={20} />{label}</a>)}</nav><a className="admin-web-link" href={admin.webUrl} target="_blank" rel="noreferrer">Mở Tellme<ArrowUpRight size={16} /></a></aside>
+    <a className="skip-link" href="#admin-main" onClick={(event) => { event.preventDefault(); document.getElementById("admin-main")?.focus(); }}>Đến nội dung chính</a>
+    <aside className="admin-sidebar"><a href="#overview" aria-label="Tellme quản trị"><img src={logo} alt="Tellme" /></a><span className="admin-workspace">Vận hành & cộng đồng</span><nav aria-label="Điều hướng quản trị">{sections.map(({ id, label, icon: Icon }) => <a key={id} href={`#${id}`} aria-current={section === id ? "page" : undefined}><Icon size={20} />{label}</a>)}</nav><a className="admin-web-link" href={admin.webUrl} target="_blank" rel="noreferrer">Mở Tellme<ArrowUpRight size={16} /></a></aside>
     <div className="admin-content"><header className="admin-header"><span>{admin.name}<small>{admin.email}</small></span><button className="secondary" disabled={busy} onClick={() => void logout()}><LogOut size={16} />Đăng xuất</button></header>
-      <main id="admin-main"><h1>{sections.find((item) => item.id === section)?.label}</h1>{!admin.verified && <p role="alert" className="admin-notice">Xác thực email để thực hiện thao tác quản trị. <a href={`${admin.webUrl}/auth/verify-email`}>Nhập mã xác thực</a></p>}{error && <p className="error" role="alert">{error}</p>}
-        {admin.verified && <Suspense fallback={<p role="status">Đang mở trang…</p>}>{section === "overview" ? <Dashboard /> : section === "reports" ? <Reports canWrite={admin.verified} /> : section === "users" ? <UsersPage webUrl={admin.webUrl} /> : <Jobs canWrite={admin.verified} />}</Suspense>}
+      <main id="admin-main" tabIndex={-1}><h1>{sections.find((item) => item.id === section)?.label}</h1>{!admin.verified && <p role="alert" className="admin-notice">Xác thực email để thực hiện thao tác quản trị. <a href={`${admin.webUrl}/auth/verify-email`}>Nhập mã xác thực</a></p>}{error && <p className="error" role="alert">{error}</p>}
+        {admin.environment === "test" && <p className="admin-notice">Môi trường kiểm thử · Dữ liệu minh họa trong cơ sở dữ liệu riêng, không phải dữ liệu vận hành thật.</p>}
+        {admin.verified && <Suspense fallback={<p role="status">Đang mở trang…</p>}>{section === "overview" ? <Dashboard /> : section === "reports" ? <Reports canWrite={admin.verified} /> : section === "users" ? <UsersPage webUrl={admin.webUrl} /> : section === "infrastructure" ? <Infrastructure /> : section === "logs" ? <Logs /> : section === "audit" ? <Audit /> : section === "content" ? <Moderation /> : section === "analytics" ? <Analytics /> : <Jobs canWrite={admin.verified} />}</Suspense>}
       </main>
     </div>
   </div>;

@@ -1,5 +1,7 @@
 export * from "./config.js";
 export * from "./database.js";
+export * from "./observability.js";
+export * from "./moderation.js";
 export * from "./connection.js";
 export * from "./models.js";
 export * from "./story-music.js";

@@ -66,6 +66,9 @@ importers:
       '@tellme/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@tellme/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       cloudinary:
         specifier: ^2.11.0
         version: 2.11.0

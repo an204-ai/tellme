@@ -6,11 +6,13 @@
     "dev": "tsx watch src/main.ts",
     "build": "tsc",
     "start": "node dist/main.js",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "test:admin": "node --import tsx --test tests/admin.integration.ts"
   },
   "dependencies": {
     "@hono/node-server": "^1.13.7",
     "@tellme/database": "workspace:*",
+    "@tellme/shared": "workspace:*",
     "cloudinary": "^2.11.0",
     "dotenv": "^16.4.7",
     "hono": "^4.6.14",

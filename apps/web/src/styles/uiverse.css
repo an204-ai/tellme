@@ -924,7 +924,7 @@
   grid-template-columns: auto auto auto auto auto 1fr;
 }
 
-:where(.uiv-comment-reply) .text-box .formatting button {
+:where(.uiv-comment-reply) .text-box .formatting > button {
   width: 30px;
   height: 30px;
   position: relative;
@@ -937,7 +937,7 @@
   outline: none;
 }
 
-:where(.uiv-comment-reply) .text-box .formatting button:hover {
+:where(.uiv-comment-reply) .text-box .formatting > button:hover {
   background-color: #f1f1f1;
 }
 

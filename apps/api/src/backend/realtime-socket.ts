@@ -12,6 +12,7 @@ type Options = {
   presence: PresenceStore;
   origins: Set<string>;
   ready: () => boolean;
+  validate?: (actor: RealtimeActor) => Promise<boolean>;
   now?: () => number;
 };
 
@@ -79,11 +80,16 @@ export function attachRealtimeSocket(server: Server, options: Options) {
   };
   server.on("upgrade", upgrade);
   let sweeping = false;
+  let lastValidation = 0;
   const timer = setInterval(() => {
     if (sweeping) return;
     sweeping = true;
     const now = clock();
     for (const peer of peers.values()) if (now - peer.seen > PRESENCE_TTL || peer.actor.expiresAt <= now) peer.socket.terminate();
+    if (options.validate && now - lastValidation >= 30000) {
+      lastValidation = now;
+      for (const peer of peers.values()) void options.validate(peer.actor).then((valid) => { if (!valid) peer.socket.close(1008, "Sign in again"); }).catch(() => peer.socket.close(1013, "Reconnect"));
+    }
     void options.presence.sweep(now).catch(() => {}).finally(() => { sweeping = false; });
   }, 5000 + Math.floor(Math.random() * 2000));
   timer.unref();

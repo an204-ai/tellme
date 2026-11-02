@@ -7,6 +7,7 @@ import type {
   PostFilters,
   PostPage,
   ProfileActivityPage,
+  JourneyMonth,
 } from "./types";
 import { validateImage } from "./images";
 export { canView, visiblePosts } from "./visibility";
@@ -149,6 +150,9 @@ export const apiRepository = {
     acceptPosts(page.items);
     page.people.forEach((p) => knownPeople.set(p.id, p));
     return { ...page, nextCursor: page.nextCursor ?? undefined };
+  },
+  async getJourneyMonth(authorId: string, month: string): Promise<JourneyMonth> {
+    return request<JourneyMonth>(`/users/${encodeURIComponent(authorId)}/journey?month=${encodeURIComponent(month)}`);
   },
   async getProfilePage(
     authorId: string,

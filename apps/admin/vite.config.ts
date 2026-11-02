@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, "../..", "");
-  const proxy = { "/api": { target: env.API_INTERNAL_URL || "http://127.0.0.1:4000", changeOrigin: true } };
+  const proxy = { "/api": { target: process.env.API_INTERNAL_URL || env.API_INTERNAL_URL || "http://127.0.0.1:4000", changeOrigin: true } };
   return {
   envDir: "../..",
   publicDir: false,

@@ -1,6 +1,6 @@
 import { streamSSE } from "hono/streaming";
 import type { Hono } from "hono";
-import { eventChannel, redis, prefix, users, sessions } from "@tellme/database";
+import { eventChannel, redis, prefix, users, sessions, isSuspended } from "@tellme/database";
 import { cookieName, type Env } from "./security.js";
 import { createHash } from "node:crypto";
 import type { Server } from "node:http";
@@ -13,12 +13,17 @@ let transport: ReturnType<typeof attachRealtimeSocket> | undefined;
 export function mountRealtime(server: Server, ready: () => boolean) {
   transport = attachRealtimeSocket(server, {
     ready, presence, origins,
+    validate: async (actor) => {
+      const [session, user] = await Promise.all([sessions.findOne({ _id: actor.sessionId, expiresAt: { $gt: new Date() } }, { projection: { _id: 1 } }), users.findOne({ _id: actor.userId }, { projection: { suspension: 1 } })]);
+      return !!session && !!user && !isSuspended(user);
+    },
     authenticate: async (request) => {
       const encoded = request.headers.cookie?.split(";").map((part) => part.trim()).find((part) => part.startsWith(`${cookieName}=`))?.slice(cookieName.length + 1);
       if (!encoded || encoded.length > 256) return null;
       const sessionId = createHash("sha256").update(decodeURIComponent(encoded)).digest("hex");
       const session = await sessions.findOne({ _id: sessionId, expiresAt: { $gt: new Date() } });
-      if (!session || !await users.findOne({ _id: session.userId }, { projection: { _id: 1 } })) return null;
+      const user = session && await users.findOne({ _id: session.userId }, { projection: { _id: 1, suspension: 1 } });
+      if (!session || !user || isSuspended(user)) return null;
       return { userId: session.userId, sessionId, expiresAt: session.expiresAt.getTime() };
     },
     friends: async (id) => {

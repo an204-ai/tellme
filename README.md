@@ -1,5 +1,7 @@
 # Tellme — Social Platform Monorepo
 
+Hướng dẫn deploy production lên Coolify với `tellme.my`, `about.tellme.my` và `admin.tellme.my`: [infra/deploy/README.md](infra/deploy/README.md).
+
 > **Your day. Your stories.**  
 > Mạng xã hội dành cho những câu chuyện và khoảnh khắc đời thường. “Chuyện hôm nay” gom các ảnh được bổ sung trong ngày thành một chuỗi và lưu lại theo ngày trên trang cá nhân.
 

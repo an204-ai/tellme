@@ -18,12 +18,13 @@ import { config } from "./config.js";
 import { mongo } from "./database.js";
 import { optionalAuthenticate, checkOrigin, rateLimit, type Env } from "./security.js";
 import { HTTPException as AuthError } from "hono/http-exception";
-import { MediaUnavailable, isTransientConnectionError, connectionFailure, databaseUnavailable } from "@tellme/database";
+import { MediaUnavailable, isTransientConnectionError, connectionFailure, databaseUnavailable, logEvent } from "@tellme/database";
 import { registerRealtimeRoutes } from "./realtime.js";
 import { registerAdminRoutes } from "../modules/admin/admin.routes.js";
 import { registerArchiveRoutes } from "../modules/archive/archive.routes.js";
 import { registerMusicRoutes } from "../modules/music/music.routes.js";
 import { registerWeatherRoutes } from "../modules/weather/weather.routes.js";
+import { observeRequest } from "./observability.js";
 const cloudUrl = new URL(config.CLOUDINARY_URL);
 cloudinary.config({
   cloud_name: cloudUrl.hostname,
@@ -33,6 +34,7 @@ cloudinary.config({
 });
 export const app = new Hono<Env>();
 app.use("*", secureHeaders());
+app.use("*", observeRequest);
 const standardBodyLimit = bodyLimit({
   maxSize: 3 * 1024 * 1024,
   onError: (c) =>
@@ -56,6 +58,7 @@ app.onError((error, c) => {
   if (isTransientConnectionError(error)) {
     if (Date.now() - lastDatabaseFailureLog >= 30000) {
       console.error("MongoDB connection unavailable; the driver will retry.", connectionFailure(error));
+      logEvent({ level: "error", service: "api", event: "database.unavailable", code: connectionFailure(error).codes.join(",") });
       lastDatabaseFailureLog = Date.now();
     }
     return databaseUnavailable();
@@ -80,6 +83,7 @@ app.onError((error, c) => {
     type: error.name,
     path: c.req.routePath,
   });
+  logEvent({ service: "api", level: "error", event: "request.failed", code: error.name, route: c.req.routePath || "/unmatched", requestId: c.get("requestId") });
   return c.json({ error: "Chưa xử lý được yêu cầu. Bạn thử lại nhé." }, 503);
 });
 app.get("/health", async (c) => {
@@ -92,7 +96,7 @@ registerWeatherRoutes(app);
 const api = new Hono<Env>();
 api.use("*", optionalAuthenticate, rateLimit(300, 60000));
 api.use("*", async (c, next) => {
-  const publicRead = c.req.method === "GET" && (/^\/api\/(bootstrap|search|posts(?:\/[^/]+)?|stories(?:\/[^/]+)?|users\/[^/]+(?:\/(?:activity|followers|following))?)$/.test(c.req.path) || /^\/api\/stories\/[^/]+\/music\/stream$/.test(c.req.path));
+  const publicRead = c.req.method === "GET" && (/^\/api\/(bootstrap|search|posts(?:\/[^/]+)?|stories(?:\/[^/]+)?|users\/[^/]+(?:\/(?:activity|journey|followers|following))?)$/.test(c.req.path) || /^\/api\/stories\/[^/]+\/music\/stream$/.test(c.req.path));
   if (c.get("user")._id === "guest" && (!publicRead || c.req.path === "/api/stories/saved" || c.req.query("view") === "saved" || c.req.query("tab") === "following"))
     throw new AuthError(401, { message: "Đăng nhập để sử dụng chức năng này." });
   const user = c.get("user");

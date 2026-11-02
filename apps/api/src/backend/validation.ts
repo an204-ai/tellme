@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { getTellmeSticker } from "@tellme/shared/stickers";
 export const idSchema = z.string().uuid();
 export const privacy = z.enum(["public", "connections", "private"]);
 export const reaction = z
@@ -59,13 +60,14 @@ export const postSchema = z
     anonymous: z.boolean(),
   })
   .refine((p) => !!p.content || !!p.image, "Viết nội dung hoặc thêm ảnh.");
-const mediaSchema = z.object({
+const giphyMediaSchema = z.object({
   id: z.string().min(1).max(100),
   kind: z.enum(["gif", "sticker"]),
   url: z
     .string()
     .url()
     .refine((s) => {
+      if (!URL.canParse(s)) return false;
       const u = new URL(s);
       return u.protocol === "https:" && /(^|\.)giphy\.com$/.test(u.hostname);
     }, "Ảnh GIF cần thuộc Giphy."),
@@ -73,6 +75,15 @@ const mediaSchema = z.object({
   width: z.number().positive().max(4096),
   height: z.number().positive().max(4096),
 });
+const tellmeMediaSchema = z.object({
+  id: z.string().min(1).max(100), kind: z.literal("sticker"), url: z.string().max(200),
+  alt: z.string().max(500), width: z.number().positive().max(4096), height: z.number().positive().max(4096),
+}).refine((media) => getTellmeSticker(media.id)?.src === media.url, "Sticker Tellme không hợp lệ.")
+  .transform((media) => {
+    const sticker = getTellmeSticker(media.id)!;
+    return { id: sticker.id, kind: "sticker" as const, url: sticker.src, alt: sticker.label, width: sticker.width, height: sticker.height };
+  });
+const mediaSchema = z.union([tellmeMediaSchema, giphyMediaSchema]);
 export const commentSchema = z
   .object({
     id: idSchema,
@@ -80,7 +91,7 @@ export const commentSchema = z
     parentId: idSchema.optional(),
     media: mediaSchema.optional(),
   })
-  .refine((v) => !!v.content || !!v.media, "Nhập bình luận hoặc chọn GIF.");
+  .refine((v) => !!v.content || !!v.media, "Nhập bình luận hoặc chọn sticker/GIF.");
 export const momentSchema = z.object({
   id: idSchema,
   storyId: idSchema,
@@ -103,10 +114,12 @@ export const messageSchema = z
   .object({
     id: idSchema,
     text: z.string().trim().max(1000),
+    stickerId: z.string().max(100).refine((id) => !!getTellmeSticker(id), "Sticker không khả dụng.").optional(),
     postId: idSchema.optional(),
     storyReply: z.object({ storyId: idSchema, momentId: idSchema }).optional(),
   })
-  .refine((v) => !!v.text || !!v.postId, "Nhập tin nhắn.")
+  .refine((v) => !!v.text || !!v.postId || !!v.stickerId, "Nhập tin nhắn hoặc chọn sticker.")
+  .refine((v) => !v.stickerId || !(v.postId || v.storyReply), "Sticker cần được gửi thành tin nhắn riêng.")
   .refine((v) => !(v.postId && v.storyReply), "Chọn một nội dung để trả lời.");
 export const pageSchema = z.object({
   cursor: z.coerce.number().int().min(0).max(100000).default(0),

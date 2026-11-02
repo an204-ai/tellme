@@ -5,6 +5,8 @@ import type { ClientSession } from "mongodb";
 import { config } from "./config.js";
 import { outbox } from "./database.js";
 import type { JobKind } from "./models.js";
+import { logEvent } from "./observability.js";
+import { connectionFailure } from "./connection.js";
 
 export const prefix = `tellme-${config.MONGODB_DB.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
 export const redis = new Redis(config.REDIS_URL, { lazyConnect: true, maxRetriesPerRequest: 1, enableOfflineQueue: false, connectTimeout: 3000 });
@@ -79,8 +81,11 @@ export function createWorker(name: "media" | "feed" | "notification", handler: (
     await handler(job.name as JobKind, job.data as Record<string, unknown>, job.id!);
     await outbox.updateOne({ _id: job.id! }, { $set: { status: "completed", finishedAt: new Date() }, $unset: { error: "" } });
   }, { connection, prefix, concurrency: name === "media" ? 2 : 5 });
-  worker.on("error", () => console.error(`${name} worker connection unavailable; retrying.`));
-  worker.on("failed", (job) => {
+  let lastError = 0;
+  worker.on("error", () => { if (Date.now() - lastError > 30000) { lastError = Date.now(); logEvent({ service: name, level: "error", event: "worker.connection-unavailable" }); } });
+  worker.on("failed", (job, error) => {
+    const failure = connectionFailure(error);
+    logEvent({ service: name, level: "error", event: "job.failed", code: failure.codes.join(",") || failure.type, ...(job ? { jobId: job.id, jobKind: job.name } : {}) });
     if (job && job.name !== "notification.system" && job.attemptsMade >= (job.opts.attempts || 1)) void outbox.updateOne({ _id: job.id! }, { $set: { status: "failed", error: "Task failed after automatic retries." } }).catch(() => undefined);
   });
   return worker;

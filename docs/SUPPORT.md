@@ -10,8 +10,10 @@ Mục đích: cho người dùng tự nguyện ủng hộ người phát triển
 
 ## Nguồn thông tin
 
+Sticker chắp tay “Năn nỉ nè” (`public/brand/stickers/tellme-please.png`) đặt phía trên thông tin người nhận, không che QR hay nút thao tác. Ảnh PNG 1254 × 1254 có alpha do người dùng gửi ngày 02/11/2026 được giữ nguyên; CSS chỉ thu nhỏ và ẩn phần trong suốt dư phía trên. Cùng ảnh/id được đăng ký trong `packages/shared/stickers.mjs` cho kho sticker dùng chung.
+
 `lib/support.ts` chứa thông tin người nhận công khai và đường dẫn ảnh, lấy từ ảnh người dùng cung cấp. Đổi tài khoản phải cập nhật cả thông tin lẫn QR cùng lúc. Không có key/env/backend mới; không thu thập tài khoản ngân hàng của người ủng hộ, không ghi donation vào DB.
 
-`public/support/tellme-donate-qr.jpg` sao chép nguyên file `IMG_1544.JPG` do chủ dự án cung cấp, giữ nguyên byte/pixel QR. CSS chỉ hiển thị phần chứa QR, tên, số tài khoản và logo trong khung vuông; tải xuống vẫn là ảnh gốc đầy đủ. Không tái tạo QR bằng công cụ sinh ảnh.
+`public/support/tellme-vietqr.jpg` sao chép nguyên file `IMG_1547.jpg` do chủ dự án cung cấp, giữ nguyên QR, tên, số tài khoản và logo. CSS giữ nguyên tỷ lệ ảnh 880 × 1040 để QR không bị cắt; tải xuống vẫn là ảnh gốc đầy đủ. Không tái tạo QR bằng công cụ sinh ảnh.
 
-SHA-256 ảnh gốc/ảnh sử dụng: `27636a310e416e11add76cfed259552dce485d350f262b7aa1f41b9ce7a22e78` (172062 byte).
+SHA-256 ảnh gốc/ảnh sử dụng: `5272f38f03b860d80a75838e8305920f15dc41505f32eaa9c8a7c7948d527d64` (153534 byte).

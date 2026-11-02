@@ -1,9 +1,23 @@
-import React from "react";
-
-export const Moderation: React.FC = () => {
-  return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold">Moderation Overview</h1>
-    </div>
-  );
-};
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { api, date, send, type Page } from "../api";
+import { Dialog, ErrorState, Loading, Pagination, ReasonForm } from "../components";
+import type { ContentEntry } from "../types";
+const names = { post: "Bài viết", story: "Tell me now", comment: "Bình luận" };
+function ContentReview({ selected, close, completed }: { selected: ContentEntry; close: () => void; completed: () => Promise<void> }) {
+  const query = useQuery({ queryKey: ["admin", "content-detail", selected.type, selected._id, selected.postId], queryFn: () => api<ContentEntry>(`/admin/content/${selected.type}/${selected._id}${selected.postId ? `?postId=${selected.postId}` : ""}`) });
+  const item = query.data;
+  return <Dialog title={`Xem xét ${names[selected.type].toLowerCase()}`} close={close}>{query.isPending ? <Loading /> : query.isError ? <ErrorState error={query.error} retry={() => query.refetch()} /> : item && <><p><strong>{item.author}</strong> · {date(item.at)}</p><p className="content-full-text">{item.text || "Không có lời kể."}</p><div className="content-images">{item.images.map((image, index) => <img key={`${image}:${index}`} src={image} alt={`Ảnh ${index + 1}`} loading="lazy" />)}</div>{item.moderation && <p className="admin-notice">Lần xử lý trước: {item.moderation.reason} · {date(item.moderation.at)}</p>}<ReasonForm action={item.moderation?.hidden ? "Khôi phục nội dung" : "Ẩn nội dung"} danger={!item.moderation?.hidden} description={item.moderation?.hidden ? "Nội dung sẽ hiển thị lại theo quyền riêng tư người dùng đã chọn." : item.type === "comment" ? "Bình luận và các trả lời bên dưới sẽ được ẩn. Có thể khôi phục sau." : "Nội dung được giữ để xem xét và có thể khôi phục, không xóa ảnh gốc."} onCancel={close} onConfirm={async (reason) => { await send(`/admin/content/${item.type}/${item._id}/moderate`, { hidden: !item.moderation?.hidden, reason, postId: item.postId }); await completed(); }} /></>}</Dialog>;
+}
+export function Moderation() {
+  const [type, setType] = useState<ContentEntry["type"]>("post"), [state, setState] = useState("all"), [cursor, setCursor] = useState(0), [search, setSearch] = useState(""), [q, setQ] = useState("");
+  const [author, setAuthor] = useState(() => new URLSearchParams(location.hash.split("?")[1]).get("author") || ""), [authorQuery, setAuthorQuery] = useState(author);
+  const [selected, setSelected] = useState<ContentEntry | null>(null), [message, setMessage] = useState("");
+  const client = useQueryClient();
+  const query = useQuery({ queryKey: ["admin", "content", type, state, q, authorQuery, cursor], queryFn: () => api<Page<ContentEntry>>(`/admin/content?type=${type}&state=${state}&q=${encodeURIComponent(q)}&author=${encodeURIComponent(authorQuery)}&cursor=${cursor}&limit=20`) });
+  return <><p className="page-description">Ẩn hoặc khôi phục nội dung vi phạm. Nội dung đã ẩn không xuất hiện trên bảng tin, tìm kiếm, hồ sơ và liên kết xem trực tiếp.</p><div className="admin-tabs" aria-label="Loại nội dung">{Object.entries(names).map(([key, label]) => <button key={key} aria-pressed={type === key} onClick={() => { setType(key as ContentEntry["type"]); setCursor(0); }}>{label}</button>)}</div>
+    <form className="admin-filters" onSubmit={(event) => { event.preventDefault(); setCursor(0); setQ(search.trim()); setAuthorQuery(author.trim()); }}><label className="filter-grow">Nội dung<input value={search} onChange={(event) => setSearch(event.target.value)} maxLength={100} placeholder="Tìm trong lời kể…" /></label><label>Mã người đăng<input value={author} onChange={(event) => setAuthor(event.target.value)} maxLength={100} placeholder="Tất cả người dùng" /></label><label>Hiển thị<select value={state} onChange={(event) => { setState(event.target.value); setCursor(0); }}><option value="all">Tất cả</option><option value="visible">Chưa bị ẩn</option><option value="hidden">Đã bị ẩn</option></select></label><button className="primary">Lọc</button></form>{message && <p className="success" role="status">{message}</p>}
+    {query.isPending ? <Loading /> : query.isError ? <ErrorState error={query.error} retry={() => query.refetch()} /> : <><div className="table-scroll"><table className="content-table"><thead><tr><th>Nội dung</th><th>Người đăng</th><th>Thời gian / Đối tượng</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody>{query.data.items.map((item) => <tr key={`${item.postId || ""}:${item._id}`}><td><div className="content-preview">{item.images[0] && <img src={item.images[0]} alt="Ảnh trong nội dung" loading="lazy" />}<span>{item.text || (type === "story" ? `${item.moments} khoảnh khắc` : "Nội dung bằng ảnh")}<code className="log-id cell-note">{item._id}</code></span></div></td><td>{item.author}{item.anonymous && <small className="cell-note">Đăng ẩn danh</small>}</td><td>{date(item.at)}<small className="cell-note">{{ public: "Công khai", private: "Riêng tư", connections: "Bạn bè" }[item.privacy] || item.privacy}</small></td><td><span className={`status ${item.moderation?.hidden ? "failed" : "ready"}`}>{item.moderation?.hidden ? "Đã ẩn" : "Chưa bị ẩn"}</span></td><td><button className="secondary" onClick={() => setSelected(item)}>Xem xét</button></td></tr>)}</tbody></table></div>{!query.data.items.length && <p className="admin-empty">Không có nội dung phù hợp.</p>}<Pagination cursor={cursor} total={query.data.total} hasNext={query.data.nextCursor !== null} onChange={setCursor} /></>}
+    {selected && <ContentReview selected={selected} close={() => setSelected(null)} completed={async () => { setSelected(null); setMessage("Đã cập nhật trạng thái và lưu nhật ký."); await client.invalidateQueries({ queryKey: ["admin"] }); }} />}
+  </>;
+}

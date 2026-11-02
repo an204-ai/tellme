@@ -38,4 +38,6 @@ The `render.yaml` in this directory contains the same static-site configuration.
 
 ## Assets and implementation notes
 
+The root layout includes a 2.1-second Tellme brand intro: rounded Fredoka bubble lettering stamps in on navy, then a curved, elastic SVG edge lifts while the page fades and rises using the same progress curve. The 4.2 KB font subset is self-hosted under public/brand/fonts with its SIL OFL license. It runs once per document load, not during internal navigation. “Vào Tellme” and Escape skip it; reduced-motion preferences bypass it. CSS reveals the page even without JavaScript. Keep `src/components/BrandIntro.tsx` and `src/app/brand-intro.css` in sync with the corresponding web-app files; the copies keep this static site independent of the monorepo runtime.
+
 See [`docs/ASSETS.md`](docs/ASSETS.md) for the Tellme-owned brand/reaction assets and the generated editorial photography sources. The technology and interaction contract is recorded in [`docs/DIRECTION.md`](docs/DIRECTION.md).

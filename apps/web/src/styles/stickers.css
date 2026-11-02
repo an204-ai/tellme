@@ -1,0 +1,37 @@
+.tellme-sticker-trigger { flex-shrink: 0; }
+.tellme-sticker-trigger img { display: block; width: 32px; height: 32px; object-fit: contain; }
+.tellme-sticker-trigger[aria-expanded="true"] { background: #e8edfb; }
+.tellme-sticker-picker { position: fixed; box-sizing: border-box; width: min(344px, calc(100vw - 24px)); height: min(420px, calc(100dvh - 24px)); margin: 0; padding: 12px; overflow: hidden; border: 1px solid var(--line); border-radius: 16px; background: white; color: var(--text); box-shadow: 0 12px 32px #07327f20; }
+.tellme-sticker-picker:popover-open { display: grid; grid-template-rows: auto auto auto minmax(0, 1fr); gap: 8px; }
+.tellme-sticker-tabs { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: thin; }
+.tellme-sticker-tabs > button { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; gap: 6px; min-height: 44px; padding: 4px 12px 4px 6px; border: 1px solid transparent; border-radius: 12px; background: #f5f7fa; color: #405675; font: inherit; font-size: 13px; font-weight: 500; cursor: pointer; }
+.tellme-sticker-tabs > button[aria-selected="true"] { border-color: #bbcae8; background: #eaf0fd; color: var(--primary); }
+.tellme-sticker-tabs > button img { display: block; width: 30px; height: 30px; object-fit: contain; }
+.tellme-sticker-tabs > button:focus-visible, .tellme-sticker-panel:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+.tellme-sticker-panel { min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #b9c8e4 transparent; }
+.tellme-sticker-picker header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.tellme-sticker-picker header strong { color: var(--primary); font-size: 15px; font-weight: 600; }
+.tellme-sticker-search { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; color: #586982; }
+.tellme-sticker-search input { width: 100%; min-width: 0; padding: 0; border: 0; outline: none; background: none; color: #172b4d; font: inherit; font-size: 16px; }
+.tellme-sticker-search:focus-within { outline: 2px solid var(--primary); outline-offset: 2px; }
+.tellme-sticker-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: 12px; }
+.tellme-sticker-grid button, .tellme-sticker-suggestion-list button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-width: 0; padding: 6px; border: 0; border-radius: 12px; background: transparent; color: #223c66; font: inherit; cursor: pointer; }
+.tellme-sticker-grid button:hover, .tellme-sticker-suggestion-list button:hover { background: #eef2fc; }
+.tellme-sticker-grid button:focus-visible, .tellme-sticker-suggestion-list button:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+.tellme-sticker-grid img { width: 100%; height: auto; aspect-ratio: 1; object-fit: contain; }
+.tellme-sticker-grid button span, .tellme-sticker-suggestion-list button span { font-size: 11px; line-height: 1.4; text-align: center; overflow-wrap: anywhere; }
+.tellme-sticker-empty { margin: 20px 4px; color: #586982; font-size: 13px; line-height: 1.6; }
+.tellme-sticker-suggestions { margin-bottom: 8px; padding: 6px 8px; border-radius: 12px; background: #f2f5fc; }
+.tellme-sticker-suggestion-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: #586982; font-size: 11px; }
+.tellme-sticker-suggestion-heading .icon-button { width: 32px; height: 32px; }
+.tellme-sticker-suggestion-list { display: flex; gap: 6px; overflow-x: auto; }
+.tellme-sticker-suggestion-list button { flex: 0 0 72px; }
+.tellme-sticker-suggestion-list img { width: 60px; height: 60px; object-fit: contain; }
+.tellme-sticker-draft { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; color: #223c66; font-size: 12px; }
+.tellme-sticker-draft img { width: 80px; height: 80px; object-fit: contain; }
+.tellme-sticker-draft .icon-button { margin-left: auto; }
+.message-sticker { display: block; width: min(160px, 42vw); height: auto; aspect-ratio: 1; object-fit: contain; margin-bottom: 4px; }
+.chat-input-line { gap: 6px; }
+.comments-section .text-box { scroll-margin-block: 90px; }
+.comment-media-preview > .icon-button { top: 0; right: -32px; width: 26px; height: 26px; padding: 0; border: 1px solid #e8edf3; background: #f5f7fa; }
+@media (max-width: 640px) { .chat-input-line { gap: 2px; } .chat-input-line > .icon-button { flex-shrink: 0; width: 36px; height: 40px; } }

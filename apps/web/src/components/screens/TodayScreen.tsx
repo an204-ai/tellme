@@ -45,13 +45,18 @@ export function TodayScreen({ onlyMine = false }: { onlyMine?: boolean }) {
   return (
     <PullToRefresh onRefresh={refreshTimeline}><div className="daily-space">
       <h1 className="sr-only">{DAILY_TITLE}</h1>
-      {data.authenticated === false ? <GuestInvitation next="/community/today" /> : <button className="daily-compose" onClick={() => open("moment")}>
+      {data.authenticated === false ? <GuestInvitation next="/community/today" /> : <button type="button" className="daily-compose" aria-label="Chụp khoảnh khắc hôm nay" onClick={() => open("moment")}>
         <Avatar person={me} />
-        <span className="daily-compose-prompt">{weather ? weatherVoice(weather).moment : workplaceCopy.momentPrompt(me?.name.split(" ").at(-1))}</span>
-        <span className="daily-compose-action"><Camera size={20} /><span>Chụp ảnh</span></span>
+        <span className="daily-compose-field">
+          <span className="daily-compose-prompt">{weather ? weatherVoice(weather).moment : workplaceCopy.momentPrompt(me?.name.split(" ").at(-1))}</span>
+          <span className="daily-compose-action" aria-hidden="true"><Camera size={22} /><span>Chụp ảnh</span></span>
+        </span>
       </button>}
       {!onlyMine && data.authenticated !== false && (
         <section className="today-friends" aria-label="Chuỗi khoảnh khắc hôm nay của bạn và bạn bè">
+            <header>
+              <h2>Hôm nay, mình và bạn bè</h2>
+            </header>
             <DragScroll className="today-friends-strip" label="Khoảnh khắc hôm nay — kéo ngang để xem thêm">
               <button
                 type="button"

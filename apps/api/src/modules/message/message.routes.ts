@@ -90,6 +90,7 @@ export function registerMessageRoutes(api: Hono<Env>) {
       conversationId: chat._id,
       senderId: me._id,
       text: input.text,
+      ...(input.stickerId ? { stickerId: input.stickerId } : {}),
       at: now(),
       ...(input.postId ? { postId: input.postId } : {}),
       ...(input.storyReply ? { storyReply: input.storyReply } : {}),

@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { z } from "zod";
-import { users, posts, reports } from "../../backend/database.js";
+import { users, posts, reports, stories } from "../../backend/database.js";
 import { fail, type Env } from "../../backend/security.js";
 import { type Post } from "../../backend/models.js";
 import { createHash, randomUUID } from "node:crypto";
@@ -165,6 +165,41 @@ export function registerUserRoutes(api: Hono<Env>) {
       { $set: { hiddenPosts: [], hiddenStories: [] } },
     );
     return c.json({ ok: true });
+  });
+  api.get("/users/:id/journey", async (c) => {
+    const me = c.get("user");
+    const id = internalId(c.req.param("id"), me);
+    const month = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/).parse(c.req.query("month"));
+    const relation = await relations(me);
+    const owner = await users.findOne({ _id: id }, { projection: { createdAt: 1 } });
+    if (!owner || relation.blocked.includes(id)) fail(404, "Hồ sơ không khả dụng.");
+    const mutual = relation.mutual;
+    const result = await stories.aggregate([
+      { $match: { $and: [await visibility(me, "userId"), { userId: id }] } },
+      { $project: { day: 1, items: { $filter: { input: "$items", as: "item", cond: { $or: [
+        { $eq: ["$userId", me._id] },
+        { $eq: [{ $ifNull: ["$$item.privacy", "$privacy"] }, "public"] },
+        { $and: [{ $eq: [{ $ifNull: ["$$item.privacy", "$privacy"] }, "connections"] }, { $in: ["$userId", mutual] }] },
+      ] } } } } },
+      { $match: { "items.0": { $exists: true } } },
+      { $project: { day: 1, count: { $size: "$items" }, cover: { $arrayElemAt: ["$items.image", -1] } } },
+      { $facet: {
+        days: [
+          { $match: { day: { $gte: `${month}-01`, $lte: `${month}-31` } } },
+          { $sort: { day: 1, _id: 1 } },
+          { $group: { _id: "$day", storyId: { $first: "$_id" }, image: { $first: "$cover" }, count: { $sum: "$count" } } },
+          { $sort: { _id: 1 } },
+          { $limit: 31 },
+        ],
+        bounds: [{ $group: { _id: null, firstDay: { $min: "$day" }, latestDay: { $max: "$day" } } }],
+      } },
+    ]).next();
+    return c.json({
+      days: (result?.days || []).map((entry: { _id: string; storyId: string; image: string; count: number }) => ({ day: entry._id, storyId: entry.storyId, image: entry.image, count: entry.count })),
+      firstDay: result?.bounds[0]?.firstDay || null,
+      accountCreatedAt: owner.createdAt,
+      latestDay: result?.bounds[0]?.latestDay || null,
+    });
   });
   api.get("/users/:id/activity", async (c) => {
     const me = c.get("user"),

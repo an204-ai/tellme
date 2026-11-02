@@ -12,7 +12,7 @@ import {
   postFilter,
 } from "../../backend/domain.js";
 import * as v from "../../backend/validation.js";
-import { cachedPublicFeed, withMediaChange, scheduleCleanup, enqueue, mongo, publishUpdate } from "@tellme/database";
+import { cachedPublicFeed, withMediaChange, scheduleCleanup, enqueue, mongo, publishUpdate, hiddenCommentIds } from "@tellme/database";
 export function registerPostRoutes(api: Hono<Env>) {
   api.get("/posts", async (c) => {
     const me = c.get("user"),
@@ -147,7 +147,7 @@ export function registerPostRoutes(api: Hono<Env>) {
       input = v.commentSchema.parse(await c.req.json());
     if (
       input.parentId &&
-      !post.comments.some((comment) => comment.id === input.parentId)
+      (!post.comments.some((comment) => comment.id === input.parentId) || hiddenCommentIds(post.comments).has(input.parentId))
     )
       fail(400, "Bình luận gốc không tồn tại.");
     if (post.comments.length >= 2000)
@@ -182,7 +182,7 @@ export function registerPostRoutes(api: Hono<Env>) {
       post = await requirePost(c.req.param("id"), me),
       commentId = c.req.param("commentId"),
       { liked } = z.object({ liked: z.boolean() }).parse(await c.req.json());
-    if (!post.comments.some((comment) => comment.id === commentId))
+    if (!post.comments.some((comment) => comment.id === commentId) || hiddenCommentIds(post.comments).has(commentId))
       fail(404, "Bình luận không tồn tại.");
     await posts.updateOne(
       { _id: post._id, "comments.id": commentId },

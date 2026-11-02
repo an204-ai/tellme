@@ -14,7 +14,7 @@ import {
   Send,
   Share2,
   EyeOff,
-  Sticker,
+  Film,
   X,
   Trash2,
 } from "lucide-react";
@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/Primitives";
 import { EmojiButton } from "@/components/ui/EmojiButton";
 import { GiphyPicker } from "./GiphyPicker";
+import { TellmeStickerButton, TellmeStickerSuggestions, stickerMedia, type TellmeSticker } from "@/components/ui/TellmeStickers";
 import { Modal } from "@/components/ui/Modal";
 import { PostPhoto } from "@/components/ui/PostPhoto";
 import { AnonymousAvatar, postPersona } from "@/components/ui/AnonymousAvatar";
@@ -82,6 +83,14 @@ export function PostCard({
   const [report, setReport] = useState(false);
   const [reason, setReason] = useState("spam");
   const replyInput = useRef<HTMLTextAreaElement>(null);
+  const selectSticker = (sticker: TellmeSticker) => {
+    setMedia(stickerMedia(sticker));
+    setError("");
+    requestAnimationFrame(() => {
+      replyInput.current?.focus();
+      replyInput.current?.closest("form")?.scrollIntoView({ block: "nearest" });
+    });
+  };
   const reactionCount = useRef<HTMLSpanElement>(null);
   const persona = postPersona(post);
   const isAnonymousAuthor = (comment: Comment) => post.anonymous && (comment.isAuthor || comment.userId === "anonymous" || post.authorId === "me" && comment.userId === "me");
@@ -94,6 +103,7 @@ export function PostCard({
     });
   const send = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (saving) return;
     const parsed = commentSchema.safeParse({ text, media });
     if (!parsed.success) {
       setError(parsed.error.issues[0]?.message || "Kiểm tra bình luận.");
@@ -355,14 +365,16 @@ export function PostCard({
           )}
           {data.authenticated === false ? <Link className="text-link" href={`/auth/login?next=${encodeURIComponent(`/post/${post.id}`)}`}>Đăng nhập để bình luận</Link> : <form onSubmit={send} className="text-box">
             <div className="box-container">
+              {!media && <TellmeStickerSuggestions text={text} onSelect={selectSticker} />}
               {media && (
                 <div className="comment-media-preview">
                   <img src={media.url} alt={media.alt} />
                   <IconButton
                     label="Bỏ GIF hoặc sticker"
+                    tooltip={false}
                     onClick={() => setMedia(null)}
                   >
-                    <X size={17} />
+                    <X size={13} />
                   </IconButton>
                 </div>
               )}
@@ -399,8 +411,9 @@ export function PostCard({
                   label="Thêm GIF hoặc sticker"
                   onClick={() => setMediaPickerOpen(true)}
                 >
-                  <Sticker size={20} />
+                  <Film size={20} />
                 </IconButton>
+                <TellmeStickerButton label="Thêm sticker Tellme vào bình luận" disabled={saving} onSelect={selectSticker} />
                 <span className="comment-limit">{text.length}/1.000</span>
                 <button
                   className="send"

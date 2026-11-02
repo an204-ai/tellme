@@ -1,0 +1,4 @@
+FROM nginx:1.30-alpine
+COPY infra/deploy/nginx/web.conf /etc/nginx/conf.d/default.conf
+COPY infra/deploy/nginx/api-proxy-params.conf /etc/nginx/tellme-api-proxy-params.conf
+EXPOSE 80

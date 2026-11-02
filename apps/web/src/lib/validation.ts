@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { getTellmeSticker } from "@tellme/shared/stickers";
 
 export const postSchema = z
   .object({
@@ -18,20 +19,19 @@ export const replySchema = z
   .trim()
   .min(1, "Bạn chưa nhập bình luận.")
   .max(1000, "Bình luận tối đa 1.000 ký tự.");
+export const messageDraftSchema = z.object({
+  text: z.string().trim().max(1000, "Tin nhắn tối đa 1.000 ký tự."),
+  stickerId: z.string().refine((id) => !!getTellmeSticker(id), "Chọn sticker hợp lệ.").optional(),
+}).refine((draft) => !!draft.text || !!draft.stickerId, "Nhập tin nhắn hoặc chọn sticker.");
 export const commentMediaSchema = z.object({
   id: z.string().min(1),
   kind: z.enum(["gif", "sticker"]),
-  url: z
-    .string()
-    .url()
-    .refine(
-      (value) => value.startsWith("https://"),
-      "Ảnh GIF/sticker cần đường dẫn HTTPS.",
-    ),
+  url: z.string(),
   alt: z.string(),
   width: z.number().positive(),
   height: z.number().positive(),
-});
+}).refine((media) => media.kind === "sticker" && getTellmeSticker(media.id)?.src === media.url
+  || media.url.startsWith("https://") && URL.canParse(media.url), "Chọn GIF/sticker hợp lệ.");
 export const commentSchema = z
   .object({
     text: z.string().trim().max(1000, "Bình luận tối đa 1.000 ký tự."),

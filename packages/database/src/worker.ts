@@ -10,6 +10,7 @@ import { users } from "./database.js";
 import { deliverSystemNotification, scheduleSystemNotifications } from "./system-notifications.js";
 import type { JobKind } from "./models.js";
 import { expireYouTubeMetadata } from "./story-music.js";
+import { logEvent, startLogWriter, flushServerLogs } from "./observability.js";
 
 export async function handleJob(kind: JobKind, data: Record<string, unknown>, id: string) {
   switch (kind) {
@@ -32,6 +33,7 @@ export async function runWorker(name: "media" | "feed" | "notification") {
   const startup = new AbortController();
   let worker: ReturnType<typeof createWorker> | undefined;
   let stopDispatcher = () => {};
+  let stopLogs = () => {};
   let beat: ReturnType<typeof setInterval> | undefined;
   let timer: ReturnType<typeof setInterval> | undefined;
   let stopping = false, scheduling = false;
@@ -40,8 +42,10 @@ export async function runWorker(name: "media" | "feed" | "notification") {
     stopping = true;
     startup.abort();
     clearInterval(timer); clearInterval(beat); stopDispatcher();
+    logEvent({ service: name, level: "info", event: "process.stopping" }); stopLogs();
     if (worker) await worker.close();
     await redis.del(`${prefix}:worker:${name}`).catch(() => undefined);
+    await flushServerLogs();
     await Promise.allSettled([closeQueues(), mongo.close()]);
     process.exit(code);
   };
@@ -52,6 +56,7 @@ export async function runWorker(name: "media" | "feed" | "notification") {
       signal: startup.signal,
       onRetry: (failure, attempt, delay) => console.warn(`MongoDB chưa kết nối được; ${name} worker sẽ tự thử lại.`, { ...failure, attempt, retryInSeconds: Math.ceil(delay / 1000) }),
     });
+    stopLogs = startLogWriter();
     await connectRedis();
     startup.signal.throwIfAborted();
     worker = createWorker(name, handleJob);
@@ -71,6 +76,7 @@ export async function runWorker(name: "media" | "feed" | "notification") {
     schedule();
     timer = setInterval(schedule, name === "notification" ? 10000 : name === "feed" ? 30000 : 3600000);
     console.log(`Tellme ${name} worker ready (${config.NODE_ENV}).`);
+    logEvent({ service: name, level: "info", event: "process.ready" });
   } catch (error) {
     if (!startup.signal.aborted) {
       console.error(`Tellme ${name} worker startup failed. Check MongoDB/Redis configuration.`, connectionFailure(error));

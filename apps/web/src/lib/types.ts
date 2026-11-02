@@ -98,6 +98,7 @@ export interface DayStory {
   music?: StoryMusic;
 }
 export interface Message {
+  stickerId?: string;
   userId?: string;
   postId?: string;
   storyReply?: {
@@ -177,6 +178,13 @@ export interface PostPage {
   items: Post[];
   nextCursor: number | undefined;
   total: number;
+}
+
+export interface JourneyMonth {
+  accountCreatedAt: string;
+  days: { day: string; storyId: string; image: string; count: number }[];
+  firstDay: string | null;
+  latestDay: string | null;
 }
 
 export type ProfileActivity =
