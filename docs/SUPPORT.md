@@ -2,8 +2,8 @@
 
 Mục đích: cho người dùng tự nguyện ủng hộ người phát triển mà không ngắt việc đọc/chụp/nhắn tin.
 
-- Lần đầu vào Tell me now/Khám phá, sau khi trang có dữ liệu, hiện một lời mời nhỏ ở mép dưới. Trên mobile nó nằm trên thanh điều hướng. Có nút đóng; không tự mở QR hoặc chuyển trang.
-- Ghi cờ `tellme.support-invitation.v1` khi lời mời đã hiện. Không tự nhắc lại sau mỗi lần đăng nhập/chuyển tab. Chỉ lưu ở trình duyệt; chặn localStorage thì dùng cờ RAM cho phiên hiện tại.
+- Lần đầu vào Tell me now/Bảng tin, lời mời dạng modal chỉ hiện sau khi màn chào “Tell me now” kết thúc. Trạng thái hoàn tất được truyền từ `BrandIntro`, bao gồm kết thúc animation, bấm Vào Tellme/Escape hoặc giảm chuyển động; không dùng một khoảng chờ riêng để đoán thời điểm mở. Nút “Ủng hộ Tellme” căn giữa phần nội dung ở cả desktop và mobile. Không tự mở QR hoặc chuyển trang.
+- Ghi cờ `tellme.support-invitation.v2` khi lời mời thực sự hiện sau màn chào. Không ghi cờ trong lúc intro còn chạy, không tự nhắc lại sau mỗi lần đăng nhập/chuyển tab. Chỉ lưu ở trình duyệt; chặn localStorage thì dùng cờ RAM cho phiên hiện tại.
 - Khi modal/chuỗi/nhạc đang mở, lời mời tạm ẩn để không chen vào thao tác.
 - Mở lại bằng `Ủng hộ Tellme` dưới tagline sidebar desktop hoặc menu tài khoản trên mobile/desktop. Khách có thể xem modal QR, không yêu cầu đăng nhập.
 - Modal cho quét QR, sao chép số tài khoản và tải ảnh gốc; hướng dẫn chọn ảnh QR trong ứng dụng ngân hàng khi dùng cùng điện thoại. Không tự khởi tạo giao dịch hoặc đặt sẵn số tiền.

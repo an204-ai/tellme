@@ -12,7 +12,8 @@
 .support-welcome-copy { padding: 30px 28px 24px; display: flex; flex-direction: column; align-items: stretch; justify-content: center; }
 .support-welcome-copy h3 { margin: 0 0 15px; font-size: 23px; line-height: 1.5; letter-spacing: -.025em; font-weight: 600; color: #000; }
 .support-welcome-copy p { font-size: 14px; line-height: 1.85; margin: 0 0 22px; color: #000; }
-.support-welcome-copy .btn { display: inline-flex; justify-content: center; gap: 9px; min-height: 46px; }
+.support-welcome-copy > .button-wrap { align-self: center; max-width: 100%; }
+.support-welcome-copy .button { justify-content: center; gap: 9px; min-height: 46px; white-space: normal; }
 .support-welcome-later { border: 0; background: none; color: #07327f; cursor: pointer; min-height: 44px; margin-top: 5px; font: inherit; font-size: 14px; }
 .support-welcome-later:hover { text-decoration: underline; text-underline-offset: 4px; }
 .support-welcome-note { font-size: 11px; line-height: 1.6; text-align: center; margin-top: 5px; }
