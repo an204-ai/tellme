@@ -12,7 +12,6 @@
   .post-statistics { padding: 10px 16px; }
   .post-actions { min-height: 46px; gap: 2px; }
   .post-action, .tellme-reaction-main { min-height: 44px; font-size: var(--social-label); }
-  .tellme-reaction-more { width: 44px; }
   .post-photo { max-height: 560px; }
   .post-photo > img { position: absolute; inset: 0; max-height: none; }
   .daily-entry { padding-block: 20px; }

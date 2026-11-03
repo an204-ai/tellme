@@ -42,6 +42,7 @@ export function Modal({
       aria-labelledby={titleId}
       onCancel={(event) => {
         event.preventDefault();
+        event.stopPropagation();
         closeRef.current();
       }}
       onClick={(event) => {

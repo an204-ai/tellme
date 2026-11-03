@@ -7,7 +7,8 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
     () =>
       new QueryClient({
         defaultOptions: {
-          queries: { retry: 1, refetchOnWindowFocus: true },
+          // A stale browser online flag must not leave reads stuck in paused state.
+          queries: { networkMode: "always", retry: 1, refetchOnWindowFocus: true },
           mutations: { retry: false },
         },
       }),

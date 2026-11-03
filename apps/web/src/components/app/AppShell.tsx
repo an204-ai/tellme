@@ -36,7 +36,6 @@ import {
 import { GlobalOverlays } from "./GlobalOverlays";
 import { SupportInvitation } from "./TellmeSupport";
 import { LiquidNavigation } from "./LiquidNavigation";
-import { PageNavigationLoader } from "./PageNavigationLoader";
 import { usePageNavigation } from "@/hooks/use-page-navigation";
 import { NotificationBell } from "./NotificationBell";
 import type { AppData } from "@/lib/types";
@@ -172,7 +171,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { search, setSearch } = useAppStore();
   const searchRef = useRef<HTMLInputElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
   const navigation = usePageNavigation(pathname);
   const selectionPath = navigation.pendingHref?.split("?")[0] || pathname;
   const me = data?.people.find((person) => person.id === "me");
@@ -442,13 +440,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </aside>
         <main id="main-content" className="main-content" aria-busy={!!navigation.pendingHref}>
-          <div ref={contentRef} className="route-content" data-navigation-pending={!!navigation.pendingHref} inert={!!navigation.pendingHref}>
+          <div className="route-content">
             {navigation.failed && <p role="status" className="section-note">Trang đang mở lâu hơn bình thường. <a href={navigation.failed.href}>Mở lại {navigation.failed.label}</a></p>}
             {!data && error ? <div className="loading-state" role="alert">
               <p>{error.message}</p><button type="button" onClick={() => void refetch()}>Thử lại</button>
             </div> : children}
           </div>
-          <PageNavigationLoader content={contentRef} label={navigation.pendingLabel || "trang"} active={!!navigation.pendingHref} />
         </main>
         {!fullSection && data && <SupportRail data={data} />}
       </div>

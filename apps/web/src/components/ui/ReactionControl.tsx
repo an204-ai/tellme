@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type RefObject } from "react";
-import { ChevronDown, ThumbsUp } from "lucide-react";
+import { ThumbsUp } from "lucide-react";
 import type { Reaction } from "@/lib/types";
 import { reactionOptions } from "@/lib/social-assets";
 
@@ -11,14 +11,13 @@ export function ReactionIcon({ value, size = 28 }: { value: Reaction; size?: num
 }
 
 /** Native popover keeps reactions above both feed images and timeline dialogs. */
-export function ReactionControl({ selected, onChange, disabled = false, compact = false, flightTarget, className = "", hideMore = false }: {
+export function ReactionControl({ selected, onChange, disabled = false, compact = false, flightTarget, className = "" }: {
   selected?: Reaction | null;
   onChange: (value: Reaction | null) => void;
   disabled?: boolean;
   compact?: boolean;
   flightTarget?: RefObject<HTMLElement | null>;
   className?: string;
-  hideMore?: boolean;
 }) {
   const id = useId();
   const trigger = useRef<HTMLDivElement>(null);
@@ -29,6 +28,7 @@ export function ReactionControl({ selected, onChange, disabled = false, compact 
   const [burst, setBurst] = useState<{ value: Reaction; x: number; y: number; key: number; flight?: { dx: number; dy: number; arc: number; size: number } } | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const gesture = useRef<{ id: number; x: number; y: number; opened: boolean; value: Reaction | null; timer?: ReturnType<typeof setTimeout> } | null>(null);
+  const gestureListeners = useRef<AbortController | null>(null);
   const suppressClick = useRef(false);
   const suppressClickTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const chooseRef = useRef<(value: Reaction | null, source: HTMLButtonElement) => void>(() => {});
@@ -91,19 +91,28 @@ export function ReactionControl({ selected, onChange, disabled = false, compact 
     if (focus) requestAnimationFrame(() => popup.current?.querySelector<HTMLButtonElement>("button")?.focus({ preventScroll: true }));
   };
   useEffect(() => () => { clearTimeout(timer.current); clearTimeout(suppressClickTimer.current); }, []);
-  useEffect(() => {
+  const stopGesture = () => {
+    if (gesture.current?.timer) clearTimeout(gesture.current.timer);
+    gesture.current = null;
+    gestureListeners.current?.abort();
+    gestureListeners.current = null;
+  };
+  useEffect(() => () => stopGesture(), []);
+  const trackGesture = () => {
+    const listeners = new AbortController();
+    gestureListeners.current = listeners;
     const move = (event: PointerEvent) => {
       const current = gesture.current;
       if (!current || current.id !== event.pointerId) return;
       if (!current.opened) {
         if (Math.hypot(event.clientX - current.x, event.clientY - current.y) > 12) {
-          if (current.timer) clearTimeout(current.timer);
-          gesture.current = null;
+          stopGesture();
         }
         return;
       }
       const node = document.elementFromPoint(event.clientX, event.clientY);
       const button = node?.closest<HTMLButtonElement>(".tellme-reaction-picker > button[data-reaction]");
+      if (button && button.parentElement !== popup.current) return;
       const value = button?.dataset.reaction as Reaction | undefined;
       const next = value && reactionOptions.some((option) => option.value === value) ? value : null;
       current.value = next;
@@ -112,8 +121,7 @@ export function ReactionControl({ selected, onChange, disabled = false, compact 
     const finish = (event: PointerEvent) => {
       const current = gesture.current;
       if (!current || current.id !== event.pointerId) return;
-      if (current.timer) clearTimeout(current.timer);
-      gesture.current = null;
+      stopGesture();
       if (!current.opened) return;
       if (event.type !== "pointerup") {
         setDragReaction(null);
@@ -132,17 +140,11 @@ export function ReactionControl({ selected, onChange, disabled = false, compact 
         else closeRef.current();
       } else closeRef.current();
     };
-    document.addEventListener("pointermove", move, { capture: true, passive: true });
-    document.addEventListener("pointerup", finish, true);
-    document.addEventListener("pointercancel", finish, true);
-    return () => {
-      document.removeEventListener("pointermove", move, true);
-      document.removeEventListener("pointerup", finish, true);
-      document.removeEventListener("pointercancel", finish, true);
-      if (gesture.current?.timer) clearTimeout(gesture.current.timer);
-      gesture.current = null;
-    };
-  }, []);
+    const options = { capture: true, signal: listeners.signal };
+    document.addEventListener("pointermove", move, { ...options, passive: true });
+    document.addEventListener("pointerup", finish, options);
+    document.addEventListener("pointercancel", finish, options);
+  };
   useEffect(() => {
     if (!open) return;
     const dismiss = () => popup.current?.hidePopover();
@@ -177,7 +179,7 @@ export function ReactionControl({ selected, onChange, disabled = false, compact 
     <div ref={trigger} className={`tellme-reaction-control ${compact ? "compact" : ""} ${selected ? "selected" : ""} ${className}`} onPointerLeave={(event) => { if (event.pointerType === "mouse") scheduleClose(); }}>
       <button ref={main} type="button" className="tellme-reaction-main" onPointerDown={(event) => {
         if (disabled || event.button !== 0 || event.isPrimary === false) return;
-        if (gesture.current?.timer) clearTimeout(gesture.current.timer);
+        stopGesture();
         const current: NonNullable<typeof gesture.current> = { id: event.pointerId, x: event.clientX, y: event.clientY, opened: false, value: null };
         current.timer = setTimeout(() => {
           if (gesture.current !== current) return;
@@ -185,13 +187,17 @@ export function ReactionControl({ selected, onChange, disabled = false, compact 
           show();
         }, 320);
         gesture.current = current;
-      }} onPointerEnter={(event) => { if (event.pointerType === "mouse") show(); }} onContextMenu={(event) => event.preventDefault()} disabled={disabled} aria-pressed={!!selected} aria-haspopup="true" aria-controls={id} aria-expanded={open} onClick={(event) => {
+        trackGesture();
+      }} onKeyDown={(event) => {
+        if (event.key !== "ArrowDown" && !(event.shiftKey && event.key === "F10")) return;
+        event.preventDefault();
+        show(true);
+      }} onPointerEnter={(event) => { if (event.pointerType === "mouse") show(); }} onContextMenu={(event) => event.preventDefault()} disabled={disabled} aria-pressed={!!selected} aria-haspopup="true" aria-keyshortcuts="ArrowDown Shift+F10" aria-controls={id} aria-expanded={open} onClick={(event) => {
         if (suppressClick.current) { suppressClick.current = false; event.preventDefault(); return; }
         choose(selected ? null : "like", event.currentTarget);
       }}>
         {selected ? <ReactionIcon value={selected} /> : <ThumbsUp size={22} strokeWidth={2} aria-hidden="true" />}<span>{choice?.label || "Thích"}</span>
       </button>
-      {!hideMore && <button type="button" className="tellme-reaction-more" disabled={disabled} aria-label="Chọn cảm xúc" aria-controls={id} aria-expanded={open} onClick={() => open ? close() : show(true)}><ChevronDown size={14} /></button>}
     </div>
     <div id={id} ref={popup} popover="manual" className="tellme-reaction-picker" aria-label="Chọn cảm xúc" onToggle={(event) => setOpen(event.newState === "open")} onPointerEnter={cancelClose} onPointerLeave={(event) => { if (event.pointerType === "mouse") scheduleClose(); }} onKeyDown={(event) => {
       const entries = Array.from(popup.current?.querySelectorAll<HTMLButtonElement>("button") || []);

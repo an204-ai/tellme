@@ -34,16 +34,9 @@
 
 /* One transition: the loading veil recedes. New content stays fully opaque. */
 .route-content { min-width: 0; }
-.route-content[data-navigation-pending="true"] { pointer-events: none; user-select: none; }
-.route-content[data-navigation-pending="true"] .loading-state { visibility: hidden; }
 .messages-layout .route-content { height: 100%; min-height: 0; overflow: hidden; }
 .app-frame:has(.pull-refresh) > .app-shell > .main-content > .route-content {
   height: 100%;
   min-height: 0;
   overflow: hidden;
 }
-.page-navigation-loader { position: fixed; z-index: 32; display: grid; place-items: center; pointer-events: none; background: rgb(255 255 255 / .86); opacity: 0; transition: opacity 180ms ease-out; }
-.page-navigation-loader[data-active="true"] { opacity: 1; }
-.page-navigation-loader .loading-state { margin: 0; padding: 0; border-radius: 0; background: transparent; box-shadow: none; }
-.reduce-motion .page-navigation-loader { transition: none; }
-@media (prefers-reduced-motion: reduce) { .page-navigation-loader { transition: none; } }

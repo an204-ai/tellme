@@ -133,7 +133,7 @@ export function storyDTO(story: Story, me: User, mutual: string[] = [], includeI
       })
       .map(({ reactions, ...item }) => ({
         ...item,
-        reaction: normalizeReaction(reactions[me._id]),
+        reaction: story.userId === me._id ? null : normalizeReaction(reactions[me._id]),
         ...(includeIncomingReactions && story.userId === me._id
           ? { incomingReactions: Object.entries(reactions)
               .filter(([userId]) => userId !== me._id)

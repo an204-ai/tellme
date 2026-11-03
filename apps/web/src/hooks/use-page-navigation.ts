@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type Intent = { href: string; label: string; from: string; deadline: number };
@@ -7,7 +7,6 @@ const navigationTimeout = 10000;
 
 export function usePageNavigation(pathname: string) {
   const router = useRouter();
-  const [routing, startTransition] = useTransition();
   const [intent, setIntent] = useState<Intent | null>(null);
   const [failed, setFailed] = useState<Intent | null>(null);
   const latest = useRef<Intent | null>(null);
@@ -19,7 +18,7 @@ export function usePageNavigation(pathname: string) {
     latest.current = next;
     setFailed(null);
     setIntent(next);
-    startTransition(() => router.push(href));
+    router.push(href);
   }, [router]);
 
   useEffect(() => {
@@ -30,7 +29,10 @@ export function usePageNavigation(pathname: string) {
       if (!committed && Date.now() < intent.deadline) return;
       latest.current = null;
       setIntent(null);
-      if (!committed) setFailed(intent);
+      if (!committed) {
+        if (navigator.onLine) window.location.assign(intent.href);
+        else setFailed(intent);
+      }
     };
     const timer = window.setTimeout(check, Math.max(0, intent.deadline - Date.now()));
     document.addEventListener("visibilitychange", check);
@@ -41,7 +43,7 @@ export function usePageNavigation(pathname: string) {
       document.removeEventListener("visibilitychange", check);
       window.removeEventListener("pageshow", check);
     };
-  }, [intent, pathname, routing]);
+  }, [intent, pathname]);
 
   useEffect(() => {
     const cancel = () => { latest.current = null; setIntent(null); setFailed(null); };
@@ -50,5 +52,5 @@ export function usePageNavigation(pathname: string) {
   }, []);
   useEffect(() => { setFailed(null); }, [pathname]);
 
-  return { navigate, pendingHref: intent?.href, pendingLabel: intent?.label, failed };
+  return { navigate, pendingHref: intent?.href, failed };
 }

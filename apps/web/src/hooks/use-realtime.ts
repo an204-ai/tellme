@@ -41,6 +41,20 @@ export function useRealtime(enabled: boolean, friendIds: string[] = []) {
         socket.send("h"); heartbeat();
       }, 22000 + Math.random() * 10000);
     };
+    let reactionRefresh: ReturnType<typeof setTimeout> | undefined;
+    const reactionQueries = new Map<string, string[]>();
+    const queueReactionRefresh = (storyId: string, momentId: string) => {
+      for (const key of [["tellme", "story", storyId], ["tellme", "moment-reactors", storyId, momentId]]) {
+        if (queryClient.getQueryState(key)) reactionQueries.set(JSON.stringify(key), key);
+      }
+      if (!reactionQueries.size) return;
+      if (reactionRefresh) return;
+      reactionRefresh = setTimeout(() => {
+        reactionRefresh = undefined;
+        for (const queryKey of reactionQueries.values()) void queryClient.invalidateQueries({ queryKey, exact: true });
+        reactionQueries.clear();
+      }, 250);
+    };
     const connect = () => {
       if (stopped || paused || !navigator.onLine || current.current && current.current.readyState < WebSocket.CLOSING) return;
       clearTimeout(reconnect);
@@ -73,6 +87,9 @@ export function useRealtime(enabled: boolean, friendIds: string[] = []) {
           else if (value.kind === "presence" && typeof value.userId === "string" && typeof value.online === "boolean" && Number.isSafeInteger(value.revision)) store().change(value);
           else if (value.kind === "presence.unavailable") { store().clear(); retryPresence(); }
           else if (value.kind === "ready" || value.kind === "realtime-ready") { store().clear(); store().health(true); queueInvalidation(); }
+          else if (value.kind === "story.reactions") {
+            if (typeof value.storyId === "string" && typeof value.momentId === "string") queueReactionRefresh(value.storyId, value.momentId);
+          }
           else if (value.kind === "notifications") {
             if (!noticeRefresh) noticeRefresh = setTimeout(() => {
               noticeRefresh = undefined;
@@ -99,7 +116,7 @@ export function useRealtime(enabled: boolean, friendIds: string[] = []) {
     window.addEventListener("pagehide", hide); window.addEventListener("pageshow", resume); window.addEventListener("online", resume); window.addEventListener("offline", offline); document.addEventListener("visibilitychange", visible);
     connect();
     return () => {
-      stopped = true; clearTimeout(noticeRefresh); clearInterval(prune); attachChatSocket(null); clearTimeout(reconnect); clearTimeout(pulse); clearTimeout(invalidate); clearTimeout(resync);
+      stopped = true; clearTimeout(reactionRefresh); clearTimeout(noticeRefresh); clearInterval(prune); attachChatSocket(null); clearTimeout(reconnect); clearTimeout(pulse); clearTimeout(invalidate); clearTimeout(resync);
       const socket = current.current; current.current = null; socket?.close(); store().clear();
       window.removeEventListener("pagehide", hide); window.removeEventListener("pageshow", resume); window.removeEventListener("online", resume); window.removeEventListener("offline", offline); document.removeEventListener("visibilitychange", visible);
     };

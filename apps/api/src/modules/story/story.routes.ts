@@ -15,6 +15,7 @@ import {
   visibility,
   personDTO,
 } from "../../backend/domain.js";
+import { normalizeReaction } from "../../backend/social-assets.js";
 import * as v from "../../backend/validation.js";
 import { withMediaChange, scheduleCleanup, enqueue, mongo, publishUpdate } from "@tellme/database";
 export function registerStoryRoutes(api: Hono<Env>) {
@@ -178,6 +179,35 @@ export function registerStoryRoutes(api: Hono<Env>) {
     await publishUpdate([], "stories");
     return c.json({ ok: true });
   });
+  api.get("/stories/:id/moments/:momentId/reactions", async (c) => {
+    const me = c.get("user");
+    const { cursor, limit } = v.pageSchema.parse(c.req.query());
+    const momentId = c.req.param("momentId");
+    const story = await stories.findOne(
+      { _id: c.req.param("id"), userId: me._id, "moderation.hidden": { $ne: true }, "items.id": momentId },
+      { projection: { items: { $elemMatch: { id: momentId } } } },
+    );
+    const item = story?.items[0];
+    if (!item) return fail(404, "Khoảnh khắc không khả dụng.");
+    const blocked = new Set((await relations(me)).blocked);
+    const reactions = Object.entries(item.reactions).flatMap(([id, value]) => {
+      const reaction = normalizeReaction(value);
+      return id !== me._id && !blocked.has(id) && reaction ? [{ id, reaction }] : [];
+    });
+    const page = reactions.slice(cursor, cursor + limit);
+    const people = page.length ? await users.find(
+      { _id: { $in: page.map(({ id }) => id) } },
+      { projection: { name: 1, username: 1, avatar: 1 } },
+    ).toArray() : [];
+    const byId = new Map(people.map((person) => [person._id, person]));
+    return c.json({
+      items: page.flatMap(({ id, reaction }) => {
+        const person = byId.get(id);
+        return person ? [{ id, reaction, name: person.name, username: person.username, avatar: person.avatar }] : [];
+      }),
+      nextCursor: cursor + limit < reactions.length ? cursor + limit : null,
+    });
+  });
   api.put("/stories/:id/moments/:momentId/reaction", async (c) => {
     const me = c.get("user"),
       story = await requireStory(c.req.param("id"), me),
@@ -185,14 +215,17 @@ export function registerStoryRoutes(api: Hono<Env>) {
       { reaction } = z
         .object({ reaction: v.reaction })
         .parse(await c.req.json());
+    if (reaction && story.userId === me._id) fail(403, "Bạn không thể thả cảm xúc vào khoảnh khắc của mình.");
     if (!(await canViewMoment(story, momentId, me)))
       fail(404, "Khoảnh khắc không tồn tại hoặc bạn không có quyền xem.");
-    await stories.updateOne(
+    const result = await stories.updateOne(
       { _id: story._id, "items.id": momentId },
       reaction
         ? { $set: { [`items.$.reactions.${me._id}`]: reaction } }
         : { $unset: { [`items.$.reactions.${me._id}`]: "" } },
     );
+    if (result.modifiedCount && story.userId !== me._id)
+      void publishUpdate([story.userId], "story.reactions", { storyId: story._id, momentId });
     return c.json({ ok: true });
   });
 }

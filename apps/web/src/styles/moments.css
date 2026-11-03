@@ -744,6 +744,7 @@
 }
 .today-friend-person {
   position: absolute;
+  z-index: 3;
   right: 16px;
   bottom: 18px;
   left: 16px;
@@ -869,7 +870,8 @@
   align-self: flex-start;
   z-index: 4;
 }
-.day-moment-reaction-anchor .tellme-reaction-control {
+.day-moment-reaction-anchor .tellme-reaction-control,
+.moment-reaction-people {
   color: white;
   border: 1px solid #ffffff80;
   border-radius: 99px;
@@ -879,35 +881,44 @@
   box-shadow: 0 2px 10px #06132622;
 }
 .day-moment-reaction-anchor .tellme-reaction-control.selected { color: white; }
-.day-moment-reaction-anchor .tellme-reaction-main,
-.day-moment-reaction-anchor .tellme-reaction-more { color: white; }
+.day-moment-reaction-anchor .tellme-reaction-main { color: white; }
+.moment-reaction-people { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 4px 12px; font-size: 13px; cursor: pointer; }
+.moment-reaction-people:hover { background: #ffffff30; }
 .day-moment-reaction-anchor .tellme-reaction-control button:hover { background: #ffffff30; }
 .moment-reaction-floaters {
+  --float-size: clamp(44px, 6vw, 56px);
+  --float-rise: clamp(125px, 27vw, 235px);
   position: absolute;
-  z-index: 6;
-  bottom: 100%;
-  left: 0;
-  width: 100%;
-  height: 0;
+  z-index: 2;
+  inset: 0;
   pointer-events: none;
 }
 .moment-reaction-floaters > span {
   position: absolute;
-  bottom: 0;
-  left: calc(50% + var(--float-offset));
-  width: 34px;
-  height: 34px;
-  filter: drop-shadow(0 2px 4px #06132666);
-  animation: moment-reaction-rise 1.7s cubic-bezier(.16,.72,.35,1) var(--float-delay) both;
+  bottom: 3px;
+  left: var(--float-start);
+  width: var(--float-size);
+  height: var(--float-size);
+  filter: drop-shadow(0 3px 5px #06132666);
+  animation: moment-reaction-rise 1.65s cubic-bezier(.16,.72,.35,1) var(--float-delay) both;
 }
-.moment-reaction-floaters img { width: 34px; height: 34px; }
+.moment-reaction-floaters img { width: 100%; height: 100%; }
+.today-friend-story .moment-reaction-floaters {
+  --float-size: clamp(28px, 4vw, 42px);
+  --float-rise: clamp(96px, 20vw, 170px);
+}
 @keyframes moment-reaction-rise {
-  0% { opacity: 0; transform: translate(-50%, 8px) scale(.68); }
-  14% { opacity: 1; transform: translate(calc(-50% + 3px), -12px) scale(1.05); }
-  72% { opacity: .8; transform: translate(calc(-50% - 8px), -108px) scale(.88); }
-  100% { opacity: 0; transform: translate(calc(-50% + 10px), -164px) scale(.7); }
+  0% { opacity: 0; transform: translate(-50%, 12px) scale(.78); }
+  18% { opacity: 1; transform: translate(-50%, -26px) scale(1.08); }
+  72% { opacity: .85; transform: translate(calc(-50% + var(--float-drift) * .6), calc(var(--float-rise) * -.72)); }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--float-drift)), calc(-1 * var(--float-rise))) scale(.78); }
 }
-@media (prefers-reduced-motion: reduce) { .moment-reaction-floaters { display: none; } }
+.today-friend-story > .today-friend-preview-enter { animation: today-friend-preview-fade 300ms ease-out both; }
+@keyframes today-friend-preview-fade { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .moment-reaction-floaters { display: none; }
+  .today-friend-story > .today-friend-preview-enter { animation: none; }
+}
 .reduce-motion .moment-reaction-floaters { display: none; }
 .day-moment-audience {
   z-index: 5;
@@ -1190,7 +1201,8 @@
 .today-friends-strip { gap: 16px; scroll-snap-type: x proximity; }
 .today-friend-story { scroll-snap-align: start; border: 0; border-radius: 16px; }
 .today-friend-progress { position: absolute; top: 14px; left: 14px; right: 14px; display: flex; gap: 4px; }
-.today-friend-progress > i { flex: 1; height: 3px; border-radius: 4px; background: #fff; box-shadow: 0 1px 4px #0005; }
+.today-friend-progress > i { flex: 1; height: 3px; border-radius: 4px; background: #ffffff66; box-shadow: 0 1px 4px #0005; }
+.today-friend-progress > .is-current { background: #fff; }
 .today-friend-time { position: absolute; top: 28px; left: 14px; color: #fff; font-size: 11px; text-shadow: 0 1px 4px #000a; }
 .today-friend-person > .avatar { box-shadow: none; border: 2px solid white; }
 .today-friend-person strong { white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-height: 1.4; }
@@ -1217,8 +1229,6 @@
 @media (max-width: 700px) {
   .day-moment-overlay { gap: 6px; padding: 11px; }
   .day-moment-caption { font-size: 13px; line-height: 1.4; }
-  .moment-reaction-floaters > span { width: 30px; height: 30px; }
-  .moment-reaction-floaters img { width: 30px; height: 30px; }
 }
 @media (max-width: 600px) {
   .today-friends > header { align-items: flex-start; }

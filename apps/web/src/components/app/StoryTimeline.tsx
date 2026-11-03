@@ -3,38 +3,19 @@ import { StoryMusic } from "@/components/music/StoryMusic";
 import { Select } from "@/components/ui/Select";
 import { useQuery } from "@tanstack/react-query";
 import { apiRepository, ApiError } from "@/lib/api-repository";
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Camera, Check, MoreHorizontal, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useCommunity } from "@/hooks/use-community";
 import { canView, timeOf } from "@/lib/api-repository";
 import { localDay } from "@/lib/validation";
 import { useAppStore } from "@/stores/app.store";
 import { Avatar, Button, Loader, IconButton, PrivacyIcon, privacyNames } from "@/components/ui/Primitives";
-import type { MomentItem, Privacy, Reaction } from "@/lib/types";
+import type { Privacy } from "@/lib/types";
 import { Modal } from "@/components/ui/Modal";
 import { StoryReactions } from "./StoryReactions";
 import { StoryReply } from "./StoryReply";
-import { ReactionIcon } from "@/components/ui/ReactionControl";
-
-function MomentReactionFloaters({ item, active, reducedMotion }: { item: MomentItem; active: boolean; reducedMotion?: boolean }) {
-  const [run, setRun] = useState(0);
-  const reactions = item.incomingReactions || [];
-  const signature = reactions.join(":");
-  useEffect(() => {
-    if (!active || !reactions.length || reducedMotion || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    setRun((current) => current + 1);
-    const timeout = window.setTimeout(() => setRun(0), 2700);
-    return () => window.clearTimeout(timeout);
-  }, [active, item.id, signature, reducedMotion]);
-  if (!active || !run || !reactions.length) return null;
-  const visible = reactions.slice(0, 8);
-  return <span className="moment-reaction-floaters" key={run} aria-hidden="true">
-    {visible.map((value, index) => <span key={`${run}-${index}`} style={{
-      "--float-delay": `${index * 115}ms`,
-      "--float-offset": `${(index % 5 - 2) * 18}px`,
-    } as CSSProperties}><ReactionIcon value={value} size={34} /></span>)}
-  </span>;
-}
+import { MomentReactionBurst } from "./MomentReactionFloaters";
+import { MomentReactionPeople } from "./MomentReactionPeople";
 
 export function StoryTimeline({
   storyId,
@@ -114,7 +95,7 @@ export function StoryTimeline({
       frame = 0;
       const nodes = [...momentsRef.current.values()];
       const line = root.getBoundingClientRect().top + 36;
-      const last = root.scrollTop + root.clientHeight >= root.scrollHeight - 4;
+      const last = root.scrollTop > 0 && root.scrollTop + root.clientHeight >= root.scrollHeight - 4;
       const current = last ? nodes.at(-1) : [...nodes].reverse().find((node) => node.getBoundingClientRect().top <= line) || nodes[0];
       if (current) setActive(current.dataset.momentId);
     };
@@ -266,15 +247,15 @@ export function StoryTimeline({
                     <div className="day-moment-overlay">
                       {item.caption && <p className="day-moment-caption">{item.caption}</p>}
                       <div className="day-moment-reaction-anchor">
-                        <StoryReactions
-                          storyId={story.id}
-                          itemId={item.id}
-                          selected={item.reaction}
-                        />
-                        {story.userId === "me" && <MomentReactionFloaters item={item} active={active === item.id} reducedMotion={reducedMotion} />}
+                        {story.userId === "me"
+                          ? <MomentReactionPeople storyId={story.id} itemId={item.id} reactions={item.incomingReactions} onProfile={() => viewStory(null)} />
+                          : <StoryReactions storyId={story.id} itemId={item.id} selected={item.reaction} />}
                       </div>
                       <StoryReply story={story} item={item} person={person} />
                     </div>
+                  {story.userId === "me" && active === item.id && !reducedMotion && (
+                    <MomentReactionBurst storyId={story.id} moments={item} surface="detail" />
+                  )}
                   {item.privacy && item.privacy !== story.privacy && (
                     <span
                       className="day-moment-audience"

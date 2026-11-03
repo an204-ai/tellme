@@ -10,7 +10,7 @@ import { useStoryPages } from "@/hooks/use-posts";
 import { InfiniteTrigger } from "@/components/app/InfiniteTrigger";
 import { GuestInvitation } from "@/components/app/GuestInvitation";
 import { StoryMenu } from "@/components/app/StoryMenu";
-import { DragScroll } from "@/components/ui/DragScroll";
+import { TodayStoryHighlights } from "@/components/app/TodayStoryHighlights";
 import { DAILY_TITLE, workplaceCopy } from "@/lib/brand";
 import { useCommunity } from "@/hooks/use-community";
 import { canView, timeOf, timeAgo } from "@/lib/api-repository";
@@ -53,41 +53,7 @@ export function TodayScreen({ onlyMine = false }: { onlyMine?: boolean }) {
         </span>
       </button>}
       {!onlyMine && data.authenticated !== false && (
-        <section className="today-friends" aria-label="Chuỗi khoảnh khắc hôm nay của bạn và bạn bè">
-            <header>
-              <h2>Hôm nay, mình và bạn bè</h2>
-            </header>
-            <DragScroll className="today-friends-strip" label="Khoảnh khắc hôm nay — kéo ngang để xem thêm">
-              <button
-                type="button"
-                className="today-friend-story today-create-story"
-                aria-label="Chụp khoảnh khắc hôm nay của bạn"
-                onClick={() => open("moment")}
-              >
-                <span className="today-create-cover">
-                  <img src={me?.avatar || "/images/avatar-default.svg"} alt="" />
-                  <span className="today-create-plus"><Plus size={22} aria-hidden="true" /></span>
-                </span>
-                <span className="today-create-label">Chụp khoảnh khắc</span>
-              </button>
-              {todayHighlights.map((story) => {
-                const person = data.people.find((entry) => entry.id === story.userId);
-                const latest = story.items.at(-1)!;
-                return (
-                  <button type="button" className="today-friend-story" aria-label={story.userId === "me" ? "Xem chuỗi khoảnh khắc hôm nay của bạn" : `Xem chuỗi khoảnh khắc của ${person?.name || "bạn bè"}`} key={story.id} onClick={() => viewStory(story.id)}>
-                    <img src={latest.image} alt="" loading="lazy" />
-                    <span className="today-friend-shade" />
-                    <span className="today-friend-progress" aria-hidden="true">{story.items.slice(0, 12).map((item) => <i key={item.id} />)}</span>
-                    <span className="today-friend-time">{timeAgo(latest.at)}</span>
-                    <span className="today-friend-person">
-                      <Avatar person={person} size="sm" />
-                      <span><strong>{story.userId === "me" ? "Ngày của bạn" : person?.name}</strong></span>
-                    </span>
-                  </button>
-                );
-              })}
-            </DragScroll>
-        </section>
+        <TodayStoryHighlights stories={todayHighlights} people={data.people} me={me} reducedMotion={data.settings.reducedMotion} />
       )}
       <h2 className="today-community-heading">Một ngày đi làm của mọi người</h2>
       <div className="daily-stream">
