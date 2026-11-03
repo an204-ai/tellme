@@ -1,13 +1,15 @@
 name: Publish Tellme images
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: tellme-images-${{ github.sha }}
+  group: tellme-production
   cancel-in-progress: false
 
 jobs:
@@ -92,3 +94,70 @@ jobs:
             printf '    TELLME_IMAGE_REPOSITORY=docker.io/%s\n' "$DOCKERHUB_REPOSITORY"
             printf '    TELLME_IMAGE_REVISION=%s\n' "$GITHUB_SHA"
           } >> "$GITHUB_STEP_SUMMARY"
+
+  deploy:
+    needs: release
+    if: vars.COOLIFY_AUTO_DEPLOY == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - name: Deploy the latest complete release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COOLIFY_URL: ${{ vars.COOLIFY_URL }}
+          COOLIFY_APP_UUID: ${{ vars.COOLIFY_APP_UUID }}
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+        run: |
+          set -euo pipefail
+          main_sha=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')
+          if [[ "$main_sha" != "$GITHUB_SHA" ]]; then
+            echo "Skipping deploy because main has moved to $main_sha."
+            exit 0
+          fi
+
+          if [[ ! "$COOLIFY_URL" =~ ^https://[^/?#@[:space:]]+/?$ || ! "$COOLIFY_APP_UUID" =~ ^[a-zA-Z0-9-]+$ || -z "$COOLIFY_TOKEN" ]]; then
+            echo "::error::Set COOLIFY_URL to the HTTPS origin, COOLIFY_APP_UUID to the application UUID, and COOLIFY_TOKEN to its API token."
+            exit 1
+          fi
+
+          api="${COOLIFY_URL%/}/api/v1"
+          app="$api/applications/$COOLIFY_APP_UUID"
+          coolify() {
+            curl --fail --silent --show-error --connect-timeout 10 --max-time 20 \
+              --header "Authorization: Bearer $COOLIFY_TOKEN" \
+              --header 'Accept: application/json' \
+              --header 'Content-Type: application/json' "$@"
+          }
+
+          # Check the target before applying any changes to the application.
+          coolify "$app" | jq -e '
+            .build_pack == "dockercompose" and
+            ((.docker_compose_location // "") | ltrimstr("/")) == "infra/deploy/compose.registry.yaml" and
+            ((.docker_compose_custom_build_command // "") | length) == 0
+          ' > /dev/null || {
+            echo "::error::Switch the Coolify application to infra/deploy/compose.registry.yaml and clear its custom build command first."
+            exit 1
+          }
+
+          # Select the same commit for both the Compose file and all eight images.
+          coolify --request PATCH --data "$(jq -nc --arg sha "$GITHUB_SHA" '{key:"TELLME_IMAGE_REVISION",value:$sha}')" "$app/envs" > /dev/null
+          coolify --request PATCH --data "$(jq -nc --arg sha "$GITHUB_SHA" '{git_commit_sha:$sha}')" "$app" > /dev/null
+          deployment=$(coolify --request POST --data "$(jq -nc --arg uuid "$COOLIFY_APP_UUID" '{uuid:$uuid,force:true}')" "$api/deploy" |
+            jq -er '.deployments[0].deployment_uuid | select(type == "string" and length > 0)')
+          echo "Coolify deployment: $deployment"
+          printf '\nCoolify deployment `%s` for `%s`.\n' "$deployment" "$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+
+          # Hold the release lock while Coolify applies this configuration.
+          deadline=$((SECONDS + 780))
+          while (( SECONDS < deadline )); do
+            status=$(coolify "$api/deployments/$deployment" | jq -er '.status')
+            case "$status" in
+              finished) exit 0 ;;
+              queued|in_progress) sleep 10 ;;
+              *)
+                echo "::error::Coolify deployment $deployment ended with status $status. Open its deployment logs."
+                exit 1 ;;
+            esac
+          done
+          echo "::error::Timed out waiting for Coolify deployment $deployment. Check its status in Coolify before retrying."
+          exit 1

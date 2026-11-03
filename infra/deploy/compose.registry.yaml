@@ -38,6 +38,7 @@ services:
 
   api:
     image: "${TELLME_IMAGE_REPOSITORY:?Set the Docker Hub repository}:api-${TELLME_IMAGE_REVISION:?Set the Git commit SHA}"
+    pull_policy: always
     restart: unless-stopped
     environment: &tellme-api-environment
       NODE_ENV: production
@@ -77,6 +78,7 @@ services:
 
   worker-media:
     image: "${TELLME_IMAGE_REPOSITORY:?Set the Docker Hub repository}:worker-media-${TELLME_IMAGE_REVISION:?Set the Git commit SHA}"
+    pull_policy: always
     restart: unless-stopped
     environment: *tellme-api-environment
     depends_on:
@@ -86,6 +88,7 @@ services:
 
   worker-feed:
     image: "${TELLME_IMAGE_REPOSITORY:?Set the Docker Hub repository}:worker-feed-${TELLME_IMAGE_REVISION:?Set the Git commit SHA}"
+    pull_policy: always
     restart: unless-stopped
     environment: *tellme-api-environment
     depends_on:
@@ -95,6 +98,7 @@ services:
 
   worker-notification:
     image: "${TELLME_IMAGE_REPOSITORY:?Set the Docker Hub repository}:worker-notification-${TELLME_IMAGE_REVISION:?Set the Git commit SHA}"
+    pull_policy: always
     restart: unless-stopped
     environment: *tellme-api-environment
     depends_on:
@@ -104,6 +108,7 @@ services:
 
   web-app:
     image: "${TELLME_IMAGE_REPOSITORY:?Set the Docker Hub repository}:web-${TELLME_IMAGE_REVISION:?Set the Git commit SHA}"
+    pull_policy: always
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -123,6 +128,7 @@ services:
 
   web-edge:
     image: "${TELLME_IMAGE_REPOSITORY:?Set the Docker Hub repository}:web-edge-${TELLME_IMAGE_REVISION:?Set the Git commit SHA}"
+    pull_policy: always
     restart: unless-stopped
     depends_on:
       web-app:
@@ -141,6 +147,7 @@ services:
 
   landing:
     image: "${TELLME_IMAGE_REPOSITORY:?Set the Docker Hub repository}:landing-${TELLME_IMAGE_REVISION:?Set the Git commit SHA}"
+    pull_policy: always
     restart: unless-stopped
     expose:
       - "80"
@@ -154,6 +161,7 @@ services:
 
   admin-edge:
     image: "${TELLME_IMAGE_REPOSITORY:?Set the Docker Hub repository}:admin-${TELLME_IMAGE_REVISION:?Set the Git commit SHA}"
+    pull_policy: always
     restart: unless-stopped
     depends_on:
       api:
