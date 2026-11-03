@@ -8,8 +8,14 @@
   --color-muted: #000000;
   --color-canvas: #ffffff;
   --color-line: #e8edf3;
-  --font-sans: "Poppins", "Be Vietnam Pro", sans-serif;
+  --font-sans: "Be Vietnam Pro", sans-serif;
 }
+
+@utility notification-marker {
+  background-color: var(--notification-marker);
+  color: #fff;
+}
+
 :root {
   --primary: #07327f;
   --primary-hover: #052561;
@@ -18,6 +24,7 @@
   --line: #e8edf3;
   --canvas: #ffffff;
   --primary-tint: #f5f5f5;
+  --notification-marker: #e54858;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 * {
@@ -627,7 +634,7 @@ a.person-name:hover {
   position: absolute;
   right: 2px;
   top: -3px;
-  background: var(--primary);
+  background: var(--notification-marker);
   border: 2px solid white;
   width: 9px;
   height: 9px;
@@ -727,16 +734,11 @@ a.person-name:hover {
   min-width: 19px;
   height: 19px;
   border-radius: 6px;
-  background: #e8edf3;
-  color: #000000;
   font-size: 12px;
   display: grid;
   place-items: center;
 }
-.nav-item.active .nav-badge {
-  background: var(--primary);
-  color: #fff;
-}
+.nav-item.active .nav-badge { color: #fff; }
 .nav-separator {
   height: 1px;
   background: #e3e8ef;
@@ -2626,8 +2628,6 @@ a.person-name:hover {
   place-items: center;
   font-size: 12px;
   font-weight: 500;
-  background: var(--primary);
-  color: white;
   width: 16px;
   height: 16px;
   border-radius: 50%;
@@ -4098,10 +4098,7 @@ textarea::placeholder,
   background: #f4f4f4;
   color: #000;
 }
-.nav-item.active .nav-badge {
-  background: #fff;
-  color: #07327f;
-}
+.nav-item.active .nav-badge { color: #fff; }
 .sidebar-tagline p,
 .sidebar-tagline p strong {
   color: #07327f;
@@ -4672,11 +4669,13 @@ textarea::placeholder,
 }
 .bell-count {
   position: absolute;
-  right: 0;
-  top: 0;
-  background: #07327f;
-  color: white;
+  box-sizing: border-box;
+  right: -1px;
+  top: -1px;
   font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
   min-width: 17px;
   height: 17px;
   border-radius: 50%;
@@ -4727,23 +4726,42 @@ textarea::placeholder,
 }
 .popover-notice {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 13px 8px;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 8px;
   border-radius: 8px;
 }
 .popover-notice:hover,
 .popover-notice.unread {
-  background: #f5f5f5;
+  background: #fff3f3;
 }
+.popover-notice:hover { background: #ffeded; }
+.popover-notice-avatar {
+  position: relative;
+  display: block;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  margin: 2px 2px 0 0;
+}
+.popover-notice-avatar > .avatar,
+.popover-notice-avatar > .system-notice-avatar { display: block; width: 44px; height: 44px; }
 .popover-notice-copy {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 5px;
   font-size: 14px;
-  line-height: 1.7;
-  min-width: 0;
+  line-height: 1.45;
+}
+.popover-notice-message {
+  display: -webkit-box;
+  overflow: hidden;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 .popover-notice strong {
   font-weight: 500;
@@ -4752,23 +4770,31 @@ textarea::placeholder,
   font-size: 12px;
 }
 .popover-notice > i {
+  flex: 0 0 7px;
+  align-self: center;
   width: 7px;
   height: 7px;
-  background: #07327f;
   border-radius: 50%;
 }
 .notification-group-count {
-  flex: 0 0 auto;
-  min-width: 22px;
-  height: 22px;
+  position: absolute;
+  z-index: 2;
+  top: -5px;
+  right: -7px;
   display: grid;
+  box-sizing: border-box;
+  min-width: 20px;
+  height: 20px;
+  margin: 0;
   place-items: center;
-  padding-inline: 5px;
+  padding: 0 4px;
   border-radius: 999px;
-  background: #e8eef8;
-  color: #07327f;
-  font-size: 11px;
+  border: 2px solid white;
+  box-shadow: 0 2px 5px #5d162332;
+  font-size: 10px;
   font-weight: 700;
+  line-height: 1;
+  text-align: center;
   font-variant-numeric: tabular-nums;
 }
 .notification-feed-sentinel { height: 1px; }

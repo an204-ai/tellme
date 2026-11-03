@@ -7,5 +7,5 @@ import { useReaction } from "@/hooks/use-reaction";
 export function StoryReactions({ storyId, itemId, selected }: { storyId: string; itemId: string; selected?: Reaction | null }) {
   const { data, saving } = useCommunity();
   const reaction = useReaction({ kind: "moment", storyId, itemId }, !!data && data.authenticated !== false);
-  return <ReactionControl compact selected={selected} disabled={saving || reaction.pending} onChange={reaction.change} />;
+  return <ReactionControl compact selected={selected} disabled={saving} onChange={reaction.change} />;
 }

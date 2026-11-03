@@ -1,6 +1,8 @@
 import type { DayStory, Post, Reaction } from "./types";
 
-export type ReactionTarget = { kind: "post"; id: string } | { kind: "moment"; storyId: string; itemId: string };
+export type ReactionTarget = { kind: "post"; id: string }
+  | { kind: "comment"; postId: string; commentId: string }
+  | { kind: "moment"; storyId: string; itemId: string };
 const slots = ["pages", "items", "posts", "stories", "post", "story"];
 
 /** Visit only social query shapes; retain references for unrelated cached data. */
@@ -26,6 +28,10 @@ export function readCachedReaction(value: unknown, target: ReactionTarget): Reac
   let found: Reaction | null | undefined;
   visit(value, (post) => {
     if (target.kind === "post" && post.id === target.id) found = post.reaction;
+    if (target.kind === "comment" && post.id === target.postId) {
+      const comment = post.comments.find((entry) => entry.id === target.commentId);
+      if (comment) found = comment.reaction ?? (comment.liked ? "like" : null);
+    }
     return post;
   }, (story) => {
     if (target.kind === "moment" && story.id === target.storyId) {
@@ -39,6 +45,14 @@ export function readCachedReaction(value: unknown, target: ReactionTarget): Reac
 
 export function patchCachedReaction(value: unknown, target: ReactionTarget, reaction: Reaction | null): unknown {
   return visit(value, (post) => {
+    if (target.kind === "comment") {
+      if (post.id !== target.postId) return post;
+      const comments = post.comments.map((comment) => {
+        if (comment.id !== target.commentId || (comment.reaction ?? (comment.liked ? "like" : null)) === reaction) return comment;
+        return { ...comment, reaction, liked: reaction === "like" };
+      });
+      return comments.some((comment, index) => comment !== post.comments[index]) ? { ...post, comments } : post;
+    }
     if (target.kind !== "post" || post.id !== target.id || post.reaction === reaction) return post;
     const reactorIds = (post.reactorIds || []).filter((id) => id !== "me");
     const reactorReactions = { ...post.reactorReactions };

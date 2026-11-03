@@ -30,7 +30,7 @@ export function FeedScreen() {
   const feed = usePostPages({ view: "feed", tab: "recent", topic }, !!data);
   const open = useAppStore((state) => state.open);
   if (isPending) return <Loader />;
-  if (!data || error)
+  if (!data)
     return (
       <Empty
         title="Chưa tải được bảng tin"

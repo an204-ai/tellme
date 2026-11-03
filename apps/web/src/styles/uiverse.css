@@ -449,7 +449,7 @@
     0 1px 1px rgba(14, 17, 22, 0.03),
     0 18px 36px -22px rgba(14, 17, 22, 0.18);
   font-family:
-    "Poppins",
+    "Be Vietnam Pro",
     system-ui,
     -apple-system,
     sans-serif;
@@ -488,7 +488,7 @@
   background: #f3f6fa;
   border: 1px solid #eef2f6;
   border-radius: 999px;
-  font-family: "Poppins", system-ui, sans-serif;
+  font-family: "Be Vietnam Pro", system-ui, sans-serif;
   font-size: 11px;
   font-weight: 500;
   color: var(--color-mist, #5b6472);

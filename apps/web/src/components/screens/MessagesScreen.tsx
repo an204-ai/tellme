@@ -1,4 +1,11 @@
 "use client";
+import { replyPreview, replyQuote } from "@/lib/message-reply";
+import { TypingIndicator } from "@/components/chat/TypingIndicator";
+import { typingUsers } from "@/lib/chat-indicators";
+import { useTypingWatch } from "@/hooks/use-typing-watch";
+import { useChatSignals } from "@/hooks/use-chat-signals";
+import { useChatRealtime } from "@/lib/chat-realtime";
+import { optimisticMutations } from "@/lib/optimistic-mutation";
 import { useChatScroll } from "@/hooks/use-chat-scroll";
 import { TooltipIconButton } from "@/components/ui/TooltipIconButton";
 import { ConversationTools } from "@/components/app/ConversationTools";
@@ -8,7 +15,7 @@ import { GroupComposer } from "@/components/app/GroupComposer";
 import { DEFAULT_GROUP_AVATAR } from "@/lib/social-assets";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   PanelRight,
@@ -16,10 +23,12 @@ import {
   PencilLine,
   Send,
   Users,
+  X,
+  Reply,
 } from "lucide-react";
-import { communityKey, useCommunity } from "@/hooks/use-community";
+import { useCommunity } from "@/hooks/use-community";
 import { MessageHistory } from "@/components/chat/MessageHistory";
-import type { Conversation, AppData } from "@/lib/types";
+import type { Conversation, AppData, Message } from "@/lib/types";
 import { apiRepository, newId, timeOf } from "@/lib/api-repository";
 import { messageDraftSchema } from "@/lib/validation";
 import { getTellmeSticker } from "@tellme/shared/stickers";
@@ -73,6 +82,7 @@ export function MessagesScreen({
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [text, setText] = useState("");
+  const [replyTo, setReplyTo] = useState<Message | null>(null);
   const [stickerId, setStickerId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [sending, setSending] = useState(false);
@@ -84,10 +94,19 @@ export function MessagesScreen({
   const detailsButton = useRef<HTMLButtonElement>(null);
   const closeDetails = () => { setDetailsOpen(false); requestAnimationFrame(() => detailsButton.current?.focus({ preventScroll: true })); };
   const inputRef = useRef<HTMLInputElement>(null);
-  const conversations =
-    data?.conversations.filter(
-      (entry) => !data.blocked.includes(entry.userId),
-    ) || [];
+  const selectReply = useCallback((message: Message) => {
+    setReplyTo(message);
+    requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true }));
+  }, []);
+  const conversations = data
+    ? data.conversations
+        .filter((entry) => !data.blocked.includes(entry.userId))
+        .sort((left, right) => {
+          const leftAt = Date.parse(left.messages.at(-1)?.at || "") || 0;
+          const rightAt = Date.parse(right.messages.at(-1)?.at || "") || 0;
+          return rightAt - leftAt;
+        })
+    : [];
   const conversation = conversationId
     ? conversations.find((entry) => entry.id === conversationId)
     : conversations[0];
@@ -96,7 +115,7 @@ export function MessagesScreen({
   const person = useMemo(() => conversationPerson(data, conversation), [data, conversation]);
   const online = usePresenceStore((state) => !!person?.id && !!state.online[person.id]);
   useEffect(() => { setDetailsOpen(false); }, [conversation?.id]);
-  useEffect(() => { setStickerId(null); setText(""); setError(""); setSending(false); sendingRef.current = false; }, [conversation?.id]);
+  useEffect(() => { setStickerId(null); setText(""); setReplyTo(null); setError(""); setSending(false); sendingRef.current = false; }, [conversation?.id]);
   const selectSticker = (sticker: TellmeSticker) => {
     setStickerId(sticker.id);
     setError("");
@@ -105,16 +124,12 @@ export function MessagesScreen({
   const canSend = !!data && !!conversation && canMessageConversation(conversation, data);
   const lastMessage = conversation?.messages.at(-1);
   const chatScroll = useChatScroll(conversation?.id, lastMessage?.id, lastMessage?.own);
-  useEffect(() => {
-    if (conversation?.unread && (conversationId || window.innerWidth > 640)) {
-      void update((draft) => {
-        const chat = draft.conversations.find(
-          (entry) => entry.id === conversation.id,
-        );
-        if (chat) chat.unread = 0;
-      }).catch(() => undefined);
-    }
-  }, [conversation?.unread, conversationId]);
+  const signals = useChatSignals(conversation, chatScroll.viewport);
+  const typingPeers = useChatRealtime((state) => state.peers);
+  const typingIds = useMemo(() => typingUsers(typingPeers, conversation?.id || ""), [typingPeers, conversation?.id]);
+  const listIds = conversations.map((entry) => entry.id).join(",");
+  useTypingWatch(conversation?.id, listIds);
+
   if (!data) return <Loader />;
   return (
     <>
@@ -148,9 +163,11 @@ export function MessagesScreen({
               .map((entry) => {
                 const user = conversationPerson(data, entry);
                 const last = entry.messages.at(-1);
+                const entryTypingIds = typingUsers(typingPeers, entry.id);
                 return (
                   <Link
                     key={entry.id}
+                    data-conversation-id={entry.id}
                     className={`conversation-row ${entry.id === conversation?.id ? "selected" : ""}`}
                     href={`/community/messages/${entry.id}`}
                   >
@@ -163,13 +180,13 @@ export function MessagesScreen({
                       <span
                         className={`conversation-preview ${entry.unread ? "has-unread" : ""}`}
                       >
-                        {last
+                        {entryTypingIds.length ? <TypingIndicator inline group={entry.kind === "group"} userIds={entryTypingIds} people={data.people} /> : last
                           ? `${last.own ? "Bạn: " : ""}${last.stickerId ? `Sticker · ${getTellmeSticker(last.stickerId)?.label || "Tellme"}${last.text ? " · " : ""}` : ""}${last.text}`
                           : "Bắt đầu câu chuyện…"}
                       </span>
                     </span>
                     {entry.unread > 0 && (
-                      <b className="conversation-unread">{entry.unread}</b>
+                      <b className="conversation-unread notification-marker">{entry.unread}</b>
                     )}
                   </Link>
                 );
@@ -211,14 +228,15 @@ export function MessagesScreen({
                 <button type="button" ref={detailsButton} className={`icon-button chat-details-toggle ${detailsOpen ? "active" : ""}`} aria-label={detailsOpen ? "Đóng thông tin trò chuyện" : "Mở thông tin và chức năng trò chuyện"} aria-controls={detailsId} aria-expanded={detailsOpen} onClick={() => detailsOpen ? closeDetails() : setDetailsOpen(true)}><PanelRight size={21} /></button>
               </header>
               <div className="chat-messages" ref={chatScroll.viewport} role="region" aria-label="Lịch sử tin nhắn" tabIndex={0}>
-                <MessageHistory ref={chatScroll.history} data={data} conversation={conversation} person={person} />
+                <MessageHistory ref={chatScroll.history} data={data} conversation={conversation} person={person} typingIds={typingIds} onReply={selectReply} />
               </div>
+
               {canSend ? <form
                 className="chat-composer"
                 onSubmit={async (event) => {
                   event.preventDefault();
                   if (saving || sendingRef.current) return;
-                  const parsed = messageDraftSchema.safeParse({ text, stickerId: stickerId || undefined });
+                  const parsed = messageDraftSchema.safeParse({ text, stickerId: stickerId || undefined, replyToId: replyTo?.id });
                   if (!parsed.success) {
                     setError(
                       parsed.error.issues[0]?.message ||
@@ -231,35 +249,39 @@ export function MessagesScreen({
                     text: parsed.data.text,
                     ...(parsed.data.stickerId ? { stickerId: parsed.data.stickerId } : {}),
                     own: true as const,
+                    pending: true,
+                    ...(replyTo ? { replyTo: replyQuote(replyTo) } : {}),
                     at: new Date().toISOString(),
                   };
+                  signals.stop();
                   sendingRef.current = true;
                   setSending(true);
+                  const replyDraft = replyTo;
                   setText("");
+                  setReplyTo(null);
                   setStickerId(null);
                   setError("");
-                  queryClient.setQueryData<AppData>(communityKey, (current) => current && ({
-                    ...current,
-                    conversations: current.conversations.map((entry) => entry.id === conversation.id
-                      ? { ...entry, messages: [...entry.messages, message] }
-                      : entry),
-                  }));
                   try {
-                    await apiRepository.sendMessage(conversation.id, {
-                      id: message.id,
-                      text: message.text,
-                      ...(parsed.data.stickerId ? { stickerId: parsed.data.stickerId } : {}),
+                    await optimisticMutations(queryClient).run({
+                      scope: `conversation:${conversation.id}`,
+                      matches: (query) => query.queryKey[0] === "tellme" && query.queryKey[1] === "community",
+                      apply: (value) => {
+                        const current = value as AppData | undefined;
+                        return current && ({ ...current, conversations: current.conversations.map((entry) => entry.id !== conversation.id || entry.messages.some((item) => item.id === message.id) ? entry : { ...entry, messages: [...entry.messages, message] }) });
+                      },
+                      reconcile: (value, result) => {
+                        const current = value as AppData | undefined;
+                        return current && ({ ...current, conversations: current.conversations.map((entry) => entry.id !== conversation.id ? entry : { ...entry, messages: entry.messages.some((item) => item.id === message.id) ? entry.messages.map((item) => item.id === message.id ? result.message : item) : [...entry.messages, result.message] }) });
+                      },
+                      execute: () => apiRepository.sendMessage(conversation.id, { id: message.id, text: message.text, ...(parsed.data.replyToId ? { replyToId: parsed.data.replyToId } : {}), ...(parsed.data.stickerId ? { stickerId: parsed.data.stickerId } : {}) }),
                     });
-                    void queryClient.invalidateQueries({ queryKey: communityKey });
                   } catch (sendError) {
-                    queryClient.setQueryData<AppData>(communityKey, (current) => current && ({
-                      ...current,
-                      conversations: current.conversations.map((entry) => entry.id === conversation.id
-                        ? { ...entry, messages: entry.messages.filter((item) => item.id !== message.id) }
-                        : entry),
-                    }));
-                    if (activeConversationId.current === conversation.id) {
+                    // A socket acknowledgement can arrive even if the HTTP response is lost.
+                    const acknowledged = queryClient.getQueryData<AppData>(["tellme", "community"])?.conversations
+                      .find((entry) => entry.id === conversation.id)?.messages.some((entry) => entry.id === message.id && !entry.pending);
+                    if (!acknowledged && activeConversationId.current === conversation.id) {
                       setText((current) => current || parsed.data.text);
+                      setReplyTo((current) => current || replyDraft);
                       setStickerId((current) => current || parsed.data.stickerId || null);
                       setError(sendError instanceof Error ? sendError.message : "Chưa gửi được tin nhắn. Bạn thử lại nhé.");
                     }
@@ -271,6 +293,7 @@ export function MessagesScreen({
                   }
                 }}
               >
+                {replyTo && <div className="chat-reply-draft"><Reply size={17} /><span><strong>Trả lời {replyTo.own ? "chính bạn" : data.people.find((entry) => entry.id === replyTo.userId)?.name || person.name}</strong><span>{replyPreview(replyTo)}</span></span><button type="button" aria-label="Hủy trả lời" onClick={() => setReplyTo(null)}><X size={17} /></button></div>}
                 {stickerId ? <TellmeStickerDraft id={stickerId} onRemove={() => setStickerId(null)} />
                   : <TellmeStickerSuggestions key={conversation.id} text={text} onSelect={selectSticker} showLabels={false} />}
                 <div className="chat-input-line">
@@ -299,6 +322,7 @@ export function MessagesScreen({
                     }
                     onChange={(event) => {
                       setText(event.target.value);
+                      signals.input(event.target.value);
                       setError("");
                     }}
                   />

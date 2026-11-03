@@ -1,26 +1,55 @@
-import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { RefreshCw } from "lucide-react";
-import { api, bytes, date, number, send } from "../api";
-import { Dialog, ErrorState, Loading, ReasonForm } from "../components";
+import { api, bytes, date, number } from "../api";
+import { ErrorState, Loading } from "../components";
 import type { InfrastructureData } from "../types";
+
+const states = {
+  connected: "Kết nối được", unavailable: "Chưa lấy được dữ liệu",
+  configured: "Đã cấu hình", disabled: "Chưa cấu hình",
+};
+const hourLabel = new Intl.DateTimeFormat("vi-VN", { timeZone: "Asia/Ho_Chi_Minh", hour: "2-digit", minute: "2-digit" });
+
 export function Infrastructure() {
-  const [rebuild, setRebuild] = useState(false), [message, setMessage] = useState("");
-  const client = useQueryClient();
-  const query = useQuery({ queryKey: ["admin", "infrastructure"], queryFn: () => api<InfrastructureData>("/admin/infrastructure"), refetchInterval: 15000 });
-  if (query.isPending) return <Loading label="Đang kiểm tra hạ tầng…" />;
-  if (query.isError) return <ErrorState error={query.error} retry={() => query.refetch()} />;
-  const data = query.data, metrics = data.api.metrics;
+  const query = useQuery({
+    queryKey: ["admin", "infrastructure"],
+    queryFn: () => api<InfrastructureData>("/admin/infrastructure"),
+    refetchInterval: 60000,
+  });
+  if (!query.data) return query.isError
+    ? <ErrorState error={query.error} retry={() => query.refetch()} />
+    : <Loading label="Đang kiểm tra hạ tầng…" />;
+  const data = query.data;
+  const peak = Math.max(1, ...data.traffic.map(({ count }) => count));
+  const { disk } = data.host;
   return <>
-    <div className="section-toolbar"><p>Môi trường <strong>{data.environment}</strong> · Cập nhật {date(data.at)}</p><button className="secondary" disabled={query.isFetching} onClick={() => void query.refetch()}><RefreshCw size={16} />Kiểm tra lại</button></div>
-    <div className="health-summary"><span className={`status ${data.database.ready && data.redis.ready && data.workers.every((worker) => worker.ready) ? "ready" : "offline"}`}>{data.database.ready && data.redis.ready && data.workers.every((worker) => worker.ready) ? "Các dịch vụ chính đang hoạt động" : "Có dịch vụ cần kiểm tra"}</span><span>API đã chạy {number(Math.floor(data.api.uptimeSeconds / 60))} phút</span></div>
-    <dl className="admin-totals">{[["Request / phút", number(Math.round(metrics.count / Math.max(1, metrics.windowMinutes)))], ["Request / 15 phút", number(metrics.count)], ["Phản hồi trung bình", `${metrics.averageMs} ms`], ["RAM tiến trình API", bytes(data.api.memory.rss)]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
-    <div className="overview-columns">
-      <section><h2>Dịch vụ & worker</h2><dl className="service-list"><div><dt>MongoDB Atlas <small>{data.database.latencyMs} ms · {bytes(data.database.dataBytes)} dữ liệu</small></dt><dd><span className={`status ${data.database.ready ? "ready" : "offline"}`}>{data.database.ready ? "Kết nối được" : "Mất kết nối"}</span></dd></div><div><dt>Redis <small>{data.redis.latencyMs ?? "—"} ms · {bytes(data.redis.memoryBytes)}</small></dt><dd><span className={`status ${data.redis.ready ? "ready" : "offline"}`}>{data.redis.ready ? "Kết nối được" : "Mất kết nối"}</span></dd></div>{data.workers.map((worker) => <div key={worker.name}><dt>Worker {worker.name}<small>Heartbeat: {worker.ageSeconds === null ? "chưa nhận" : `${worker.ageSeconds} giây trước`}</small></dt><dd><span className={`status ${worker.ready ? "ready" : "offline"}`}>{worker.ready ? "Đang hoạt động" : "Chưa thấy heartbeat"}</span></dd></div>)}</dl></section>
-      <section><h2>Bộ nhớ & phản hồi</h2><dl className="service-list">{[["RAM heap API", `${bytes(data.api.memory.heapUsed)} / ${bytes(data.api.memory.heapTotal)}`], ["RAM máy chủ khả dụng", `${bytes(data.host.freeMemoryBytes)} / ${bytes(data.host.totalMemoryBytes)}`], ["Đĩa khả dụng", data.host.disk ? `${bytes(data.host.disk.availableBytes)} / ${bytes(data.host.disk.totalBytes)}` : "Không đọc được"], ["Dung lượng MongoDB Atlas", bytes(data.database.storageBytes)], ["Phản hồi lâu nhất / 15 phút", `${metrics.maxMs} ms`], ["API đã chạy", `${number(Math.floor(data.api.uptimeSeconds / 60))} phút`]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl><p className="section-note">Số liệu request và RAM API lấy trực tiếp từ tiến trình đang chạy. Dung lượng đĩa là filesystem của container; kho ảnh Cloudinary được quản lý riêng.</p></section>
+    <div className="section-toolbar">
+      <p>{data.environment} · Cập nhật {date(data.at)}</p>
+      <button className="secondary" disabled={query.isFetching} onClick={() => void query.refetch()}><RefreshCw size={16} />Làm mới</button>
     </div>
-    <section className="admin-section"><h2>Hàng đợi thực tế</h2><div className="table-scroll"><table><thead><tr><th>Queue</th><th>Chờ</th><th>Đang chạy</th><th>Hẹn giờ</th><th>Lỗi</th><th>Hoàn tất còn lưu</th></tr></thead><tbody>{data.queues.map((queue) => <tr key={queue.name}><td>{queue.name}</td>{["waiting", "active", "delayed", "failed", "completed"].map((key) => <td key={key}>{queue.available ? number(queue.counts?.[key] || 0) : "Không kết nối"}</td>)}</tr>)}</tbody></table></div><p className="section-note">Outbox lỗi: {data.backlog.failed} · Tác vụ chờ lâu nhất: {date(data.backlog.oldestAt)}. <a href="#jobs">Xem tác vụ</a></p></section>
-    <section className="admin-section"><h2>Thao tác vận hành</h2><p>Tạo job dựng lại bảng tin và chủ đề nổi bật. Tác vụ sẽ đợi trong outbox nếu Redis chưa sẵn sàng.</p><button className="secondary operation-button" onClick={() => setRebuild(true)}>Dựng lại bảng tin</button>{message && <p className="success" role="status">{message}</p>}</section>
-    {rebuild && <Dialog title="Dựng lại bảng tin" close={() => setRebuild(false)}><ReasonForm action="Đưa vào hàng đợi" description="Tác vụ cập nhật cache bảng tin; không xóa nội dung người dùng. Các yêu cầu trong cùng một phút dùng chung một job." onCancel={() => setRebuild(false)} onConfirm={async (reason) => { await send("/admin/operations/rebuild-feed", { reason }); setRebuild(false); setMessage("Đã đưa yêu cầu dựng bảng tin vào hàng đợi."); await client.invalidateQueries({ queryKey: ["admin"] }); }} /></Dialog>}
+    <dl className="admin-totals">
+      <div><dt>Request trong phút trước</dt><dd>{number(data.requestsPerMinute)}</dd></div>
+      <div><dt>RAM khả dụng</dt><dd>{bytes(data.host.freeMemoryBytes)} / {bytes(data.host.totalMemoryBytes)}</dd></div>
+      <div><dt>Đĩa khả dụng</dt><dd>{disk ? `${bytes(disk.availableBytes)} / ${bytes(disk.totalBytes)}` : "—"}</dd></div>
+      <div><dt>Lưu trữ Cloudinary</dt><dd>{bytes(data.cloudinary.storageBytes)}</dd></div>
+    </dl>
+    <section className="admin-section">
+      <h2>Request API trong 24 giờ gần nhất</h2>
+      <p className="section-note">Mỗi cột là một khoảng 60 phút, theo giờ Việt Nam. Số liệu từ tiến trình API hiện tại và được tính lại sau khi khởi động.</p>
+      <ol className="admin-traffic" aria-label="Số request từng giờ">
+        {data.traffic.map(({ hour, count }) => <li key={hour} title={`${hourLabel.format(new Date(hour))} · ${number(count)} request`}>
+          <span className="sr-only">{hourLabel.format(new Date(hour))} · {number(count)} request</span>
+          <span aria-hidden="true" className="admin-traffic-bar" style={{ height: `${count / peak * 100}%` }} />
+        </li>)}
+      </ol>
+      <div className="admin-traffic-labels" aria-hidden="true">{data.traffic.filter((_, i) => i % 4 === 0 || i === 23).map(({ hour }) => <span key={hour}>{hourLabel.format(new Date(hour))}</span>)}</div>
+    </section>
+    <section className="admin-section">
+      <h2>Kết nối dịch vụ</h2>
+      <dl className="service-list">{data.connections.map(({ name, state }) => <div key={name}>
+        <dt>{name}</dt><dd className={`status ${state === "connected" ? "ready" : state === "unavailable" ? "offline" : "pending"}`}>{states[state]}</dd>
+      </div>)}</dl>
+      <p className="section-note">Đã cấu hình cho biết tích hợp đã có thiết lập. Dung lượng đĩa lấy từ filesystem mà container nhìn thấy.</p>
+    </section>
   </>;
 }

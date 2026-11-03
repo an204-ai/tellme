@@ -64,7 +64,7 @@ export function registerStoryRoutes(api: Hono<Env>) {
   });
   api.get("/stories/:id", async (c) => {
     const me = c.get("user"), story = await requireStory(c.req.param("id"), me);
-    return c.json(storyDTO(story, me, (await relations(me)).mutual));
+    return c.json(storyDTO(story, me, (await relations(me)).mutual, true));
   });
   api.post("/stories/moments", async (c) => {
     const me = c.get("user"),

@@ -1,0 +1,94 @@
+name: Publish Tellme images
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tellme-images-${{ github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check registry settings
+        env:
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+          DOCKERHUB_REPOSITORY: ${{ vars.DOCKERHUB_REPOSITORY }}
+          HAS_DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN != '' }}
+        run: |
+          if [[ -z "$DOCKERHUB_USERNAME" || "$HAS_DOCKERHUB_TOKEN" != "true" ]]; then
+            echo "::error::Set DOCKERHUB_USERNAME and DOCKERHUB_TOKEN in GitHub Actions settings."
+            exit 1
+          fi
+          if [[ ! "$DOCKERHUB_REPOSITORY" =~ ^[a-z0-9][a-z0-9._-]*/[a-z0-9][a-z0-9._-]*$ ]]; then
+            echo "::error::Set DOCKERHUB_REPOSITORY to namespace/repository without docker.io or a tag."
+            exit 1
+          fi
+
+  publish:
+    needs: validate
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: api
+            file: infra/docker/api.Dockerfile
+          - name: worker-media
+            file: infra/docker/worker.Dockerfile
+            args: WORKER=@tellme/worker-media
+          - name: worker-feed
+            file: infra/docker/worker.Dockerfile
+            args: WORKER=@tellme/worker-feed
+          - name: worker-notification
+            file: infra/docker/worker.Dockerfile
+            args: WORKER=@tellme/worker-notification
+          - name: web
+            file: infra/deploy/Dockerfile.web
+          - name: web-edge
+            file: infra/deploy/Dockerfile.web-edge
+          - name: landing
+            file: infra/deploy/Dockerfile.landing
+          - name: admin
+            file: infra/deploy/Dockerfile.admin
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+        if: contains(vars.DOCKER_PLATFORMS, 'arm64')
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.file }}
+          platforms: ${{ vars.DOCKER_PLATFORMS || 'linux/amd64' }}
+          push: true
+          tags: docker.io/${{ vars.DOCKERHUB_REPOSITORY }}:${{ matrix.name }}-${{ github.sha }}
+          build-args: ${{ matrix.args }}
+          cache-from: type=gha,scope=tellme-${{ matrix.name }}
+          cache-to: type=gha,mode=max,scope=tellme-${{ matrix.name }}
+
+  release:
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Show deployment settings
+        env:
+          DOCKERHUB_REPOSITORY: ${{ vars.DOCKERHUB_REPOSITORY }}
+        run: |
+          {
+            echo "### All eight Tellme images published"
+            echo
+            echo "Copy these values into the Coolify Tellme resource:"
+            echo
+            printf '    TELLME_IMAGE_REPOSITORY=docker.io/%s\n' "$DOCKERHUB_REPOSITORY"
+            printf '    TELLME_IMAGE_REVISION=%s\n' "$GITHUB_SHA"
+          } >> "$GITHUB_STEP_SUMMARY"

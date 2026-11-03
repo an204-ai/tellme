@@ -12,8 +12,8 @@ function noticeCopy(notice: Notice) {
   const count = notice.groupCount || 1;
   if (count < 2 || notice.kind === "system") return notice.text;
   return notice.kind === "message"
-    ? `đã gửi cho bạn ${count} tin nhắn.`
-    : `đã bày tỏ cảm xúc ${count} lần.`;
+    ? "đã gửi tin nhắn cho bạn."
+    : "đã bày tỏ cảm xúc.";
 }
 
 export function NotificationList({ active, onNavigate, fullPage = false }: { active: boolean; onNavigate?: () => void; fullPage?: boolean }) {
@@ -86,13 +86,15 @@ export function NotificationList({ active, onNavigate, fullPage = false }: { act
           key={`${notice.kind || "like"}:${notice.userId}:${notice.id}`}
           onClick={() => { onNavigate?.(); readNotice(notice); }}
         >
-          <NoticeAvatar notice={notice} person={person} />
+          <span className="popover-notice-avatar">
+            <NoticeAvatar notice={notice} person={person} />
+            {unreadCount > 1 ? <span className="notification-group-count notification-marker" aria-label={`${unreadCount} thông báo chưa đọc`}>{unreadCount > 99 ? "99+" : unreadCount}</span> : null}
+          </span>
           <span className="popover-notice-copy">
-            <span><strong>{notice.kind === "system" ? notice.title : person?.name || "Một người bạn"}</strong> {noticeCopy(notice)}</span>
+            <span className="popover-notice-message"><strong>{notice.kind === "system" ? notice.title : person?.name || "Một người bạn"}</strong> {noticeCopy(notice)}</span>
             <time>{timeAgo(notice.at)}</time>
           </span>
-          {notice.groupCount && notice.groupCount > 1 ? <span className="notification-group-count" aria-label={`${notice.groupCount} thông báo`}>{notice.groupCount > 99 ? "99+" : notice.groupCount}</span> : null}
-          {unreadCount > 0 && <i aria-label="Chưa đọc" />}
+          {unreadCount > 0 && <i className="notification-marker" aria-label="Chưa đọc" />}
         </Link>;
       }) : <p className="notification-feed-state">{scope === "recent" && firstPage?.olderAvailable ? "Bảy ngày gần đây chưa có thông báo mới." : "Bạn đã xem hết thông báo."}</p>}
       <div className="notification-feed-sentinel" ref={sentinelRef} aria-hidden="true" />

@@ -11,12 +11,14 @@ export function ReactionIcon({ value, size = 28 }: { value: Reaction; size?: num
 }
 
 /** Native popover keeps reactions above both feed images and timeline dialogs. */
-export function ReactionControl({ selected, onChange, disabled = false, compact = false, flightTarget }: {
+export function ReactionControl({ selected, onChange, disabled = false, compact = false, flightTarget, className = "", hideMore = false }: {
   selected?: Reaction | null;
   onChange: (value: Reaction | null) => void;
   disabled?: boolean;
   compact?: boolean;
   flightTarget?: RefObject<HTMLElement | null>;
+  className?: string;
+  hideMore?: boolean;
 }) {
   const id = useId();
   const trigger = useRef<HTMLDivElement>(null);
@@ -172,7 +174,7 @@ export function ReactionControl({ selected, onChange, disabled = false, compact 
     };
   }, [open]);
   return <>
-    <div ref={trigger} className={`tellme-reaction-control ${compact ? "compact" : ""} ${selected ? "selected" : ""}`} onPointerLeave={(event) => { if (event.pointerType === "mouse") scheduleClose(); }}>
+    <div ref={trigger} className={`tellme-reaction-control ${compact ? "compact" : ""} ${selected ? "selected" : ""} ${className}`} onPointerLeave={(event) => { if (event.pointerType === "mouse") scheduleClose(); }}>
       <button ref={main} type="button" className="tellme-reaction-main" onPointerDown={(event) => {
         if (disabled || event.button !== 0 || event.isPrimary === false) return;
         if (gesture.current?.timer) clearTimeout(gesture.current.timer);
@@ -189,7 +191,7 @@ export function ReactionControl({ selected, onChange, disabled = false, compact 
       }}>
         {selected ? <ReactionIcon value={selected} /> : <ThumbsUp size={22} strokeWidth={2} aria-hidden="true" />}<span>{choice?.label || "Thích"}</span>
       </button>
-      <button type="button" className="tellme-reaction-more" disabled={disabled} aria-label="Chọn cảm xúc" aria-controls={id} aria-expanded={open} onClick={() => open ? close() : show(true)}><ChevronDown size={14} /></button>
+      {!hideMore && <button type="button" className="tellme-reaction-more" disabled={disabled} aria-label="Chọn cảm xúc" aria-controls={id} aria-expanded={open} onClick={() => open ? close() : show(true)}><ChevronDown size={14} /></button>}
     </div>
     <div id={id} ref={popup} popover="manual" className="tellme-reaction-picker" aria-label="Chọn cảm xúc" onToggle={(event) => setOpen(event.newState === "open")} onPointerEnter={cancelClose} onPointerLeave={(event) => { if (event.pointerType === "mouse") scheduleClose(); }} onKeyDown={(event) => {
       const entries = Array.from(popup.current?.querySelectorAll<HTMLButtonElement>("button") || []);

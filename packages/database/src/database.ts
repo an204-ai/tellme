@@ -13,7 +13,6 @@ import type {
   Report,
   BackgroundJob,
   PushSubscriptionRecord,
-  AdminAudit,
 } from "./models.js";
 export const mongo = new MongoClient(config.MONGODB_URI, {
   serverSelectionTimeoutMS: 10000,
@@ -32,7 +31,6 @@ export const media = db.collection<Media>("media");
 export const reports = db.collection<Report>("reports");
 export const outbox = db.collection<BackgroundJob>("background_jobs");
 export const pushSubscriptions = db.collection<PushSubscriptionRecord>("push_subscriptions");
-export const adminAudit = db.collection<AdminAudit>("admin_audit");
 export async function connectDatabase() {
   await mongo.connect();
   await Promise.all([
@@ -42,8 +40,6 @@ export async function connectDatabase() {
     users.createIndex({ username: 1 }, { unique: true }),
     sessions.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }),
     sessions.createIndex({ userId: 1 }),
-    adminAudit.createIndex({ at: -1, _id: -1 }),
-    adminAudit.createIndex({ targetId: 1, at: -1 }),
     reports.createIndex({ at: -1 }),
     posts.createIndex({ createdAt: -1, _id: -1 }),
     posts.createIndex({ authorId: 1, createdAt: -1 }),

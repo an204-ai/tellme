@@ -38,12 +38,11 @@ Tham khảo kỹ thuật: [React optimistic UI](https://react.dev/reference/reac
 ## Kiểm tra chạy lại
 
 ```sh
-node --test apps/web/src/lib/api-repository.test.mjs apps/web/src/lib/reaction-cache.test.mjs apps/web/src/lib/camera.test.mjs
 pnpm --filter @tellme/web check-types
 TELLME_LOW_MEMORY_BUILD=1 pnpm --filter @tellme/web build
 ```
 
-Kết quả cuối: 11/11 test qua; TypeScript và build production Next.js thành công (23 trang tĩnh và các route động), `git diff --check` qua. Không có route/asset QA trong bản build.
+Kết quả lần QA ban đầu: 11/11 test qua; TypeScript và build production Next.js thành công (23 trang tĩnh và các route động), `git diff --check` qua. Không có route/asset QA trong bản build.
 
 11 test kiểm tra: số request hẹp, queue đồng thời/lỗi, optimistic count, đổi/bỏ cảm xúc, rollback giữ dữ liệu khác, cache feed/detail/profile/story, đối soát dữ liệu server, crop 4:3/zoom và ảnh selfie. Không dùng database hoặc webcam.
 

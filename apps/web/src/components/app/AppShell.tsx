@@ -173,7 +173,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const searchRef = useRef<HTMLInputElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
-  const navigation = usePageNavigation(pathname, contentRef);
+  const navigation = usePageNavigation(pathname);
   const selectionPath = navigation.pendingHref?.split("?")[0] || pathname;
   const me = data?.people.find((person) => person.id === "me");
   useRealtime(data?.authenticated === true, data?.connections || []);
@@ -388,7 +388,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <Icon size={23} strokeWidth={1.8} />
                 <span>{label}</span>
                 {label === "Tin nhắn" && unreadMessages > 0 && (
-                  <span className="nav-badge">{unreadMessages}</span>
+                  <span className="nav-badge notification-marker">{unreadMessages}</span>
                 )}
               </Link>
             ))}
@@ -443,7 +443,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </aside>
         <main id="main-content" className="main-content" aria-busy={!!navigation.pendingHref}>
           <div ref={contentRef} className="route-content" data-navigation-pending={!!navigation.pendingHref} inert={!!navigation.pendingHref}>
-            {children}
+            {navigation.failed && <p role="status" className="section-note">Trang đang mở lâu hơn bình thường. <a href={navigation.failed.href}>Mở lại {navigation.failed.label}</a></p>}
+            {!data && error ? <div className="loading-state" role="alert">
+              <p>{error.message}</p><button type="button" onClick={() => void refetch()}>Thử lại</button>
+            </div> : children}
           </div>
           <PageNavigationLoader content={contentRef} label={navigation.pendingLabel || "trang"} active={!!navigation.pendingHref} />
         </main>
@@ -463,7 +466,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               >
                 <span className="mobile-nav-icon">
                   <item.icon size={23} strokeWidth={1.8} />
-                  {index === 2 && unreadMessages > 0 && <span className="mobile-nav-unread" aria-hidden="true">{unreadMessages > 99 ? "99+" : unreadMessages}</span>}
+                  {index === 2 && unreadMessages > 0 && <span className="mobile-nav-unread notification-marker" aria-hidden="true">{unreadMessages > 99 ? "99+" : unreadMessages}</span>}
                 </span>
                 <span className="mobile-nav-label">{item.label}</span>
               </Link>

@@ -1,3 +1,4 @@
+import { advanceReadReceipt } from "../../backend/read-receipt.js";
 import { registerConversationRoutes } from "./conversation.routes.js";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -85,7 +86,13 @@ export function registerMessageRoutes(api: Hono<Env>) {
       if (chat.kind !== "direct" || story.userId === me._id || !chat.participants.includes(story.userId))
         fail(400, "Lời trả lời cần được gửi riêng cho người đăng ảnh.");
     }
-    await messages.insertOne({
+    const original = input.replyToId ? await messages.findOne({ _id: input.replyToId, conversationId: chat._id }) : null;
+    if (input.replyToId && !original) fail(404, "Tin nhắn cần trả lời không còn khả dụng.");
+    const message = {
+      ...(original ? { replyTo: { messageId: original._id, senderId: original.senderId,
+        text: original.text || (original.postId ? "Bài viết được chia sẻ" : original.storyReply ? "Khoảnh khắc" : ""),
+        ...(original.stickerId ? { stickerId: original.stickerId } : {}),
+      } } : {}),
       _id: input.id,
       conversationId: chat._id,
       senderId: me._id,
@@ -94,11 +101,14 @@ export function registerMessageRoutes(api: Hono<Env>) {
       at: now(),
       ...(input.postId ? { postId: input.postId } : {}),
       ...(input.storyReply ? { storyReply: input.storyReply } : {}),
-    });
+    };
+    await messages.insertOne(message);
     await conversations.updateOne(
       { _id: chat._id },
-      { $set: { updatedAt: now(), [`readAt.${me._id}`]: now() } },
+      { $set: { updatedAt: now() } },
     );
+    const dto = await messageDTO(message, me);
+    await publishUpdate(chat.participants, "chat.message", { conversationId: chat._id, message: { id: message._id, userId: me._id, text: message.text, at: message.at, ...(message.stickerId ? { stickerId: message.stickerId } : {}), ...(message.postId ? { postId: message.postId } : {}), ...(dto.storyReply ? { storyReply: dto.storyReply } : {}), ...(message.replyTo ? { replyTo: { messageId: message.replyTo.messageId, userId: message.replyTo.senderId, text: message.replyTo.text, ...(message.replyTo.stickerId ? { stickerId: message.replyTo.stickerId } : {}) } } : {}) } });
     await Promise.all(
       chat.participants
         .filter((id) => id !== me._id && !chat.mutedBy?.includes(id))
@@ -109,11 +119,11 @@ export function registerMessageRoutes(api: Hono<Env>) {
             "đã gửi cho bạn một tin nhắn.",
             undefined,
             "message",
+            { messageId: message._id, conversationId: chat._id, at: message.at },
           ),
         ),
     );
-    await publishUpdate(chat.participants, "messages");
-    return c.json({ ok: true }, 201);
+    return c.json({ ok: true, message: dto }, 201);
   });
   api.get("/conversations/:id/messages", async (c) => {
     const me = c.get("user"),
@@ -136,9 +146,20 @@ export function registerMessageRoutes(api: Hono<Env>) {
   api.put("/conversations/:id/read", async (c) => {
     const me = c.get("user"),
       chat = await requireConversation(c.req.param("id"), me);
-    await conversations.updateOne(
-      { _id: chat._id },
-      { $set: { [`readAt.${me._id}`]: now() } },
+    const body = await c.req.json().catch(() => ({}));
+    const { messageId } = z.object({ messageId: z.string().max(100).optional() }).parse(body);
+    // Legacy clients can still call the route; new clients bound the cursor to a visible message.
+    const message = messageId
+      ? await messages.findOne({ _id: messageId, conversationId: chat._id })
+      : await messages.find({ conversationId: chat._id }).sort({ at: -1, _id: -1 }).limit(1).next();
+    if (!message) return c.json({ ok: true });
+    const path = `readAt.${me._id}`;
+    await advanceReadReceipt(chat.readAt[me._id], message.at,
+      () => conversations.updateOne(
+        { _id: chat._id, participants: me._id, $or: [{ [path]: { $lt: message.at } }, { [path]: { $exists: false } }] },
+        { $max: { [path]: message.at } },
+      ),
+      () => publishUpdate(chat.participants, "chat.read", { conversationId: chat._id, userId: me._id, at: message.at }),
     );
     return c.json({ ok: true });
   });

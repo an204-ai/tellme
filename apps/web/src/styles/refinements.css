@@ -147,7 +147,7 @@ html[data-input-modality="pointer"] .journey-stop:focus-visible .journey-stop-im
   --rgb-background: 255, 255, 255;
   --rgb-color: 0, 0, 0;
   --border-radius: 12px;
-  --font-family: Poppins, "Be Vietnam Pro", sans-serif;
+  --font-family: "Be Vietnam Pro", sans-serif;
   --font-family-emoji:
     "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
   --category-icon-size: 19px;

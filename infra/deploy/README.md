@@ -1,5 +1,7 @@
 # Deploy Tellme with Coolify
 
+Để build trên GitHub Actions và chỉ kéo image về VPS, làm theo [hướng dẫn triển khai từ Docker Hub](REGISTRY.md). Phần bên dưới áp dụng cho Compose build từ source.
+
 This production stack runs the main app, landing page, admin, API, three workers and Redis in one Coolify Docker Compose resource. MongoDB remains the existing MongoDB Atlas cluster: the API and workers receive its current `MONGODB_URI`, and this stack neither creates a MongoDB container nor changes or migrates database records. Public traffic enters three Nginx edge services; API and Redis have no published host ports. The app continues using MongoDB transactions against Atlas.
 
 ## Before you start
@@ -58,7 +60,7 @@ Use `https://` in each Coolify domain entry so its proxy requests TLS certificat
 2. If any service fails, inspect that service's Runtime Logs first. Common first-deploy problems are a missing Atlas Network Access entry, wrong Atlas URI/database user, outbound DNS/TCP restrictions, an invalid Cloudinary URL, an SMTP connection/sender rejection, an incorrect DNS record, or a VPS without enough RAM/disk.
 3. Verify `https://tellme.my`, `https://about.tellme.my` and `https://admin.tellme.my`. The admin login is a separate Tellme session on the admin subdomain.
 4. Use an existing verified account named in `ADMIN_EMAILS`, or register that real address through the main app and verify it from its mailbox. No administrator account or password is created automatically.
-5. Sign in at `https://admin.tellme.my`. Check **Hạ tầng**: MongoDB, Redis and worker heartbeats should be healthy. Unconfigured optional integrations should remain clearly marked as unavailable.
+5. Sign in at `https://admin.tellme.my`. Check **Hạ tầng**: MongoDB, Redis and Cloudinary connection indicators should be healthy. Unconfigured optional integrations should remain clearly marked as unavailable.
 
 The database is the existing Atlas database, so current users, posts and sessions stay there. No data migration or database reset is part of deployment. Admin access requires the allowlisted account's email to be verified.
 

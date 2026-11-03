@@ -50,9 +50,6 @@ export interface ServerLog {
   requestId?: string; route?: string; method?: string; status?: number; durationMs?: number;
   actorId?: string; jobId?: string; jobKind?: string; code?: string;
 }
-export interface AdminAudit {
-  _id: string; at: Date; actorId: string; action: string; targetType: string; targetId: string; reason: string;
-}
 export interface AuthToken {
   _id: string;
   userId: string;
@@ -78,6 +75,8 @@ export interface Comment {
   createdAt: string;
   parentId?: string;
   likedBy: string[];
+  /** New reaction map; likedBy remains readable for comments created before reactions existed. */
+  reactions?: Record<string, Reaction>;
   moderation?: ModerationState;
   media?: {
     id: string;
@@ -149,6 +148,7 @@ export interface Conversation {
   updatedAt: string;
 }
 export interface Message {
+  replyTo?: { messageId: string; senderId: string; text: string; stickerId?: string };
   stickerId?: string;
   _id: string;
   conversationId: string;

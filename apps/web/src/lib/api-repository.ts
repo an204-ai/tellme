@@ -29,33 +29,39 @@ export async function request<T = { ok: boolean }>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
-  let response: Response;
+  const controller = new AbortController();
+  const abort = () => controller.abort();
+  if (options.signal?.aborted) abort();
+  options.signal?.addEventListener("abort", abort, { once: true });
+  const timeout = !options.method || options.method.toUpperCase() === "GET"
+    ? setTimeout(abort, 20000)
+    : undefined;
   try {
-    response = await fetch(`/api${path}`, {
+    const response = await fetch(`/api${path}`, {
       ...options,
+      signal: controller.signal,
       credentials: "same-origin",
       headers: {
-        ...(options.body instanceof FormData
-          ? {}
-          : { "Content-Type": "application/json" }),
+        ...(options.body instanceof FormData ? {} : { "Content-Type": "application/json" }),
         ...options.headers,
       },
     });
-  } catch {
-    throw new ApiError(
-      "Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại nhé.",
-      0,
-    );
+    const body = await response.json().catch((error) => {
+      if (controller.signal.aborted) throw error;
+      throw new ApiError("Máy chủ chưa sẵn sàng. Bạn thử lại nhé.", response.status);
+    });
+    if (!response.ok) throw new ApiError(body?.error || "Chưa xử lý được yêu cầu.", response.status);
+    return body as T;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    if (options.signal?.aborted) throw error;
+    throw new ApiError(controller.signal.aborted
+      ? "Máy chủ phản hồi quá lâu. Bạn thử lại nhé."
+      : "Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại nhé.", 0);
+  } finally {
+    clearTimeout(timeout);
+    options.signal?.removeEventListener("abort", abort);
   }
-  const body = await response
-    .json()
-    .catch(() => ({ error: "Máy chủ chưa sẵn sàng. Bạn thử lại nhé." }));
-  if (!response.ok)
-    throw new ApiError(
-      body.error || "Chưa xử lý được yêu cầu.",
-      response.status,
-    );
-  return body as T;
 }
 const send = (path: string, method: string, body?: unknown) =>
   request(path, {
@@ -85,8 +91,8 @@ function overview(): AppData {
     stories: [...loadedStories.values()],
   });
 }
-async function refresh() {
-  const next = await request<AppData>("/bootstrap");
+async function refresh(signal?: AbortSignal) {
+  const next = await request<AppData>("/bootstrap", { signal });
   metadata = next;
   next.people.forEach((p) => knownPeople.set(p.id, p));
   loadedStories.clear();
@@ -94,8 +100,8 @@ async function refresh() {
   return overview();
 }
 export const apiRepository = {
-  async get() {
-    return refresh();
+  async get(signal?: AbortSignal) {
+    return refresh(signal);
   },
   snapshot() {
     return overview();
@@ -104,19 +110,25 @@ export const apiRepository = {
     return loadedStories.get(id);
   },
   reactToPost(id: string, reaction: Reaction | null) {
-    return enqueue(async () => {
+    return (async () => {
       await send(`/posts/${id}/reaction`, "PUT", { reaction });
       return apiRepository.getPost(id);
-    });
+    })();
+  },
+  reactToComment(postId: string, commentId: string, reaction: Reaction | null) {
+    return (async () => {
+      await send(`/posts/${postId}/comments/${commentId}/reaction`, "PUT", { reaction });
+      return apiRepository.getPost(postId);
+    })();
   },
   reactToMoment(storyId: string, itemId: string, reaction: Reaction | null) {
-    return enqueue(async () => {
+    return (async () => {
       await send(`/stories/${storyId}/moments/${itemId}/reaction`, "PUT", { reaction });
       return apiRepository.getStory(storyId);
-    });
+    })();
   },
-  sendMessage(conversationId: string, message: Pick<Message, "id" | "text" | "stickerId">) {
-    return send(`/conversations/${encodeURIComponent(conversationId)}/messages`, "POST", message);
+  sendMessage(conversationId: string, message: Pick<Message, "id" | "text" | "stickerId"> & { replyToId?: string }) {
+    return request<{ ok: boolean; message: Message }>(`/conversations/${encodeURIComponent(conversationId)}/messages`, { method: "POST", body: JSON.stringify(message) });
   },
   getNotificationsPage(scope: "recent" | "older", cursor = 0, limit = 20) {
     const query = new URLSearchParams({ scope, cursor: String(cursor), limit: String(limit) });
@@ -277,9 +289,9 @@ export const apiRepository = {
           if (!previous) {
             command(`/posts/${post.id}/comments`, "POST", comment);
             affected.add(post.id);
-          } else if (comment.liked !== previous.liked) {
-            command(`/posts/${post.id}/comments/${comment.id}/liked`, "PUT", {
-              liked: !!comment.liked,
+          } else if ((comment.reaction ?? (comment.liked ? "like" : null)) !== (previous.reaction ?? (previous.liked ? "like" : null))) {
+            command(`/posts/${post.id}/comments/${comment.id}/reaction`, "PUT", {
+              reaction: comment.reaction ?? (comment.liked ? "like" : null),
             });
             affected.add(post.id);
           }

@@ -23,7 +23,7 @@ export function WeatherProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<LocationState>("idle");
   const [error, setError] = useState("");
   const generation = useRef(0);
-  const account = useQuery<AppData>({ queryKey: ["tellme", "community"], queryFn: apiRepository.get, enabled: false });
+  const account = useQuery<AppData>({ queryKey: ["tellme", "community"], queryFn: ({ signal }) => apiRepository.get(signal), enabled: false });
   const identity = account.data?.authenticated ? account.data.people.find((person) => person.id === "me")?.username : undefined;
   const reminders = account.data?.settings.notifySystem !== false;
   const [announcement, setAnnouncement] = useState<WeatherContext["announcement"]>();

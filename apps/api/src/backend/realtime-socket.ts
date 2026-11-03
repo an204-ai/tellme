@@ -1,11 +1,12 @@
+import { realtimeMessage } from "./realtime-message.js";
 import { randomUUID } from "node:crypto";
 import type { IncomingMessage, Server } from "node:http";
 import { WebSocket, WebSocketServer } from "ws";
 import { PRESENCE_TTL, type PresenceStore } from "./presence-store.js";
 
 export type RealtimeActor = { userId: string; sessionId: string; expiresAt: number };
-type Peer = { socket: WebSocket; actor: RealtimeActor; id: string; seen: number; renewed: number; pending: Promise<unknown>; closed: boolean; snapshotVersion: number };
-type Update = { kind: string; userIds: string[]; sessionId?: string };
+type Peer = { socket: WebSocket; actor: RealtimeActor; id: string; seen: number; renewed: number; pending: Promise<unknown>; closed: boolean; snapshotVersion: number; watching?: string; watched?: Set<string> };
+type Update = { kind: string; userIds: string[]; sessionId?: string; detail?: Record<string, unknown> };
 type Options = {
   authenticate: (request: IncomingMessage) => Promise<RealtimeActor | null>;
   friends: (userId: string) => Promise<string[]>;
@@ -13,6 +14,8 @@ type Options = {
   origins: Set<string>;
   ready: () => boolean;
   validate?: (actor: RealtimeActor) => Promise<boolean>;
+  control?: (actor: RealtimeActor, peerId: string, frame: Record<string, unknown>) => Promise<void>;
+  disconnect?: (peerId: string) => void;
   now?: () => number;
 };
 
@@ -20,6 +23,8 @@ type Options = {
 export function attachRealtimeSocket(server: Server, options: Options) {
   const wss = new WebSocketServer({ noServer: true, maxPayload: 1024, perMessageDeflate: false });
   const peers = new Map<string, Peer>();
+  const users = new Map<string, Set<Peer>>();
+  const audiencePeers = (ids: Iterable<string>) => Array.from(new Set(ids)).flatMap((id) => [...(users.get(id) || [])]);
   const clock = options.now || Date.now;
   let stopped = false;
   const send = (peer: Peer, value: object | string) => {
@@ -44,10 +49,12 @@ export function attachRealtimeSocket(server: Server, options: Options) {
     void options.authenticate(request).then((actor) => {
       if (socket.destroyed) return;
       if (!actor || actor.expiresAt <= clock()) { reject(socket, "401 Unauthorized"); return; }
-      if ([...peers.values()].filter((peer) => peer.actor.userId === actor.userId).length >= 8) { reject(socket, "429 Too Many Requests"); return; }
+      if ((users.get(actor.userId)?.size || 0) >= 8) { reject(socket, "429 Too Many Requests"); return; }
       wss.handleUpgrade(request, socket, head, (connection) => {
         const peer: Peer = { socket: connection, actor, id: randomUUID(), seen: clock(), renewed: clock(), pending: Promise.resolve(), closed: false, snapshotVersion: 0 };
         peers.set(peer.id, peer);
+        const devices = users.get(actor.userId) || new Set<Peer>();
+        devices.add(peer); users.set(actor.userId, devices);
         // Serialize renewal and leave so a late renewal cannot resurrect a closed tab.
         const renew = () => { peer.pending = peer.pending.catch(() => {}).then(() => options.presence.touch(actor.userId, peer.id)); };
         renew();
@@ -56,7 +63,9 @@ export function attachRealtimeSocket(server: Server, options: Options) {
         connection.on("error", () => {});
         connection.on("close", () => {
           peer.closed = true; peers.delete(peer.id);
-          void peer.pending.catch(() => {}).then(() => options.presence.leave(actor.userId, peer.id)).catch(() => {});
+          devices.delete(peer); if (!devices.size) users.delete(actor.userId);
+          options.disconnect?.(peer.id);
+          void peer.pending.catch(() => {}).then(() => { options.disconnect?.(peer.id); return options.presence.leave(actor.userId, peer.id); }).catch(() => {});
         });
         let lastSync = 0, windowStart = clock(), frames = 0;
         connection.on("message", (data, binary) => {
@@ -71,6 +80,20 @@ export function attachRealtimeSocket(server: Server, options: Options) {
             if (now - peer.renewed < 10000) return;
             peer.renewed = now; renew();
             void peer.pending.then(() => send(peer, "p")).catch(() => { send(peer, "p"); send(peer, { kind: "presence.unavailable" }); });
+          } else if (value.startsWith("{") && options.control) {
+            try {
+              const frame = JSON.parse(value);
+              if (frame.kind === "chat.watch") {
+                const active = typeof frame.conversationId === "string" && frame.conversationId.length <= 100 ? frame.conversationId : undefined;
+                if (active !== peer.watching) options.disconnect?.(peer.id);
+                peer.watching = active;
+                const requested = Array.isArray(frame.conversationIds) ? frame.conversationIds : [];
+                peer.watched = new Set([...(active ? [active] : []), ...requested.filter((id: unknown): id is string => typeof id === "string" && id.length <= 100)].slice(0, 16));
+                return;
+              }
+              // Control work is serialized separately from message delivery and heartbeat.
+              peer.pending = peer.pending.catch(() => {}).then(() => options.control!(actor, peer.id, frame)).catch(() => {});
+            } catch { /* Ignore invalid control frames. */ }
           } else if (value === "sync" && now - lastSync >= 3000) {
             lastSync = now; void snapshot(peer).catch(() => send(peer, { kind: "presence.unavailable" }));
           }
@@ -97,16 +120,22 @@ export function attachRealtimeSocket(server: Server, options: Options) {
     async presenceChanged(event: { userId: string; online: boolean; at: number; revision: number }) {
       // Recheck the audience only on transitions, never for each heartbeat.
       const audience = new Set([event.userId, ...await options.friends(event.userId)]);
-      for (const peer of peers.values()) if (audience.has(peer.actor.userId)) send(peer, { kind: "presence", ...event, userId: event.userId === peer.actor.userId ? "me" : event.userId });
+      for (const peer of audiencePeers(audience)) send(peer, { kind: "presence", ...event, userId: event.userId === peer.actor.userId ? "me" : event.userId });
     },
     async update(event: Update) {
-      for (const peer of peers.values()) {
-        if (event.userIds.length && !event.userIds.includes(peer.actor.userId)) continue;
+      for (const peer of event.userIds.length ? audiencePeers(event.userIds) : peers.values()) {
+        if (event.kind === "relations" || event.kind === "messages") options.disconnect?.(peer.id);
+        if (event.kind === "chat.typing" && !peer.watched?.has(String(event.detail?.conversationId))) continue;
         if (event.kind === "session-revoked") {
           if (!event.sessionId || event.sessionId === peer.actor.sessionId) peer.socket.close(1008, "Sign in again");
           continue;
         }
-        send(peer, { kind: event.kind });
+        send(peer, { kind: event.kind, ...event.detail,
+          ...(event.kind === "chat.message" && event.detail?.message
+            ? { message: realtimeMessage(event.detail.message as Parameters<typeof realtimeMessage>[0], peer.actor.userId) }
+            : {}),
+          ...(event.detail?.userId === peer.actor.userId ? { userId: "me" } : {}),
+        });
         if (event.kind === "relations" || event.kind === "realtime-ready") await snapshot(peer).catch(() => {});
       }
     },

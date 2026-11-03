@@ -89,7 +89,7 @@ Tim Thích có vùng icon 22px độc lập, tô kín navy khi chọn; scale xá
 
 Bộ **13 mẫu Uiverse** do chủ dự án chọn được lưu tại [references/uiverse](references/uiverse/README.md), kèm nguồn, tác giả và giấy phép. CSS được chuyển vào phạm vi `.uiv-*`, giữ hình học/chuyển động nhận diện, chỉnh navy/tiếng Việt/responsive/bàn phím; không thêm styled-components chỉ để bọc stylesheet. Giữ [thông báo MIT](references/uiverse/LICENSES.md), được phục vụ tại `/licenses/uiverse.txt`.
 
-Ảnh Unsplash cục bộ ở `apps/web/public/images/` có [bảng nguồn](references/image-sources.json); runtime hiện dùng ảnh rừng cho vùng hình minh họa trang tài khoản. Nội dung cộng đồng không nạp sample users hay seed ảnh stock. `src/lib/seed.ts` và `feed-data.ts` là dữ liệu cũ không được màn hình runtime import; không dùng chúng để khởi tạo tài khoản thật.
+Ảnh Unsplash cục bộ ở `apps/web/public/images/` có [bảng nguồn](references/image-sources.json); runtime hiện dùng ảnh rừng cho vùng hình minh họa trang tài khoản. Nội dung cộng đồng không nạp sample users hay seed ảnh stock.
 
 Wordmark dùng CSS crop từ bảng nhận diện chủ dự án, giữ nguyên bản gốc. Khi có asset logo xuất riêng, điểm thay là `components/ui/Primitives.tsx` và `.brand-wordmark`. Font được self-host qua Fontsource.
 

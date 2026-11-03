@@ -1,5 +1,5 @@
 @import "../../web/src/styles/fonts.css";
-:root { font-family: "Poppins", "Be Vietnam Pro", sans-serif; color: #000; background: #fff; font-size: 14px; line-height: 1.6; --primary: #07327f; --line: #e2e7ee; }
+:root { font-family: "Be Vietnam Pro", sans-serif; color: #000; background: #fff; font-size: 14px; line-height: 1.6; --primary: #07327f; --line: #e2e7ee; }
 * { box-sizing: border-box; }
 body, h1, h2, h3, p, dl, dd { margin: 0; }
 button, input, select, textarea { font: inherit; }
@@ -124,12 +124,7 @@ tbody tr:hover { background: #fafbfe; }
 .user-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; padding-block: 24px; margin-block: 16px; border-block: 1px solid var(--line); }
 .user-stats dt { font-size: 12px; color: #4a5c76; }
 .user-stats dd { font-size: 22px; font-weight: 600; }
-.audit-timeline { list-style: none; padding: 0; margin: 0; }
-.audit-timeline li { padding-block: 14px; border-bottom: 1px solid var(--line); }
-.audit-timeline small { display: block; color: #4a5c76; }
-.audit-timeline p { margin-top: 6px; overflow-wrap: anywhere; }
 .log-id { font-family: ui-monospace, monospace; font-size: 11px; overflow-wrap: anywhere; user-select: all; }
-.reason-cell { min-width: 180px; white-space: pre-wrap; }
 .check-label { display: flex; align-items: center; gap: 8px; }
 .check-label > input { min-height: 0; accent-color: var(--primary); width: 18px; height: 18px; }
 .admin-tabs { display: flex; gap: 6px; margin-bottom: 24px; overflow-x: auto; }
@@ -197,3 +192,10 @@ details.admin-section > summary { cursor: pointer; padding-block: 12px; font-wei
   .admin-sidebar > a:first-child img { width: 128px; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; } }
+
+.admin-traffic { display: grid; grid-template-columns: repeat(24, minmax(0, 1fr)); gap: clamp(2px, .5vw, 8px); height: 145px; padding: 0; margin: 20px 0 6px; list-style: none; border-bottom: 1px solid var(--line); }
+.admin-traffic > li { display: flex; align-items: end; min-width: 0; }
+.admin-traffic-bar { display: block; width: 100%; background: var(--primary); border-radius: 4px 4px 0 0; }
+.admin-traffic-labels { display: flex; justify-content: space-between; gap: 4px; font-size: 11px; }
+
+.admin-traffic .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

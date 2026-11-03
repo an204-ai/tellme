@@ -15,5 +15,4 @@ export interface Page<T> { items: T[]; total: number; nextCursor: number | null 
 export const date = (value?: string | null) => value && Number.isFinite(new Date(value).getTime()) ? new Intl.DateTimeFormat("vi-VN", { dateStyle: "short", timeStyle: "short", timeZone: "Asia/Ho_Chi_Minh" }).format(new Date(value)) : "Chưa ghi nhận";
 export const number = (value: number) => value.toLocaleString("vi-VN");
 export const bytes = (value: number | null) => value === null ? "Không có số liệu" : value >= 1073741824 ? `${(value / 1073741824).toFixed(1)} GB` : `${(value / 1048576).toFixed(1)} MB`;
-export const statusNames: Record<string, string> = { pending: "Đang chờ", dispatched: "Trong hàng đợi", completed: "Hoàn tất", failed: "Thất bại" };
 export const reasonNames: Record<string, string> = { spam: "Spam hoặc làm phiền", harassment: "Quấy rối, bắt nạt", impersonation: "Giả mạo", scam: "Lừa đảo", inappropriate: "Nội dung không phù hợp", other: "Lý do khác" };

@@ -113,6 +113,7 @@ export const conversationSchema = z.object({
 export const messageSchema = z
   .object({
     id: idSchema,
+    replyToId: idSchema.optional(),
     text: z.string().trim().max(1000),
     stickerId: z.string().max(100).refine((id) => !!getTellmeSticker(id), "Sticker không khả dụng.").optional(),
     postId: idSchema.optional(),

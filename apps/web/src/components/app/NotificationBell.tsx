@@ -17,7 +17,7 @@ export function NotificationBell() {
   return <>
     <button className="header-bell" type="button" popoverTarget="tellme-notifications" aria-label={`Thông báo, ${unread} chưa đọc`}>
       <Bell size={24} />
-      {unread > 0 && <span className="bell-count">{unread > 99 ? "99+" : unread}</span>}
+      {unread > 0 && <span className="bell-count notification-marker">{unread > 99 ? "99+" : unread}</span>}
     </button>
     <div ref={ref} id="tellme-notifications" popover="auto" className="notifications-popover" aria-label="Thông báo" onToggle={(event) => setOpen(event.newState === "open")}>
       <header>

@@ -24,7 +24,7 @@ export function useCommunity() {
   );
   const query = useQuery({
     queryKey: communityKey,
-    queryFn: apiRepository.get,
+    queryFn: ({ signal }) => apiRepository.get(signal),
     staleTime: 10000,
     refetchInterval: realtimeHealthy ? 60000 : 10000,
     retry: (count, error) =>

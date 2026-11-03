@@ -23,7 +23,7 @@
 .desktop-nav-track > .nav-item[data-selected="false"],
 .desktop-nav-track > .nav-item[data-selected="false"] svg { color: #000; }
 .desktop-nav-track > .nav-item[data-selected="false"]:hover { background: #f4f4f4; }
-.desktop-nav-track > .nav-item[data-selected="true"] .nav-badge { background: #fff; color: #07327f; }
+.desktop-nav-track > .nav-item[data-selected="true"] .nav-badge { color: #fff; }
 @media (max-width: 640px) {
   .mobile-nav-track > .nav-liquid-glider { border-radius: 999px; background: #e6eef9; }
   .mobile-nav-track > a[data-selected="false"] { color: #000; }

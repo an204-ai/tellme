@@ -2,7 +2,7 @@
 import dynamic from "next/dynamic";
 import { useId, useRef, useState } from "react";
 import { Smile } from "lucide-react";
-import { IconButton } from "./Primitives";
+import { TooltipIconButton } from "./TooltipIconButton";
 const Picker = dynamic(() => import("./EmojiPicker"), {
   ssr: false,
   loading: () => (
@@ -24,7 +24,7 @@ export function EmojiButton({
   const [position, setPosition] = useState({ left: 12, top: 12 });
   return (
     <>
-      <IconButton
+      <TooltipIconButton
         label={label}
         className={opened ? "emoji-trigger-open" : ""}
         popoverTarget={id}
@@ -46,7 +46,7 @@ export function EmojiButton({
         }}
       >
         <Smile size={20} />
-      </IconButton>
+      </TooltipIconButton>
       <div
         id={id}
         popover="auto"

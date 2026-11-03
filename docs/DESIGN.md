@@ -15,37 +15,37 @@ colors:
   field-error: "#B12642"
 typography:
   display:
-    fontFamily: "Poppins, \"Be Vietnam Pro\", sans-serif"
+    fontFamily: "Be Vietnam Pro, sans-serif"
     fontSize: "41px"
     fontWeight: 500
     lineHeight: 1.5
     letterSpacing: "-0.035em"
   headline:
-    fontFamily: "Poppins, \"Be Vietnam Pro\", sans-serif"
+    fontFamily: "Be Vietnam Pro, sans-serif"
     fontSize: "23px"
     fontWeight: 600
     lineHeight: 1.5
   dialog-title:
-    fontFamily: "Poppins, \"Be Vietnam Pro\", sans-serif"
+    fontFamily: "Be Vietnam Pro, sans-serif"
     fontSize: "17px"
     fontWeight: 600
     letterSpacing: "-0.025em"
   section-title:
-    fontFamily: "Poppins, \"Be Vietnam Pro\", sans-serif"
+    fontFamily: "Be Vietnam Pro, sans-serif"
     fontSize: "16px"
     fontWeight: 600
   body:
-    fontFamily: "Poppins, \"Be Vietnam Pro\", sans-serif"
+    fontFamily: "Be Vietnam Pro, sans-serif"
     fontSize: "15px"
     fontWeight: 400
     lineHeight: 1.6
     letterSpacing: "0.003em"
   button-label:
-    fontFamily: "Poppins, \"Be Vietnam Pro\", sans-serif"
+    fontFamily: "Be Vietnam Pro, sans-serif"
     fontSize: "14px"
     fontWeight: 500
   field-label:
-    fontFamily: "Poppins, \"Be Vietnam Pro\", sans-serif"
+    fontFamily: "Be Vietnam Pro, sans-serif"
     fontSize: "15px"
     fontWeight: 500
     lineHeight: 1.6
@@ -162,7 +162,7 @@ Bốn màu thương hiệu và Poppins được giữ từ [bảng nhận diện
 
 - Bề mặt trắng trên nền xám mát, phân cách bằng nét mảnh.
 - Navy gắn với hành động, điều hướng và trạng thái được chọn.
-- Poppins có Be Vietnam Pro dự phòng cho tiếng Việt.
+- Be Vietnam Pro là font giao diện và dùng đủ weight 400–700.
 - Các mẫu Uiverse do người dùng chọn giữ hình học và chuyển động nhận diện.
 - Chuyện hôm nay có chuỗi ảnh riêng, phân biệt với bài viết trong bảng tin.
 
@@ -186,13 +186,13 @@ Navy sâu, trắng và xám mát giữ cảm giác tin cậy, nhẹ và thân th
 
 Màu `focus` biểu thị vị trí bàn phím; `field-error` dành cho lỗi validation. Các sắc xanh cục bộ trên ghi chú, chủ đề gợi ý và phần giới thiệu hôm nay là chi tiết theo component, không phải accent thương hiệu mới. Chưa có hệ dark mode.
 
-**The Pinned Brand Rule.** Giữ bốn màu gốc, Poppins và tỷ lệ wordmark từ bảng nhận diện; dùng các sắc hỗ trợ cho nhiệm vụ UI đã thể hiện trong mã nguồn.
+**The Pinned Brand Rule.** Giữ bốn màu gốc và tỷ lệ wordmark từ bảng nhận diện; dùng các sắc hỗ trợ cho nhiệm vụ UI đã thể hiện trong mã nguồn.
 
 ## Typography
 
-**Display Font:** Poppins, dự phòng Be Vietnam Pro và sans-serif.
+**Display Font:** Be Vietnam Pro, dự phòng sans-serif.
 
-**Body Font:** Poppins, dự phòng Be Vietnam Pro và sans-serif. Font được self-host bằng Fontsource. Trọng số gốc được người dùng cung cấp là Regular (400), Medium (500), SemiBold (600); mã web cũng nạp 700, nhưng không biến nó thành trọng số chủ đạo mới.
+**Body Font:** Be Vietnam Pro, dự phòng sans-serif. Font được self-host bằng Fontsource. Trọng số gốc được người dùng cung cấp là Regular (400), Medium (500), SemiBold (600); mã web cũng nạp 700, nhưng không biến nó thành trọng số chủ đạo mới.
 
 **Character:** Chữ hình học gọn, mềm và thân thiện; nội dung tiếng Việt có khoảng dòng thoáng. Đây là các vai trò quan sát được, không phải một thang tỷ lệ toán học thống nhất.
 

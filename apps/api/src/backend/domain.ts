@@ -104,17 +104,21 @@ export function postDTO(post: Post, me: User) {
     reactorReactions: Object.fromEntries(Object.entries(post.reactions).map(([id, reaction]) => [externalId(id, me), normalizeReaction(reaction)])),
     comments: post.comments
       .filter((comment) => !hidden.has(comment.id) && !me.blocked.includes(comment.userId))
-      .map(({ likedBy, moderation: _moderation, ...comment }) => ({
-        ...comment,
-        userId: post.anonymous && comment.userId === post.authorId ? "anonymous" : externalId(comment.userId, me),
-        ...(post.anonymous && comment.userId === post.authorId ? { isAuthor: true } : {}),
-        liked: likedBy.includes(me._id),
-      })),
+      .map(({ likedBy, reactions, moderation: _moderation, ...comment }) => {
+        const ownReaction = normalizeReaction(reactions?.[me._id]) || (likedBy.includes(me._id) ? "like" : null);
+        return {
+          ...comment,
+          userId: post.anonymous && comment.userId === post.authorId ? "anonymous" : externalId(comment.userId, me),
+          ...(post.anonymous && comment.userId === post.authorId ? { isAuthor: true } : {}),
+          reaction: ownReaction,
+          liked: ownReaction === "like",
+        };
+      }),
     saved: post.savedBy.includes(me._id),
     shares: post.sharedBy.length,
   };
 }
-export function storyDTO(story: Story, me: User, mutual: string[] = []) {
+export function storyDTO(story: Story, me: User, mutual: string[] = [], includeIncomingReactions = false) {
   return {
     id: story._id,
     userId: externalId(story.userId, me),
@@ -130,6 +134,12 @@ export function storyDTO(story: Story, me: User, mutual: string[] = []) {
       .map(({ reactions, ...item }) => ({
         ...item,
         reaction: normalizeReaction(reactions[me._id]),
+        ...(includeIncomingReactions && story.userId === me._id
+          ? { incomingReactions: Object.entries(reactions)
+              .filter(([userId]) => userId !== me._id)
+              .map(([, value]) => normalizeReaction(value))
+              .filter((value): value is NonNullable<typeof value> => !!value) }
+          : {}),
       })),
   };
 }
@@ -160,7 +170,7 @@ export async function chatAllowed(participants: string[], creatorId?: string) {
   const people = await users.find({ _id: { $in: participants } }, { projection: { _id: 1, following: 1, blocked: 1 } }).toArray();
   return canChatTogether(participants, people, creatorId);
 }
-async function conversationAllowed(chat: Conversation) {
+export async function conversationAllowed(chat: Conversation) {
   const people = await users.find({ _id: { $in: chat.participants } }, { projection: { _id: 1, following: 1, blocked: 1 } }).toArray();
   return canSendInConversation(chat, people);
 }
@@ -185,6 +195,7 @@ export async function notify(
   text: string,
   postId?: string,
   kind: "like" | "message" = "like",
+  messageContext?: { messageId: string; conversationId: string; at: string },
 ) {
   if (recipientId === userId) return;
   const recipient = await users.findOne({ _id: recipientId });
@@ -201,10 +212,10 @@ export async function notify(
     userId,
     text,
     read: false,
-    at: now(),
+    at: messageContext?.at || now(),
     ...(postId ? { postId } : {}),
     kind,
-  });
+  }, messageContext ? { id: `message-${messageContext.messageId}-${recipientId}` } : {});
 }
 export async function conversationDTO(chat: Conversation, me: User, allowed?: boolean) {
   const items = await messages
@@ -231,6 +242,7 @@ export async function conversationDTO(chat: Conversation, me: User, allowed?: bo
     avatar: chat.avatar || "",
     participantIds: chat.participants.map((id) => externalId(id, me)),
     unread,
+    readAt: Object.fromEntries(Object.entries(chat.readAt).map(([id, at]) => [externalId(id, me), at])),
     messages: await Promise.all(items.reverse().map((m) => messageDTO(m, me))),
   };
 }
@@ -251,6 +263,7 @@ export async function messageDTO(message: Message, me: User) {
     userId: externalId(message.senderId, me),
     text: message.text,
     ...(message.stickerId ? { stickerId: message.stickerId } : {}),
+    ...(message.replyTo ? { replyTo: { messageId: message.replyTo.messageId, userId: externalId(message.replyTo.senderId, me), text: message.replyTo.text, ...(message.replyTo.stickerId ? { stickerId: message.replyTo.stickerId } : {}) } } : {}),
     own: message.senderId === me._id,
     at: message.at,
     ...(message.postId ? { postId: message.postId } : {}),

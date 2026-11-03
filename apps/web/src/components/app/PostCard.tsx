@@ -47,6 +47,16 @@ import { Modal } from "@/components/ui/Modal";
 import { PostPhoto } from "@/components/ui/PostPhoto";
 import { AnonymousAvatar, postPersona } from "@/components/ui/AnonymousAvatar";
 
+function CommentReaction({ postId, comment, authenticated }: { postId: string; comment: Comment; authenticated: boolean }) {
+  const reaction = useReaction({ kind: "comment", postId, commentId: comment.id }, authenticated);
+  return <ReactionControl
+    className="comment-reaction"
+    hideMore
+    selected={comment.reaction ?? (comment.liked ? "like" : null)}
+    onChange={reaction.change}
+  />;
+}
+
 export function PostCard({
   post,
   data,
@@ -171,25 +181,7 @@ export function PostCard({
             >
               Trả lời
             </button>
-            <button
-              type="button"
-              className={comment.liked ? "text-primary" : ""}
-              aria-label={
-                comment.liked ? "Bỏ thích bình luận" : "Thích bình luận"
-              }
-              aria-pressed={!!comment.liked}
-              onClick={() =>
-                void changePost((target) => {
-                  const item = target.comments.find(
-                    (entry) => entry.id === comment.id,
-                  );
-                  if (item) item.liked = !item.liked;
-                }).catch(() => undefined)
-              }
-            >
-              <ReactionIcon value="like" size={18} />
-              {comment.liked ? "1" : "Thích"}
-            </button>
+            <CommentReaction postId={post.id} comment={comment} authenticated={data.authenticated !== false} />
           </div>
         </div>
       </div>
@@ -313,7 +305,7 @@ export function PostCard({
         <span>{post.shares} lượt chia sẻ</span>
       </div>
       <div className="post-actions">
-        <ReactionControl selected={post.reaction} disabled={saving || reaction.pending} flightTarget={reactionCount} onChange={reaction.change} />
+        <ReactionControl selected={post.reaction} disabled={saving} flightTarget={reactionCount} onChange={reaction.change} />
         <button
           className="post-action"
           type="button"

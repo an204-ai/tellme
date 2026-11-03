@@ -3,17 +3,38 @@ import { StoryMusic } from "@/components/music/StoryMusic";
 import { Select } from "@/components/ui/Select";
 import { useQuery } from "@tanstack/react-query";
 import { apiRepository, ApiError } from "@/lib/api-repository";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Camera, Check, MoreHorizontal, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useCommunity } from "@/hooks/use-community";
 import { canView, timeOf } from "@/lib/api-repository";
 import { localDay } from "@/lib/validation";
 import { useAppStore } from "@/stores/app.store";
 import { Avatar, Button, Loader, IconButton, PrivacyIcon, privacyNames } from "@/components/ui/Primitives";
-import type { Privacy } from "@/lib/types";
+import type { MomentItem, Privacy, Reaction } from "@/lib/types";
 import { Modal } from "@/components/ui/Modal";
 import { StoryReactions } from "./StoryReactions";
 import { StoryReply } from "./StoryReply";
+import { ReactionIcon } from "@/components/ui/ReactionControl";
+
+function MomentReactionFloaters({ item, active, reducedMotion }: { item: MomentItem; active: boolean; reducedMotion?: boolean }) {
+  const [run, setRun] = useState(0);
+  const reactions = item.incomingReactions || [];
+  const signature = reactions.join(":");
+  useEffect(() => {
+    if (!active || !reactions.length || reducedMotion || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    setRun((current) => current + 1);
+    const timeout = window.setTimeout(() => setRun(0), 2700);
+    return () => window.clearTimeout(timeout);
+  }, [active, item.id, signature, reducedMotion]);
+  if (!active || !run || !reactions.length) return null;
+  const visible = reactions.slice(0, 8);
+  return <span className="moment-reaction-floaters" key={run} aria-hidden="true">
+    {visible.map((value, index) => <span key={`${run}-${index}`} style={{
+      "--float-delay": `${index * 115}ms`,
+      "--float-offset": `${(index % 5 - 2) * 18}px`,
+    } as CSSProperties}><ReactionIcon value={value} size={34} /></span>)}
+  </span>;
+}
 
 export function StoryTimeline({
   storyId,
@@ -242,6 +263,18 @@ export function StoryTimeline({
                     alt={item.caption || `Khoảnh khắc ${i + 1}`}
                     loading={i === initialIndex ? "eager" : "lazy"}
                   />
+                    <div className="day-moment-overlay">
+                      {item.caption && <p className="day-moment-caption">{item.caption}</p>}
+                      <div className="day-moment-reaction-anchor">
+                        <StoryReactions
+                          storyId={story.id}
+                          itemId={item.id}
+                          selected={item.reaction}
+                        />
+                        {story.userId === "me" && <MomentReactionFloaters item={item} active={active === item.id} reducedMotion={reducedMotion} />}
+                      </div>
+                      <StoryReply story={story} item={item} person={person} />
+                    </div>
                   {item.privacy && item.privacy !== story.privacy && (
                     <span
                       className="day-moment-audience"
@@ -305,15 +338,6 @@ export function StoryTimeline({
                       </div>
                     </div>
                   )}
-                </div>
-                <div className="day-moment-caption">
-                  {item.caption && <p>{item.caption}</p>}
-                  <StoryReactions
-                    storyId={story.id}
-                    itemId={item.id}
-                    selected={item.reaction}
-                  />
-                  <StoryReply story={story} item={item} person={person} />
                 </div>
               </div>
             </section>

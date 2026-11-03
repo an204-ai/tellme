@@ -55,8 +55,8 @@ export async function dispatchOutbox() {
     catch { await outbox.updateOne({ _id: job._id, status: "dispatched" }, { $set: { status: "pending", availableAt: new Date(Date.now() + 5000) } }); break; }
   }
 }
-export async function publishUpdate(userIds: string[], kind = "community") {
-  if (redis.status === "ready") await redis.publish(eventChannel, JSON.stringify({ userIds, kind })).catch(() => undefined);
+export async function publishUpdate(userIds: string[], kind = "community", detail?: Record<string, unknown>) {
+  if (redis.status === "ready") await redis.publish(eventChannel, JSON.stringify({ userIds, kind, detail })).catch(() => undefined);
 }
 export async function connectRedis() {
   if (redis.status === "wait") await redis.connect();

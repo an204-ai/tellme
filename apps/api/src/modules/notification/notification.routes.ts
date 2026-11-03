@@ -8,6 +8,15 @@ import { notices } from "../../backend/database.js";
 import { type Env } from "../../backend/security.js";
 import * as v from "../../backend/validation.js";
 export function registerNotificationRoutes(api: Hono<Env>) {
+  api.get("/notifications/unread", async (c) => {
+    c.header("Cache-Control", "private, no-store");
+    const me = c.get("user");
+    const [count, system] = await Promise.all([
+      notices.countDocuments({ recipientId: me._id, userId: { $nin: me.blocked }, read: false }),
+      listSystemNotices(me._id).catch(() => []),
+    ]);
+    return c.json({ count: count + system.filter((notice) => !notice.read).length });
+  });
   api.get("/notifications/inbox", async (c) => {
     c.header("Cache-Control", "private, no-store");
     const { cursor, limit } = v.pageSchema.parse(c.req.query());

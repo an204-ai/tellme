@@ -20,6 +20,7 @@ export const replySchema = z
   .min(1, "Bạn chưa nhập bình luận.")
   .max(1000, "Bình luận tối đa 1.000 ký tự.");
 export const messageDraftSchema = z.object({
+  replyToId: z.string().uuid().optional(),
   text: z.string().trim().max(1000, "Tin nhắn tối đa 1.000 ký tự."),
   stickerId: z.string().refine((id) => !!getTellmeSticker(id), "Chọn sticker hợp lệ.").optional(),
 }).refine((draft) => !!draft.text || !!draft.stickerId, "Nhập tin nhắn hoặc chọn sticker.");

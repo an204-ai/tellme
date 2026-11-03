@@ -192,6 +192,27 @@ export function registerPostRoutes(api: Hono<Env>) {
     );
     return c.json({ ok: true });
   });
+  api.put("/posts/:id/comments/:commentId/reaction", async (c) => {
+    const me = c.get("user"),
+      post = await requirePost(c.req.param("id"), me),
+      commentId = c.req.param("commentId"),
+      { reaction } = z.object({ reaction: v.reaction }).parse(await c.req.json());
+    if (!post.comments.some((comment) => comment.id === commentId) || hiddenCommentIds(post.comments).has(commentId))
+      fail(404, "Bình luận không tồn tại.");
+    const reactionPath = `comments.$.reactions.${me._id}`;
+    await posts.updateOne(
+      { _id: post._id, "comments.id": commentId },
+      reaction
+        ? {
+            $set: { [reactionPath]: reaction },
+            ...(reaction === "like"
+              ? { $addToSet: { "comments.$.likedBy": me._id } }
+              : { $pull: { "comments.$.likedBy": me._id } }),
+          }
+        : { $unset: { [reactionPath]: "" }, $pull: { "comments.$.likedBy": me._id } },
+    );
+    return c.json({ ok: true });
+  });
   api.put("/posts/:id/hidden", async (c) => {
     const me = c.get("user"),
       post = await requirePost(c.req.param("id"), me);

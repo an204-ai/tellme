@@ -1,11 +1,11 @@
 import type { Hono } from "hono";
 import { z } from "zod";
 import type { Filter } from "mongodb";
-import { users, posts, stories, sessions, reports, messages, adminAudit, config, enqueue, publishUpdate, isSuspended } from "@tellme/database";
+import { users, posts, stories, sessions, reports, messages, config, enqueue, publishUpdate, isSuspended } from "@tellme/database";
 import type { User } from "@tellme/database";
 import { fail, type Env } from "../../backend/security.js";
 import { pageSchema } from "../../backend/validation.js";
-import { audit, auditPeople, idSchema, isAdmin, moderateContent, reasonSchema, suspendAccount, transaction } from "./admin.service.js";
+import { idSchema, isAdmin, moderateContent, reasonSchema, suspendAccount, transaction } from "./admin.service.js";
 const escaped = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const queryText = (value?: string) => z.string().trim().max(100).parse(value || "");
 const userProjection = { name: 1, username: 1, avatar: 1, email: 1, emailVerifiedAt: 1, createdAt: 1, suspension: 1 };
@@ -22,13 +22,13 @@ export function registerManagementRoutes(api: Hono<Env>) {
   api.get("/admin/users/:id", async (c) => {
     const id = idSchema.parse(c.req.param("id")), user = await users.findOne({ _id: id }, { projection: userProjection });
     if (!user) fail(404, "Tài khoản không tồn tại.");
-    const [postCount, storyCount, commentCount, messageCount, sessionCount, reportCount, history] = await Promise.all([
+    const [postCount, storyCount, commentCount, messageCount, sessionCount, reportCount] = await Promise.all([
       posts.countDocuments({ authorId: id }), stories.countDocuments({ userId: id }),
       posts.aggregate([{ $match: { "comments.userId": id } }, { $unwind: "$comments" }, { $match: { "comments.userId": id } }, { $count: "count" }]).toArray(),
       messages.countDocuments({ senderId: id }), sessions.countDocuments({ userId: id, expiresAt: { $gt: new Date() } }),
-      reports.countDocuments({ targetType: "user", targetId: id }), adminAudit.find({ targetId: id }).sort({ at: -1 }).limit(10).toArray(),
+      reports.countDocuments({ targetType: "user", targetId: id }),
     ]);
-    return c.json({ user: userDTO(user), stats: { posts: postCount, stories: storyCount, comments: Number(commentCount[0]?.count || 0), messages: messageCount, sessions: sessionCount, reports: reportCount }, history: await auditPeople(history) });
+    return c.json({ user: userDTO(user), stats: { posts: postCount, stories: storyCount, comments: Number(commentCount[0]?.count || 0), messages: messageCount, sessions: sessionCount, reports: reportCount } });
   });
   api.post("/admin/users/:id/action", async (c) => {
     const id = idSchema.parse(c.req.param("id")), actor = c.get("user")._id;
@@ -43,7 +43,6 @@ export function registerManagementRoutes(api: Hono<Env>) {
           if (!user.suspension) fail(409, "Tài khoản không có lệnh tạm khóa.");
           await users.updateOne({ _id: id }, { $unset: { suspension: "" } }, { session });
         } else await sessions.deleteMany({ userId: id }, { session });
-        await audit(actor, `user.${action}`, "user", id, reason, session);
       }
     });
     if (action !== "unsuspend") await publishUpdate([id], "session-revoked");

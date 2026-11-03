@@ -40,6 +40,7 @@ export interface Comment {
   content: string;
   createdAt: string;
   parentId?: string;
+  reaction?: Reaction | null;
   liked?: boolean;
   isAuthor?: boolean;
   media?: CommentMedia;
@@ -78,6 +79,8 @@ export interface MomentItem {
   /** Optional per-photo restriction; absent means the day-wide audience applies. */
   privacy?: Privacy;
   reaction?: Reaction | null;
+  /** Viewer reaction values returned only when the story owner opens this day's timeline. */
+  incomingReactions?: Reaction[];
 }
 export interface StoryMusic {
   provider: "epidemic-sound" | "youtube";
@@ -98,6 +101,9 @@ export interface DayStory {
   music?: StoryMusic;
 }
 export interface Message {
+  replyTo?: { messageId: string; userId: string; text: string; stickerId?: string };
+  /** Local outbox state, never persisted or sent to the server. */
+  pending?: boolean;
   stickerId?: string;
   userId?: string;
   postId?: string;
@@ -114,6 +120,7 @@ export interface Message {
   at: string;
 }
 export interface Conversation {
+  readAt?: Record<string, string>;
   ownerId?: string;
   muted?: boolean;
   avatar?: string;

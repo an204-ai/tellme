@@ -1,17 +1,28 @@
 import { streamSSE } from "hono/streaming";
 import type { Hono } from "hono";
-import { eventChannel, redis, prefix, users, sessions, isSuspended } from "@tellme/database";
+import { eventChannel, redis, prefix, users, sessions, isSuspended, conversations, publishUpdate } from "@tellme/database";
 import { cookieName, type Env } from "./security.js";
 import { createHash } from "node:crypto";
 import type { Server } from "node:http";
 import { origins } from "./config.js";
 import { RedisPresence } from "./presence-store.js";
+import { createChatSignals } from "./chat-signals.js";
+import { conversationAllowed } from "./domain.js";
 import { attachRealtimeSocket } from "./realtime-socket.js";
 const listeners = new Map<string, Set<(data: string) => void>>();
 const presence = new RedisPresence(redis, prefix);
 let transport: ReturnType<typeof attachRealtimeSocket> | undefined;
 export function mountRealtime(server: Server, ready: () => boolean) {
+  const signals = createChatSignals({
+    authorize: async (id, userId) => {
+      const chat = await conversations.findOne({ _id: id, participants: userId });
+      return chat && await conversationAllowed(chat) ? chat.participants : null;
+    },
+    publish: (audience, detail) => publishUpdate(audience, "chat.typing", detail),
+  });
   transport = attachRealtimeSocket(server, {
+    disconnect: (peerId) => { void signals.stop(peerId).catch(() => {}); },
+    control: (actor, peerId, frame) => signals.control(actor.userId, peerId, frame),
     ready, presence, origins,
     validate: async (actor) => {
       const [session, user] = await Promise.all([sessions.findOne({ _id: actor.sessionId, expiresAt: { $gt: new Date() } }, { projection: { _id: 1 } }), users.findOne({ _id: actor.userId }, { projection: { suspension: 1 } })]);
@@ -47,10 +58,11 @@ export async function startRealtime() {
         if (typeof event.userId === "string" && typeof event.online === "boolean" && Number.isSafeInteger(event.revision)) void transport?.presenceChanged(event).catch(() => transport?.update({ userIds: [], kind: "presence.unavailable" }));
         return;
       }
-      const event = JSON.parse(payload) as { userIds: string[]; kind: string; sessionId?: string };
+      const event = JSON.parse(payload) as { userIds: string[]; kind: string; sessionId?: string; detail?: Record<string, unknown> };
       if (!Array.isArray(event.userIds) || typeof event.kind !== "string") return;
       void transport?.update(event).catch(() => {});
-      const value = JSON.stringify({ kind: event.kind });
+      if (event.kind === "chat.typing") return;
+      const value = JSON.stringify({ kind: event.kind.startsWith("chat.") ? "messages" : event.kind });
       for (const [userId, callbacks] of listeners) if (!event.userIds.length || event.userIds.includes(userId)) callbacks.forEach((callback) => callback(value));
     } catch { /* Ignore malformed events; never forward arbitrary payloads. */ }
   });

@@ -130,13 +130,11 @@ function MonthMap({ month, personId, isMe, onBounds }: {
   const days = query.data?.days || [];
   const savedDays = new Map(days.map((day) => [day.day, day]));
   const route = useMemo(() => monthRoute(month, bounds.width, bounds.height), [month, bounds.width, bounds.height]);
+  const canAddMoment = isMe && !!query.data && !days.length && month === localDay().slice(0, 7);
   return <div ref={root} className="journey-month" role="group" aria-label={monthLabel(month)}>
-    <div className="journey-month-meta">
-      {query.isError ? <span className="journey-status" role="alert">Chưa tải được ảnh.<button type="button" onClick={() => void query.refetch()}>Thử lại</button></span>
-        : !query.data ? <span role="status">Đang mở hành trình…</span>
-        : days.length ? <span>{days.length} ngày lưu lại · Còn nhiều điều ở phía trước</span>
-        : <span>{month < localDay().slice(0, 7) ? "Một tháng đã đi qua, vẫn là một phần hành trình." : "Tháng này đang chờ những khoảnh khắc của bạn."}</span>}
-      {isMe && query.data && !days.length && month === localDay().slice(0, 7) && <button className="journey-add" type="button" onClick={() => open("moment")}><Camera size={15} />Chụp ảnh</button>}
+    <div className={`journey-month-meta${query.isError || canAddMoment ? "" : " is-empty"}`}>
+      {query.isError && <span className="journey-status" role="alert">Chưa tải được ảnh.<button type="button" onClick={() => void query.refetch()}>Thử lại</button></span>}
+      {canAddMoment && <button className="journey-add" type="button" onClick={() => open("moment")}><Camera size={15} />Chụp ảnh</button>}
     </div>
     <div ref={map} className="journey-map" style={{ "--journey-stop-size": `${route.size}px` } as CSSProperties} aria-busy={query.isFetching}>
         <svg className="journey-road" viewBox={`0 0 ${route.width} ${route.height}`} preserveAspectRatio="none" aria-hidden="true">
@@ -195,13 +193,13 @@ export function ProfileJourney({ personId, isMe }: { personId: string; isMe: boo
   return <section ref={frame} className="profile-journey" aria-label="Hành trình Tell me now">
     <header className="journey-heading">
       <span className="journey-brand" aria-hidden="true"><img src="/brand/logos/tellme-symbol-on-light.png" alt="" width="44" height="44" /></span>
-      <div><h2>{isMe ? "Hành trình của tôi" : "Hành trình Tell me now"}</h2><p>Mỗi ngày là một dấu chân nhỏ.</p></div>
+      <div><h2>{isMe ? "Hành trình của tôi" : "Hành trình Tell me now"}</h2></div>
+      <div className="journey-navigation">
+        <button type="button" disabled={!previousAllowed} aria-label="Xem tháng trước" onClick={() => navigate(-1)}><ChevronLeft size={19} /></button>
+        <span aria-live="polite">{monthLabel(month)}</span>
+        <button type="button" disabled={!nextAllowed} aria-label="Xem tháng tiếp theo" onClick={() => navigate(1)}><ChevronRight size={19} /></button>
+      </div>
     </header>
-    <div className="journey-navigation">
-      <button type="button" disabled={!previousAllowed} aria-label="Xem tháng trước" onClick={() => navigate(-1)}><ChevronLeft size={19} /></button>
-      <span aria-live="polite">{monthLabel(month)}</span>
-      <button type="button" disabled={!nextAllowed} aria-label="Xem tháng tiếp theo" onClick={() => navigate(1)}><ChevronRight size={19} /></button>
-    </div>
     <div ref={viewport} className="journey-month-stage" role="region" tabIndex={0} aria-label="Hành trình theo tháng. Vuốt trái để sang tháng sau, vuốt phải để xem tháng trước." onKeyDown={(event) => {
       if (event.target !== event.currentTarget) return;
       if (event.key === "ArrowRight" || event.key === "ArrowLeft") {

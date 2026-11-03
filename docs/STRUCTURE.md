@@ -11,8 +11,7 @@ Monorepo giữ bốn ứng dụng, package dùng chung và ba worker. Runtime g�
 | `apps/web/src/components/app/` | Shell, composer, dialog bài, timeline ngày ảnh |
 | `apps/web/src/components/ui/` | Primitive, emoji, media picker và infinite trigger |
 | `apps/web/src/hooks/` | `use-community.ts` cho metadata/mutation; `use-posts.ts` cho trang bài/hồ sơ/chi tiết |
-| `apps/web/src/lib/` | `api-repository.ts`, type/validation/quyền hiển thị, Giphy proxy client, brand; `seed.ts`/`feed-data.ts` là dữ liệu cũ không nối runtime |
-| `apps/web/src/services/` | Scaffold API client cũ; màn hình hiện tại dùng `lib/api-repository.ts` |
+| `apps/web/src/lib/` | `api-repository.ts`, type/validation/quyền hiển thị, Giphy proxy client, brand |
 | `apps/web/src/stores/` | Zustand cho trạng thái UI |
 | `apps/web/src/styles/` | CSS nền, Uiverse, moments và refinements |
 | `apps/web/public/` | Brand, ảnh tĩnh và thông báo giấy phép |
@@ -20,9 +19,8 @@ Monorepo giữ bốn ứng dụng, package dùng chung và ba worker. Runtime g�
 | `apps/api/src/main.ts` | Kết nối database, khởi động HTTP/WebSocket server (loopback ở dev, 0.0.0.0 trong Docker) |
 | `apps/api/src/backend/` | Config, MongoDB/index, model, domain/DTO/quyền, session/security, validation và route helper |
 | `apps/api/src/modules/` | Route nghiệp vụ và quản trị: auth, bootstrap, user, post, story, message, conversation, notification, media, music, admin |
-| `apps/api/tests/` | Kiểm tra API admin dùng dữ liệu kiểm thử riêng |
 | `apps/mobile/src/`, `apps/mobile/assets/` | Scaffold Expo/React Native và tài sản mobile |
-| `apps/admin/src/` | Dashboard người dùng, kiểm duyệt, báo cáo, tác vụ nền, chỉ số hạ tầng thiết yếu, thống kê sử dụng và audit |
+| `apps/admin/src/` | Tổng quan, quản lý người dùng, kiểm duyệt, báo cáo và chỉ số hạ tầng thiết yếu |
 | `packages/database/` | MongoDB Atlas native driver, models/indexes, config, Redis/BullMQ, job và worker dùng chung |
 | `packages/shared/` | Kiểu/validator/hằng số dùng chung, độc lập nền tảng |
 | `packages/ui/` | Token/component DOM dùng chung đã có; phần lớn UI web hiện ở app web |
