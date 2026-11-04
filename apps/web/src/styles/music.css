@@ -45,10 +45,11 @@
 .moment-music-button small { min-width: 0; font-size: 12px; line-height: 1.5; color: #000; overflow-wrap: anywhere; }
 .moment-music-button .moment-music-chevron { margin-left: auto; }
 .story-music { display: flex; align-items: center; gap: 6px; color: var(--primary); }
-.story-header-music { width: fit-content; max-width: 100%; min-width: 0; margin: 7px 0 0; padding: 0; gap: 4px; }
+.story-header-music { display: block; width: fit-content; max-width: 100%; min-width: 0; margin: 7px 0 0; padding: 0; }
+.story-music-controls { display: flex; align-items: center; min-width: 0; gap: 4px; }
 .story-header-music .music-play, .story-header-music .music-edit { min-width: 36px; min-height: 36px; }
 .story-header-music .music-player { margin-left: -8px; }
-.story-header-music .music-edit { margin-left: 2px; }
+.story-header-music .music-edit { flex-shrink: 0; margin-left: 2px; }
 .story-header-music .music-edit > svg { width: 15px; height: 15px; }
 .story-music-add { display: inline-flex; align-items: center; gap: 7px; margin-top: 7px; min-height: 36px; padding: 0; border: 0; background: transparent; color: var(--primary); font-size: 13px; cursor: pointer; }
 .story-music-flip { --music-face-depth: 12px; display: block; min-width: 0; max-width: 380px; height: 24px; overflow: hidden; clip-path: inset(1px 0); perspective: 600px; }

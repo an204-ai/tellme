@@ -125,7 +125,7 @@
 .avatar-xl > .avatar-online { width: 16px; height: 16px; }
 
 /* The owner's three bouncing dots, rendered as a received bubble. */
-.chat-typing-slot { min-height: 34px; display: flex; align-items: center; }
+.chat-typing-slot { min-height: 34px; flex: 0 0 auto; display: flex; align-items: center; padding-inline: 12px; }
 .chat-typing-bubble { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; }
 .chat-typing-dots { position: relative; display: inline-flex; flex: 0 0 auto; align-items: center; width: 58px; height: 32px; padding: 0; border-radius: 20px 20px 20px 6px; background: #f0f2f5; color: #536a91; }
 .typing-indicator { display: block; width: 60px; height: 34px; position: relative; }

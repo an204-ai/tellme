@@ -211,6 +211,15 @@
   background: #ffffff20;
   color: white;
 }
+@media (max-width: 700px) {
+  .day-moment-overlay .story-reply { min-width: 0; }
+  .day-moment-overlay .story-reply-input { gap: 3px; padding: 3px 4px 3px 10px; }
+  .day-moment-overlay .story-reply-input > input { padding: 2px 0; font-size: 16px; }
+  .day-moment-overlay .story-reply-input > .icon-button,
+  .day-moment-overlay .story-reply-send { flex-basis: 32px; width: 32px; height: 32px; min-height: 32px; }
+  .day-moment-overlay .story-reply-input > .icon-button svg,
+  .day-moment-overlay .story-reply-send svg { width: 16px; height: 16px; }
+}
 .day-moment-overlay .story-reply > p,
 .day-moment-overlay .story-reply-sent > a { color: white; text-shadow: 0 1px 4px #000a; }
 .story-reply-input:focus-within {

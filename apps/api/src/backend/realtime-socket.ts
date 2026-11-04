@@ -15,6 +15,7 @@ type Options = {
   ready: () => boolean;
   validate?: (actor: RealtimeActor) => Promise<boolean>;
   control?: (actor: RealtimeActor, peerId: string, frame: Record<string, unknown>) => Promise<void>;
+  activeTyping?: (userId: string, chats: ReadonlySet<string>) => Record<string, unknown>[];
   disconnect?: (peerId: string) => void;
   now?: () => number;
 };
@@ -85,10 +86,17 @@ export function attachRealtimeSocket(server: Server, options: Options) {
               const frame = JSON.parse(value);
               if (frame.kind === "chat.watch") {
                 const active = typeof frame.conversationId === "string" && frame.conversationId.length <= 100 ? frame.conversationId : undefined;
-                if (active !== peer.watching) options.disconnect?.(peer.id);
+                if (peer.watching && active !== peer.watching) {
+                  peer.pending = peer.pending.catch(() => {}).then(() => options.disconnect?.(peer.id));
+                }
                 peer.watching = active;
                 const requested = Array.isArray(frame.conversationIds) ? frame.conversationIds : [];
-                peer.watched = new Set([...(active ? [active] : []), ...requested.filter((id: unknown): id is string => typeof id === "string" && id.length <= 100)].slice(0, 16));
+                const watched = new Set([...(active ? [active] : []), ...requested.filter((id: unknown): id is string => typeof id === "string" && id.length <= 100)].slice(0, 16));
+                const added = new Set([...watched].filter((id) => !peer.watched?.has(id)));
+                peer.watched = watched;
+                if (added.size) {
+                  for (const typing of options.activeTyping?.(actor.userId, added) ?? []) send(peer, { kind: "chat.typing", ...typing });
+                }
                 return;
               }
               // Control work is serialized separately from message delivery and heartbeat.

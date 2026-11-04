@@ -1,4 +1,5 @@
 "use client";
+import { playInterfaceSound } from "@/lib/interface-sounds";
 import { StoryMusic } from "@/components/music/StoryMusic";
 import { Select } from "@/components/ui/Select";
 import { useQuery } from "@tanstack/react-query";
@@ -76,6 +77,7 @@ export function StoryTimeline({
   const goTo = (id: string) => {
     const target = momentsRef.current.get(id);
     if (target && scrollRef.current) {
+      if (active !== id) playInterfaceSound("slide");
       scrollRef.current.scrollTo({
         top: id === items[0]?.id ? 0 : target.offsetTop - 24,
         behavior:

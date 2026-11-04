@@ -22,4 +22,9 @@ export class TypingLease {
     if (this.active) this.emit(false);
     this.active = false; this.last = 0;
   }
+  refresh() {
+    if (!this.active) return;
+    this.emit(true);
+    this.last = this.now();
+  }
 }

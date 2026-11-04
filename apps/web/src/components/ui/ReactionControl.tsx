@@ -1,4 +1,5 @@
 "use client";
+import { playInterfaceSound } from "@/lib/interface-sounds";
 import Image from "next/image";
 import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type RefObject } from "react";
 import { ThumbsUp } from "lucide-react";
@@ -11,13 +12,14 @@ export function ReactionIcon({ value, size = 28 }: { value: Reaction; size?: num
 }
 
 /** Native popover keeps reactions above both feed images and timeline dialogs. */
-export function ReactionControl({ selected, onChange, disabled = false, compact = false, flightTarget, className = "" }: {
+export function ReactionControl({ selected, onChange, disabled = false, compact = false, flightTarget, sound = "reaction", className = "" }: {
   selected?: Reaction | null;
   onChange: (value: Reaction | null) => void;
   disabled?: boolean;
   compact?: boolean;
   flightTarget?: RefObject<HTMLElement | null>;
   className?: string;
+  sound?: "reaction" | "pop";
 }) {
   const id = useId();
   const trigger = useRef<HTMLDivElement>(null);
@@ -57,6 +59,7 @@ export function ReactionControl({ selected, onChange, disabled = false, compact 
         });
       }
     }
+    if (value) playInterfaceSound(sound);
     onChange(value);
   };
   chooseRef.current = choose;
@@ -177,7 +180,7 @@ export function ReactionControl({ selected, onChange, disabled = false, compact 
   }, [open]);
   return <>
     <div ref={trigger} className={`tellme-reaction-control ${compact ? "compact" : ""} ${selected ? "selected" : ""} ${className}`} onPointerLeave={(event) => { if (event.pointerType === "mouse") scheduleClose(); }}>
-      <button ref={main} type="button" className="tellme-reaction-main" onPointerDown={(event) => {
+      <button ref={main} type="button" className="tellme-reaction-main" aria-label={choice?.label || "Thích"} onPointerDown={(event) => {
         if (disabled || event.button !== 0 || event.isPrimary === false) return;
         stopGesture();
         const current: NonNullable<typeof gesture.current> = { id: event.pointerId, x: event.clientX, y: event.clientY, opened: false, value: null };

@@ -1,4 +1,5 @@
 "use client";
+import { playInterfaceSound } from "@/lib/interface-sounds";
 
 import { useId, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
@@ -54,7 +55,7 @@ export function TellmeStickerButton({ label, onSelect, disabled = false, showLab
         <label className="tellme-sticker-search"><Search size={17} /><input aria-label={`Tìm sticker ${TELLME_STICKER_PACKS.find((pack) => pack.id === packId)?.label}`} placeholder="Chào, cảm ơn, yêu nè…" value={search} onChange={(event) => setSearch(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); event.stopPropagation(); } }} maxLength={60} /></label>
         <div id={`${id}-panel`} className="tellme-sticker-panel" role="tabpanel" aria-labelledby={`${id}-${packId}-tab`} tabIndex={0}>
         <div className="tellme-sticker-grid">
-          {stickers.map((sticker) => <button type="button" key={sticker.id} aria-label={`Dùng sticker ${sticker.label}`} onClick={() => { popup.current?.hidePopover(); onSelect(sticker); }}>
+          {stickers.map((sticker) => <button type="button" key={sticker.id} aria-label={`Dùng sticker ${sticker.label}`} onClick={() => { popup.current?.hidePopover(); playInterfaceSound("pop"); onSelect(sticker); }}>
             <img src={sticker.src} alt="" width="96" height="96" loading="lazy" draggable={false} />{showLabels && <span>{sticker.label}</span>}
           </button>)}
         </div>
@@ -71,7 +72,7 @@ export function TellmeStickerSuggestions({ text, onSelect, showLabels = true }: 
   if (!stickers.length || dismissed === text) return null;
   return <div className="tellme-sticker-suggestions" role="group" aria-label="Sticker gợi ý theo nội dung đang nhập">
     <div className="tellme-sticker-suggestion-heading"><span>Kể bằng sticker nè</span><IconButton label="Ẩn gợi ý sticker" onClick={() => setDismissed(text)}><X size={15} /></IconButton></div>
-    <div className="tellme-sticker-suggestion-list">{stickers.map((sticker) => <button type="button" key={sticker.id} aria-label={`Dùng sticker gợi ý ${sticker.label}`} onClick={() => onSelect(sticker)}>
+    <div className="tellme-sticker-suggestion-list">{stickers.map((sticker) => <button type="button" key={sticker.id} aria-label={`Dùng sticker gợi ý ${sticker.label}`} onClick={() => { playInterfaceSound("pop"); onSelect(sticker); }}>
       <img src={sticker.src} alt="" width="60" height="60" loading="lazy" draggable={false} />{showLabels && <span>{sticker.label}</span>}
     </button>)}</div>
   </div>;

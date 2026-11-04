@@ -1,4 +1,5 @@
 "use client";
+import { playInterfaceSound } from "@/lib/interface-sounds";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -18,6 +19,7 @@ export function usePageNavigation(pathname: string) {
     latest.current = next;
     setFailed(null);
     setIntent(next);
+    playInterfaceSound("tap");
     router.push(href);
   }, [router]);
 

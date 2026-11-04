@@ -19,17 +19,19 @@ export function StoryMusic({ story }: { story: DayStory }) {
   if (!story.music) return story.userId === "me" ? <button type="button" className="story-music-add" onClick={() => edit(story.id)}><Music2 size={16} />Thêm nhạc của ngày</button> : null;
   const artists = story.music.artists.join(", ") || (story.music.provider === "youtube" ? "YouTube" : "Epidemic Sound");
   return <div className="story-music story-header-music" data-playing={playback === "playing"} aria-label="Nhạc của ngày">
-    <MusicPlayer provider={story.music.provider} key={`${story.music.provider}:${story.music.trackId}:${story.music.startSeconds || 0}`} endpoint={`/stories/${story.id}/music/stream`} title={story.music.title} onPlaybackChange={setPlayback} onError={setPlaybackError} playingIcon={<span className="story-music-waves" aria-hidden="true"><i /><i /><i /><i /></span>} />
-    <span className="story-music-flip" title={`${story.music.title} — ${artists}`}>
-      <span className="sr-only">{story.music.title} — {artists}</span>
-      <span className="story-music-prism" aria-hidden="true">
-        <span className="story-music-face">{story.music.title}</span>
-        <span className="story-music-face">{artists}</span>
-        <span className="story-music-face">{story.music.title}</span>
-        <span className="story-music-face">{artists}</span>
+    <div className="story-music-controls">
+      <MusicPlayer provider={story.music.provider} key={`${story.music.provider}:${story.music.trackId}:${story.music.startSeconds || 0}`} endpoint={`/stories/${story.id}/music/stream`} title={story.music.title} onPlaybackChange={setPlayback} onError={setPlaybackError} playingIcon={<span className="story-music-waves" aria-hidden="true"><i /><i /><i /><i /></span>} />
+      <span className="story-music-flip" title={`${story.music.title} — ${artists}`}>
+        <span className="sr-only">{story.music.title} — {artists}</span>
+        <span className="story-music-prism" aria-hidden="true">
+          <span className="story-music-face">{story.music.title}</span>
+          <span className="story-music-face">{artists}</span>
+          <span className="story-music-face">{story.music.title}</span>
+          <span className="story-music-face">{artists}</span>
+        </span>
       </span>
-    </span>
-    {story.userId === "me" && <button type="button" className="music-edit" aria-label="Đổi nhạc của ngày" onClick={() => edit(story.id)}><Pencil size={16} /></button>}
+      {story.userId === "me" && <button type="button" className="music-edit" aria-label="Đổi nhạc của ngày" onClick={() => edit(story.id)}><Pencil size={16} /></button>}
+    </div>
     {playbackError && <p className="story-music-error" role="alert">{playbackError}</p>}
   </div>;
 }

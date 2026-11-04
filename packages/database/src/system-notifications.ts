@@ -57,7 +57,7 @@ export async function deliverSystemNotification(data: Record<string, unknown>) {
   const recipient = await users.findOne({ _id: userId }, { projection: { settings: 1 } });
   if (!recipient || recipient.settings.notifySystem === false) return;
   const inserted = await redis.eval(appendScript, 1, inboxKey(userId), JSON.stringify(notice), new Date(Date.now() - SYSTEM_TTL * 1000).toISOString(), notice.id, SYSTEM_INBOX_LIMIT, SYSTEM_TTL);
-  if (inserted) await publishUpdate([userId], "notifications");
+  if (inserted) await publishUpdate([userId], "notifications", { noticeId: notice.id, systemIcon: notice.systemIcon });
   const sentKey = `${prefix}:system:pushed:${notice.id}`;
   if (!config.VAPID_PRIVATE_KEY || !config.VAPID_PUBLIC_KEY || await redis.exists(sentKey)) return;
   await pushToUser(userId, { title: `Tellme · ${notice.title}`, body: notice.text, url: notice.url, tag: `tellme-system-${notice.id}`, icon: notice.systemIcon === "weather" ? "/brand/logos/tellme-symbol-on-light.png" : "/images/reactions/like.png" }, Math.max(1, Math.min(1800, Math.ceil((Number(data.deliverBy) - Date.now()) / 1000))));

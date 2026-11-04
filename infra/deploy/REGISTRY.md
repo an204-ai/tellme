@@ -28,6 +28,8 @@ Mỗi lần push lên `main`, workflow **Publish Tellme images** xuất bản t�
 
 3. Giữ nút **Auto Deploy** trên Coolify tắt. Dùng **Actions → Publish Tellme images → Run workflow → main** để thử ngay, hoặc chờ lần push tiếp theo. Job **deploy** ghi UUID vào **Summary** và chờ Coolify báo kết quả. Nếu job thất bại sau khi đã nhận UUID, đối chiếu UUID trong **Deployments** của resource trước khi chạy lại. [Chạy workflow thủ công](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow) · [API triển khai Coolify](https://coolify.io/docs/api/endpoints/deployments/deploy-by-tag-or-uuid)
 
+Workflow chờ Coolify tối đa 30 phút sau khi nhận UUID. Toàn bộ job có giới hạn 35 phút. Khi GitHub hết thời gian chờ, Coolify vẫn có thể tiếp tục triển khai. Nếu log Coolify ghi chính Coolify đã hủy deployment vì hết giờ, kiểm tra **Servers → VPS → Advanced → Deployment timeout**. [Giới hạn deploy của Coolify](https://coolify.io/docs/core/infrastructure/servers/manage-server)
+
 Để rollback thủ công, đặt `COOLIFY_AUTO_DEPLOY=false` ở GitHub và đợi các lượt chạy đang triển khai kết thúc. Chọn một SHA đã có đủ tám image. Đặt cả **Commit SHA** và `TELLME_IMAGE_REVISION` của resource Coolify về SHA đó, rồi bấm **Deploy**. Khi sẵn sàng phát hành lại từ `main`, bật lại biến GitHub.
 
 ## Dọn dữ liệu giám sát cũ

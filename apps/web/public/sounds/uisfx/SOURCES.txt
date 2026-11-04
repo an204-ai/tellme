@@ -1,0 +1,10 @@
+These sounds are by UI SFX, downloaded from 2D Digital Sounds and converted to mono PCM WAV.
+Source license: CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/)
+Original library: https://uisfx.com/
+
+reaction.wav     https://sounds.2d.digital/sounds/uisfx/rubber/reaction.ogg
+lock.wav         https://sounds.2d.digital/sounds/uisfx/minimal/lock.ogg
+typing.wav       https://sounds.2d.digital/sounds/uisfx/soft/typing.ogg
+notification.wav https://sounds.2d.digital/sounds/uisfx/soft/notification.ogg
+success.wav      https://sounds.2d.digital/sounds/uisfx/soft/success.ogg
+info.wav         https://sounds.2d.digital/sounds/uisfx/organic/info.ogg

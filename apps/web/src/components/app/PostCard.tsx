@@ -51,6 +51,7 @@ function CommentReaction({ postId, comment, authenticated }: { postId: string; c
   const reaction = useReaction({ kind: "comment", postId, commentId: comment.id }, authenticated);
   return <ReactionControl
     className="comment-reaction"
+    sound="pop"
     selected={comment.reaction ?? (comment.liked ? "like" : null)}
     onChange={reaction.change}
   />;

@@ -10,11 +10,14 @@ export function sendTyping(conversationId: string, active: boolean) {
   if (socket?.readyState !== 1) return;
   socket.send(JSON.stringify({ kind: 'chat.typing', conversationId, active }));
 }
-export function receiveTyping(frame: { conversationId: string; userId: string; peerId: string; active: boolean }) {
+export function receiveTyping(frame: { conversationId: string; userId: string; peerId: string; active: boolean; expiresInMs?: number }) {
   if (frame.userId === 'me') return;
   useChatRealtime.setState((state) => {
     const peers = { ...state.peers };
-    if (frame.active) peers[frame.peerId] = { ...frame, expires: Date.now() + 6500 };
+    const duration = typeof frame.expiresInMs === "number" && Number.isFinite(frame.expiresInMs)
+      ? Math.max(0, Math.min(6500, frame.expiresInMs))
+      : 6500;
+    if (frame.active) peers[frame.peerId] = { ...frame, expires: Date.now() + duration };
     else delete peers[frame.peerId];
     return { peers };
   });

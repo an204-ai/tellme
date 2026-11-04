@@ -18,11 +18,19 @@ export function mountRealtime(server: Server, ready: () => boolean) {
       const chat = await conversations.findOne({ _id: id, participants: userId });
       return chat && await conversationAllowed(chat) ? chat.participants : null;
     },
-    publish: (audience, detail) => publishUpdate(audience, "chat.typing", detail),
+    publish: async (audience, detail) => {
+      if (redis.status === "ready") {
+        await publishUpdate(audience, "chat.typing", detail);
+      } else {
+        // Tabs connected to this API can still exchange typing signals during a Redis outage.
+        await transport?.update({ userIds: audience, kind: "chat.typing", detail });
+      }
+    },
   });
   transport = attachRealtimeSocket(server, {
     disconnect: (peerId) => { void signals.stop(peerId).catch(() => {}); },
     control: (actor, peerId, frame) => signals.control(actor.userId, peerId, frame),
+    activeTyping: (userId, chats) => signals.activeFor(userId, chats),
     ready, presence, origins,
     validate: async (actor) => {
       const [session, user] = await Promise.all([sessions.findOne({ _id: actor.sessionId, expiresAt: { $gt: new Date() } }, { projection: { _id: 1 } }), users.findOne({ _id: actor.userId }, { projection: { suspension: 1 } })]);

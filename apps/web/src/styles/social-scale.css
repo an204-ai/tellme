@@ -32,8 +32,7 @@
   .chat-intro { padding-block: 12px; gap: 8px; }
   .chat-intro > span:last-child { font-size: 13px; line-height: 1.5; text-align: center; }
 }
-.story-header-music { flex-wrap: wrap; }
-.story-music-error { flex: 0 0 100%; min-width: 0; max-width: 100%; margin: 0; color: #8e1730; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.story-music-error { min-width: 0; max-width: 100%; margin: 0; color: #8e1730; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
 .moment-viewfinder { touch-action: none; }
 .moment-camera-zoom { display: flex; justify-content: center; gap: 8px; margin-top: -8px; }
 .moment-camera-zoom > button { display: grid; place-items: center; min-width: 44px; height: 44px; padding: 0 10px; border: 0; border-radius: 50%; background: #f1f4f9; color: var(--primary); font-size: 13px; font-weight: 500; touch-action: manipulation; }

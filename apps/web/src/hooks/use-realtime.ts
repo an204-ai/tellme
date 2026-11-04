@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { attachChatSocket, receiveTyping, pruneTyping } from "@/lib/chat-realtime";
 import { request } from "@/lib/api-repository";
+import { playInterfaceSound } from "@/lib/interface-sounds";
 import type { AppData, Message } from "@/lib/types";
 import { usePresenceStore } from "@/stores/presence.store";
 export function useRealtime(enabled: boolean, friendIds: string[] = []) {
@@ -20,6 +21,9 @@ export function useRealtime(enabled: boolean, friendIds: string[] = []) {
     const prune = setInterval(pruneTyping, 1000);
     let stopped = false, paused = false, failures = 0, lastFrame = 0;
     let noticeRefresh: ReturnType<typeof setTimeout> | undefined;
+    let noticeSound: "notification" | "weather" | undefined;
+    let legacyNotice = false;
+    const seenNotices = new Set<string>();
     let reconnect: ReturnType<typeof setTimeout> | undefined, pulse: ReturnType<typeof setTimeout> | undefined, invalidate: ReturnType<typeof setTimeout> | undefined, resync: ReturnType<typeof setTimeout> | undefined;
     const retryPresence = () => {
       clearTimeout(resync);
@@ -91,11 +95,25 @@ export function useRealtime(enabled: boolean, friendIds: string[] = []) {
             if (typeof value.storyId === "string" && typeof value.momentId === "string") queueReactionRefresh(value.storyId, value.momentId);
           }
           else if (value.kind === "notifications") {
+            if (typeof value.noticeId !== "string") legacyNotice = true;
+            else if (!seenNotices.has(value.noticeId)) {
+              seenNotices.add(value.noticeId);
+              if (seenNotices.size > 128) seenNotices.delete(seenNotices.values().next().value!);
+              if (value.systemIcon === "weather") noticeSound = "weather";
+              else noticeSound ??= "notification";
+            }
             if (!noticeRefresh) noticeRefresh = setTimeout(() => {
               noticeRefresh = undefined;
+              const sound = noticeSound, compareUnread = legacyNotice && !sound;
+              noticeSound = undefined;
+              legacyNotice = false;
+              if (sound) playInterfaceSound(sound);
+              const previous = queryClient.getQueryData<AppData>(["tellme", "community"])?.unreadNotifications;
               void queryClient.invalidateQueries({ queryKey: ["tellme", "notifications"] });
               void request<{ count: number }>("/notifications/unread").then((result) => {
-                if (!stopped) queryClient.setQueryData<AppData>(["tellme", "community"], (data) => data && ({ ...data, unreadNotifications: result.count }));
+                if (stopped) return;
+                if (compareUnread && previous !== undefined && result.count > previous) playInterfaceSound("notification");
+                queryClient.setQueryData<AppData>(["tellme", "community"], (data) => data && ({ ...data, unreadNotifications: result.count }));
               }).catch(() => {});
             }, 1000);
           } else if (typeof value.kind === "string") queueInvalidation();

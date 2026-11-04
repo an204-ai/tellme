@@ -1,3 +1,5 @@
+import { playInterfaceSound } from "./interface-sounds";
+
 type MonthSwipeOptions = {
   canNavigate: (direction: number) => boolean;
   onNavigate: (direction: number) => void;
@@ -55,6 +57,7 @@ export function enableMonthSwipe(element: HTMLElement, viewport: HTMLElement, tr
     wheelGesture = null;
     if (settling) return;
     destination = direction && options.canNavigate(direction) ? direction : 0;
+    if (destination) playInterfaceSound("slide");
     settling = true;
     delete element.dataset.swiping;
     element.dataset.settling = "true";

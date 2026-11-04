@@ -15,7 +15,7 @@ export async function deliverNotification(data: Record<string, unknown>, id: str
   if (!recipient || !actor || recipientId === userId || recipient.blocked.includes(userId) || actor.blocked.includes(recipientId)) return;
   if (!(data.kind === "message" ? recipient.settings.notifyMessages : recipient.settings.notifyLikes)) return;
   await notices.updateOne({ _id: id }, { $setOnInsert: { recipientId, userId, text: String(data.text), read: false, at: String(data.at), kind: data.kind === "message" ? "message" : "like", ...(data.postId ? { postId: String(data.postId) } : {}) } }, { upsert: true });
-  await publishUpdate([recipientId], "notifications");
+  await publishUpdate([recipientId], "notifications", { noticeId: id });
   if (config.VAPID_PRIVATE_KEY && config.VAPID_PUBLIC_KEY) await enqueue("notification.push", { recipientId, noticeId: id }, { id: `push-${id}` });
 }
 // Retained to drain old queued jobs without sending interaction emails.

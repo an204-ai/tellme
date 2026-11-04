@@ -1,4 +1,5 @@
 "use client";
+import { playInterfaceSound } from "@/lib/interface-sounds";
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { createPortal } from "react-dom";
@@ -59,6 +60,7 @@ export function WeatherWidget() {
     const expiresAt = weather.announcement?.expiresAt || 0;
     if (expiresAt <= Date.now()) { setAutomatic(false); return; }
     setAutomatic(true);
+    playInterfaceSound("weather");
     const timer = setTimeout(() => setAutomatic(false), expiresAt - Date.now());
     return () => clearTimeout(timer);
   }, [weather.announcement]);

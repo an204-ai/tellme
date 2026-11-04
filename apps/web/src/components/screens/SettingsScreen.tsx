@@ -1,7 +1,8 @@
 "use client";
 import { AccountSecurity } from "@/components/app/AccountSecurity";
 import { AccountBlockPicker } from "@/components/app/AccountBlockPicker";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { playInterfaceSound, getDefaultInterfaceSoundsEnabled, getInterfaceSoundsEnabled, setInterfaceSoundsEnabled, subscribeToInterfaceSounds } from "@/lib/interface-sounds";
 import {
   Bell,
   LockKeyhole,
@@ -22,6 +23,7 @@ import { request } from "@/lib/api-repository";
 export function SettingsScreen() {
   const { data, update } = useCommunity();
   const notify = useAppStore((state) => state.notify);
+  const soundsEnabled = useSyncExternalStore(subscribeToInterfaceSounds, getInterfaceSoundsEnabled, getDefaultInterfaceSoundsEnabled);
   const [pushEnabled, setPushEnabled] = useState(false);
   const [pushBusy, setPushBusy] = useState(false);
   const pushAvailable = !!data?.features?.pushPublicKey && typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
@@ -167,6 +169,17 @@ export function SettingsScreen() {
           </h2>
           <div className="setting-toggle-row">
             <div>
+              <strong>Âm thanh giao diện</strong>
+              <p>Phát âm nhẹ khi thao tác trên Tellme.</p>
+            </div>
+            <Switch
+              checked={soundsEnabled}
+              onChange={setInterfaceSoundsEnabled}
+              label="Âm thanh giao diện"
+            />
+          </div>
+          <div className="setting-toggle-row">
+            <div>
               <strong>Giảm chuyển động</strong>
               <p>Hạn chế animation trong giao diện.</p>
             </div>
@@ -216,6 +229,7 @@ export function SettingsScreen() {
             viewer={data.people.find((person) => person.id === "me")?.username}
             onBlock={async (id) => {
               await update((draft) => { if (!draft.blocked.includes(id)) draft.blocked.push(id); });
+              playInterfaceSound("blocked");
               notify("Đã chặn tài khoản.");
             }}
           />

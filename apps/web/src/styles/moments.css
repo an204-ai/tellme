@@ -1227,8 +1227,23 @@
 .saved-moment-preview > span { display: grid; gap: 6px; overflow-wrap: anywhere; }
 .saved-moment-preview small { font-size: 12px; }
 @media (max-width: 700px) {
-  .day-moment-overlay { gap: 6px; padding: 11px; }
+  .day-moment-overlay { gap: 4px; padding: 8px; }
+  .day-moment-overlay:has(.story-reply) {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: end;
+    column-gap: 6px;
+  }
+  .day-moment-overlay:has(.story-reply) > .day-moment-caption { grid-column: 1 / -1; }
   .day-moment-caption { font-size: 13px; line-height: 1.4; }
+  .day-moment-reaction-anchor .tellme-reaction-control.compact { padding-inline: 0; }
+  .day-moment-reaction-anchor .tellme-reaction-main { width: 44px; min-height: 38px; padding: 0; }
+  .day-moment-reaction-anchor .tellme-reaction-main > span { display: none; }
+  .day-moment-reaction-anchor .tellme-reaction-main > img { width: 22px; height: 22px; }
+  .day-moment-reaction-anchor .tellme-reaction-main > svg { width: 18px; height: 18px; }
+  .day-moment-reaction-anchor .moment-reaction-people { min-height: 34px; padding: 3px 8px; font-size: 12px; }
+  .day-moment-reaction-anchor .reaction-summary-icons > img { width: 18px; height: 18px; }
+  .day-moment-media .moment-reaction-floaters { --float-size: 34px; --float-rise: 110px; }
 }
 @media (max-width: 600px) {
   .today-friends > header { align-items: flex-start; }

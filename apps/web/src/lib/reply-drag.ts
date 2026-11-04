@@ -1,3 +1,5 @@
+import { playInterfaceSound } from "./interface-sounds";
+
 /** 120px of deliberate travel produces 54px of resisted motion. */
 export const replyDragDistance = (travel: number) => Math.min(72, Math.max(0, travel) * .45);
 export const replyDragReady = (travel: number) => replyDragDistance(travel) >= 54;
@@ -33,6 +35,7 @@ export function enableReplyDrag(element: HTMLElement, reply: () => void, own = f
       if (dy > 12 && dy > Math.abs(dx)) { reset(); return; }
       if (dx < 10 || dx < dy * 1.4) return;
       state.locked = true; element.setPointerCapture(event.pointerId);
+      playInterfaceSound("replyDrag");
     }
     event.preventDefault();
     state.travel = Math.max(0, dx);

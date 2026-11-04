@@ -16,6 +16,16 @@ export function createChatSignals(options: Options) {
   };
   return {
     stop,
+    activeFor(userId: string, chats: ReadonlySet<string>) {
+      const frames = [];
+      for (const [peerId, lease] of leases) {
+        const expiresInMs = 6500 - (now() - lease.at);
+        if (expiresInMs > 0 && lease.userId !== userId && chats.has(lease.chatId) && lease.audience.includes(userId)) {
+          frames.push({ conversationId: lease.chatId, userId: lease.userId, peerId, active: true, expiresInMs });
+        }
+      }
+      return frames;
+    },
     async control(userId: string, peerId: string, frame: Record<string, unknown>) {
       if (frame.kind !== 'chat.typing' || typeof frame.conversationId !== 'string' || frame.conversationId.length > 100 || typeof frame.active !== 'boolean') return;
       const previous = leases.get(peerId);

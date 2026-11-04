@@ -41,7 +41,7 @@ export function StoryReply({ story, item, person }: { story: DayStory; item: Mom
       } catch (failure) { setError((failure as Error).message); }
     }}>
     <div className="story-reply-input">
-      <input ref={input} aria-label="Lời trả lời ảnh" placeholder={`Trả lời riêng cho ${person?.name || "người đăng"}…`}
+      <input ref={input} aria-label="Lời trả lời ảnh" placeholder="Trả lời riêng…"
         value={text} maxLength={1000} disabled={saving}
         onChange={(event) => { setText(event.target.value); setError(""); setSentChat(""); }}/>
       <EmojiButton label="Thêm emoji vào lời trả lời" onSelect={(emoji) => {

@@ -99,7 +99,7 @@ jobs:
     needs: release
     if: vars.COOLIFY_AUTO_DEPLOY == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 16
+    timeout-minutes: 35
     steps:
       - name: Deploy the latest complete release
         env:
@@ -148,9 +148,17 @@ jobs:
           printf '\nCoolify deployment `%s` for `%s`.\n' "$deployment" "$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
 
           # Hold the release lock while Coolify applies this configuration.
-          deadline=$((SECONDS + 780))
+          deadline=$((SECONDS + 30 * 60))
+          last_status=""
           while (( SECONDS < deadline )); do
-            status=$(coolify "$api/deployments/$deployment" | jq -er '.status')
+            if ! status=$(coolify --retry 2 --retry-max-time 40 "$api/deployments/$deployment" | jq -er '.status | strings'); then
+              echo "::error::Could not read Coolify deployment $deployment. Check its status in Coolify before retrying."
+              exit 1
+            fi
+            if [[ "$status" != "$last_status" ]]; then
+              echo "Coolify deployment $deployment: $status"
+              last_status="$status"
+            fi
             case "$status" in
               finished) exit 0 ;;
               queued|in_progress) sleep 10 ;;
@@ -159,5 +167,5 @@ jobs:
                 exit 1 ;;
             esac
           done
-          echo "::error::Timed out waiting for Coolify deployment $deployment. Check its status in Coolify before retrying."
+          echo "::error::GitHub stopped waiting after 30 minutes. Coolify deployment $deployment was last seen as $last_status. Check its status in Coolify before retrying."
           exit 1

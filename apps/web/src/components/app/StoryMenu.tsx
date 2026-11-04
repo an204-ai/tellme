@@ -1,4 +1,5 @@
 "use client";
+import { playInterfaceSound } from "@/lib/interface-sounds";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
@@ -20,10 +21,10 @@ export function StoryMenu({ story, person }: { story: DayStory; person?: Person 
   const notify = useAppStore((s) => s.notify);
   const query = useQueryClient();
   const router = useRouter();
-  const action = async (task: () => Promise<unknown>, message: string) => {
+  const action = async (task: () => Promise<unknown>, message: string, sound?: "blocked") => {
     if (data?.authenticated === false) { router.push("/auth/login?next=%2Fcommunity%2Ftoday"); return; }
     setBusy(true);
-    try { await task(); await query.invalidateQueries({ queryKey: communityKey }); await query.invalidateQueries({ queryKey: ["tellme", "stories"] }); await query.invalidateQueries({ queryKey: ["tellme", "story"] }); await query.invalidateQueries({ queryKey: ["tellme", "saved-stories"] }); await query.invalidateQueries({ queryKey: ["tellme", "archive"] }); setDialog(null); notify(message); }
+    try { await task(); if (sound) playInterfaceSound(sound); await query.invalidateQueries({ queryKey: communityKey }); await query.invalidateQueries({ queryKey: ["tellme", "stories"] }); await query.invalidateQueries({ queryKey: ["tellme", "story"] }); await query.invalidateQueries({ queryKey: ["tellme", "saved-stories"] }); await query.invalidateQueries({ queryKey: ["tellme", "archive"] }); setDialog(null); notify(message); }
     catch (error) { notify(error instanceof Error ? error.message : "Chưa lưu được thay đổi."); }
     finally { setBusy(false); }
   };
@@ -42,7 +43,7 @@ export function StoryMenu({ story, person }: { story: DayStory; person?: Person 
         </> : <>
           <button onClick={() => setDialog("report")}><Flag size={16} /> Báo cáo</button>
           {data?.connections.includes(story.userId)
-            ? <button disabled={busy} onClick={() => void action(() => update((draft) => { if (!draft.blocked.includes(story.userId)) draft.blocked.push(story.userId); }), `Đã chặn ${person?.name || "tài khoản"}.`)}><ShieldOff size={16} /> Chặn tài khoản</button>
+            ? <button disabled={busy} onClick={() => void action(() => update((draft) => { if (!draft.blocked.includes(story.userId)) draft.blocked.push(story.userId); }), `Đã chặn ${person?.name || "tài khoản"}.`, "blocked")}><ShieldOff size={16} /> Chặn tài khoản</button>
             : person && <button onClick={() => router.push(`/community/profile/${person.username}`)}><Users size={16} /> Tùy chọn tài khoản trên hồ sơ</button>}
         </>}
       </div>

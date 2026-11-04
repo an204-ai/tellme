@@ -1,4 +1,5 @@
 "use client";
+import { playInterfaceSound } from "@/lib/interface-sounds";
 import { MomentComposer } from "./MomentComposer";
 import { SupportModal } from "./TellmeSupport";
 import { MusicOverlays } from "@/components/music/StoryMusic";
@@ -73,6 +74,7 @@ function Composer() {
         });
       });
       open(null);
+      playInterfaceSound("success");
       notify("Đã đăng bài viết.");
     } catch {
       /* mutation error is announced globally */

@@ -1,4 +1,5 @@
 "use client";
+import { playInterfaceSound, preloadMessageSounds, subscribeToInterfaceSounds } from "@/lib/interface-sounds";
 import { replyPreview, replyQuote } from "@/lib/message-reply";
 import { TypingIndicator } from "@/components/chat/TypingIndicator";
 import { typingUsers } from "@/lib/chat-indicators";
@@ -80,6 +81,10 @@ export function MessagesScreen({
   const { data, update, saving } = useCommunity();
   const queryClient = useQueryClient();
   const router = useRouter();
+  useEffect(() => {
+    preloadMessageSounds();
+    return subscribeToInterfaceSounds(preloadMessageSounds);
+  }, []);
   const [search, setSearch] = useState("");
   const [text, setText] = useState("");
   const [replyTo, setReplyTo] = useState<Message | null>(null);
@@ -127,7 +132,14 @@ export function MessagesScreen({
   const signals = useChatSignals(conversation, chatScroll.viewport);
   const typingPeers = useChatRealtime((state) => state.peers);
   const typingIds = useMemo(() => typingUsers(typingPeers, conversation?.id || ""), [typingPeers, conversation?.id]);
-  const listIds = conversations.map((entry) => entry.id).join(",");
+  const typingConversation = typingIds.length ? conversation?.id : undefined;
+  useEffect(() => {
+    if (typingConversation && chatScroll.viewport.current?.getClientRects().length) playInterfaceSound("typing");
+  }, [typingConversation, chatScroll.viewport]);
+  const visibleConversations = conversations.filter((entry) =>
+    conversationPerson(data, entry)?.name.toLocaleLowerCase("vi").includes(search.toLocaleLowerCase("vi")),
+  );
+  const listIds = visibleConversations.map((entry) => entry.id).join(",");
   useTypingWatch(conversation?.id, listIds);
 
   if (!data) return <Loader />;
@@ -154,13 +166,7 @@ export function MessagesScreen({
             onChange={(event) => setSearch(event.target.value)}
           />
           <div className="conversation-rows">
-            {conversations
-              .filter((entry) =>
-                conversationPerson(data, entry)
-                  ?.name.toLocaleLowerCase("vi")
-                  .includes(search.toLocaleLowerCase("vi")),
-              )
-              .map((entry) => {
+            {visibleConversations.map((entry) => {
                 const user = conversationPerson(data, entry);
                 const last = entry.messages.at(-1);
                 const entryTypingIds = typingUsers(typingPeers, entry.id);
@@ -228,8 +234,11 @@ export function MessagesScreen({
                 <button type="button" ref={detailsButton} className={`icon-button chat-details-toggle ${detailsOpen ? "active" : ""}`} aria-label={detailsOpen ? "Đóng thông tin trò chuyện" : "Mở thông tin và chức năng trò chuyện"} aria-controls={detailsId} aria-expanded={detailsOpen} onClick={() => detailsOpen ? closeDetails() : setDetailsOpen(true)}><PanelRight size={21} /></button>
               </header>
               <div className="chat-messages" ref={chatScroll.viewport} role="region" aria-label="Lịch sử tin nhắn" tabIndex={0}>
-                <MessageHistory ref={chatScroll.history} data={data} conversation={conversation} person={person} typingIds={typingIds} onReply={selectReply} />
+                <MessageHistory ref={chatScroll.history} data={data} conversation={conversation} person={person} onReply={selectReply} />
               </div>
+              {canSend && <div className="chat-typing-slot">
+                <TypingIndicator userIds={typingIds} people={data.people} group={conversation.kind === "group"} />
+              </div>}
 
               {canSend ? <form
                 className="chat-composer"
@@ -253,6 +262,7 @@ export function MessagesScreen({
                     ...(replyTo ? { replyTo: replyQuote(replyTo) } : {}),
                     at: new Date().toISOString(),
                   };
+                  playInterfaceSound("sent");
                   signals.stop();
                   sendingRef.current = true;
                   setSending(true);

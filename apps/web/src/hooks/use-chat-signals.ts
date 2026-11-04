@@ -11,16 +11,20 @@ import type { AppData, Conversation } from '@/lib/types';
 export function useChatSignals(chat: Conversation | undefined, viewport: React.RefObject<HTMLDivElement | null>) {
   const client = useQueryClient();
   const revision = useChatRealtime((state) => state.revision);
-  const lease = useMemo(() => new TypingLease((active) => { if (chat) sendTyping(chat.id, active); }), [chat?.id, revision]);
+  const chatId = chat?.id;
+  const lease = useMemo(() => new TypingLease((active) => { if (chatId) sendTyping(chatId, active); }), [chatId]);
   const stop = () => lease.stop();
   const input = (text: string) => { if (document.hidden) stop(); else lease.input(text); };
   useEffect(() => {
     const leave = () => {
-      if (document.hidden || !document.hasFocus()) stop();
+      if (document.hidden) stop();
     };
-    document.addEventListener('visibilitychange', leave); window.addEventListener('blur', leave); window.addEventListener('focus', leave);
-    return () => { stop(); document.removeEventListener('visibilitychange', leave); window.removeEventListener('blur', leave); window.removeEventListener('focus', leave); };
-  }, [chat?.id, revision]);
+    document.addEventListener('visibilitychange', leave);
+    return () => { stop(); document.removeEventListener('visibilitychange', leave); };
+  }, [lease]);
+  useEffect(() => {
+    if (!document.hidden) lease.refresh();
+  }, [lease, revision]);
   const readAt = chat?.readAt?.me || '';
   useEffect(() => {
     const root = viewport.current;

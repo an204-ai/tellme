@@ -1,4 +1,5 @@
 "use client";
+import { playInterfaceSound } from "@/lib/interface-sounds";
 
 import { useEffect, useRef, useState } from "react";
 import { Camera, ChevronDown, ChevronRight, Music2, ShieldCheck } from "lucide-react";
@@ -83,6 +84,7 @@ export function MomentComposer() {
       const invite = firstMoment && saved && !saved.music;
       if (invite) { useAppStore.getState().clearToast(); useAppStore.getState().inviteMusic(saved.id); }
       open(null);
+      playInterfaceSound("success");
       if (!invite) notify("Đã lưu một khoảnh khắc vào ngày của bạn.");
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : "Chưa đăng được khoảnh khắc. Ảnh vẫn ở đây, bạn thử lại nhé.");

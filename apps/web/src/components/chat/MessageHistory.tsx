@@ -1,7 +1,6 @@
 "use client";
 import { ReplyableMessage } from "./ReplyableMessage";
 import { messageReaders } from "@/lib/chat-indicators";
-import { TypingIndicator } from "./TypingIndicator";
 import { forwardRef, memo } from "react";
 import { getTellmeSticker } from "@tellme/shared/stickers";
 import { Avatar } from "@/components/ui/Primitives";
@@ -10,10 +9,10 @@ import { StoryReplyPreview } from "@/components/app/StoryReply";
 import { timeOf } from "@/lib/api-repository";
 import type { AppData, Conversation, Person, Message } from "@/lib/types";
 
-type HistoryProps = { data: AppData; conversation: Conversation; person: Person; typingIds?: string[]; onReply: (message: Message) => void };
+type HistoryProps = { data: AppData; conversation: Conversation; person: Person; onReply: (message: Message) => void };
 
 /** Typing a draft must not rebuild an unchanged conversation history. */
-export const MessageHistory = memo(forwardRef<HTMLDivElement, HistoryProps>(function MessageHistory({ data, conversation, person, typingIds = [], onReply }, ref) {
+export const MessageHistory = memo(forwardRef<HTMLDivElement, HistoryProps>(function MessageHistory({ data, conversation, person, onReply }, ref) {
   const readers = messageReaders(conversation);
   return <div className="chat-message-history" ref={ref}>
     <div className="chat-intro">
@@ -39,6 +38,5 @@ export const MessageHistory = memo(forwardRef<HTMLDivElement, HistoryProps>(func
         </ReplyableMessage>
       </div>;
     })}
-    <div className="chat-typing-slot"><TypingIndicator userIds={typingIds} people={data.people} group={conversation.kind === "group"} /></div>
   </div>;
 }));

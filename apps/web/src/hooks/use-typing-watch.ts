@@ -9,12 +9,15 @@ export function useTypingWatch(activeId: string | undefined, listKey: string) {
   useEffect(() => {
     const visible = new Set<string>();
     let timer: ReturnType<typeof setTimeout> | undefined;
+    let last = "";
     const publish = () => {
       clearTimeout(timer);
-      timer = setTimeout(() => {
-        if (document.hidden) watchConversation();
-        else watchConversation(activeId, [...visible]);
-      }, 80);
+      const active = document.hidden ? undefined : activeId;
+      const rows = document.hidden ? [] : [...visible];
+      const key = JSON.stringify([active, rows]);
+      if (key === last) return;
+      last = key;
+      watchConversation(active, rows);
     };
     const observer = new IntersectionObserver((entries) => {
       for (const entry of entries) {
@@ -22,7 +25,8 @@ export function useTypingWatch(activeId: string | undefined, listKey: string) {
         if (!id) continue;
         if (entry.isIntersecting) visible.add(id); else visible.delete(id);
       }
-      publish();
+      clearTimeout(timer);
+      timer = setTimeout(publish, 80);
     });
     document.querySelectorAll('[data-conversation-id]').forEach((row) => observer.observe(row));
     publish();

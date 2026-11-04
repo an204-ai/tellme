@@ -1,4 +1,5 @@
 "use client";
+import { playInterfaceSound } from "@/lib/interface-sounds";
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { ReactionIcon } from "@/components/ui/ReactionControl";
@@ -33,7 +34,10 @@ export function MomentReactionBurst({ storyId, moments, surface }: {
       seenReactions.set(key, counts);
       if (seenReactions.size > 250) seenReactions.delete(seenReactions.keys().next().value!);
     }
-    if (added.length) setBurst({ id: ++sequence.current, reactions: added });
+    if (added.length) {
+      setBurst({ id: ++sequence.current, reactions: added });
+      if (surface === "detail") playInterfaceSound("reactionBurst");
+    }
   }, [moments, storyId, surface]);
 
   return burst ? <MomentReactionFloaters key={burst.id} reactions={burst.reactions}

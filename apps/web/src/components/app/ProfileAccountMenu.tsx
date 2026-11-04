@@ -1,4 +1,5 @@
 "use client";
+import { playInterfaceSound } from "@/lib/interface-sounds";
 import { useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Flag, MoreHorizontal, ShieldOff } from "lucide-react";
@@ -33,6 +34,7 @@ export function ProfileAccountMenu({ person }: { person: Person }) {
           if (!authenticated()) return;
           try {
             await update((draft) => { if (!draft.blocked.includes(person.id)) draft.blocked.push(person.id); });
+            playInterfaceSound("blocked");
             notify(`Đã chặn ${person.name}. Bạn có thể bỏ chặn trong Cài đặt.`);
           } catch { /* useCommunity announces mutation errors. */ }
         }}><ShieldOff size={16} />Chặn tài khoản</button>
