@@ -117,6 +117,17 @@ AUTH_CODE_SECRET=RANDOM_SERVER_SECRET_AT_LEAST_32_CHARACTERS
 
 App Password lấy tại Google Account → Security → 2-Step Verification → App passwords. Bỏ khoảng trắng trình bày của App Password; mã hóa URL nếu thông tin đăng nhập chứa ký tự đặc biệt. Không đưa thông tin thật vào `.env.example` hoặc commit `.env`.
 
+### Giúp OTP vào hộp thư đến
+
+Mẫu OTP có cả HTML và plain text, nhưng mã nguồn không thể bảo đảm email sẽ vào Inbox: Gmail và các nhà cung cấp khác còn đánh giá xác thực domain gửi, uy tín domain/IP và phản hồi của người nhận. Khi dùng domain riêng:
+
+1. Xác minh `tellme.my` tại nhà cung cấp SMTP và dùng địa chỉ From cùng domain, ví dụ `noreply@tellme.my`.
+2. Thêm đúng các bản ghi SPF và DKIM do nhà cung cấp SMTP cấp vào DNS của domain. Nếu đã có SPF, hợp nhất nguồn gửi vào bản ghi hiện tại; không tạo thêm SPF thứ hai.
+3. Thêm DMARC ở `_dmarc.tellme.my`, bắt đầu với chính sách giám sát `p=none` và địa chỉ nhận báo cáo do bạn quản lý. Chỉ tăng mức xử lý sau khi đã xác nhận mọi nguồn gửi Tellme đều hợp lệ.
+4. Gửi thử đến Gmail, mở “Hiển thị thư gốc” và xác nhận SPF, DKIM, DMARC đều `PASS`; kiểm tra domain xác thực khớp với `EMAIL_FROM`.
+
+Không tự điền giá trị SPF/DKIM theo ví dụ trên mạng: các giá trị phải lấy từ đúng nhà cung cấp đang được đặt trong `SMTP_URL`. Google cũng khuyến nghị cấu hình SPF, DKIM, DMARC và căn chỉnh domain gửi; việc này giúp giảm khả năng vào spam nhưng không bảo đảm tuyệt đối [theo hướng dẫn gửi thư của Gmail](https://support.google.com/mail/answer/81126).
+
 `pnpm configure:vapid` tạo cặp khóa VAPID trong `.env` nếu chưa có, giữ nguyên cặp đã tồn tại. Khóa private chỉ dùng ở server/worker; bootstrap chỉ trả public key. Khởi động lại API và worker sau khi sửa .env. Trên web, vào Cài đặt → Thông báo trên thiết bị để cho phép thông báo. Máy chủ production cần HTTPS; iOS cần thêm web vào màn hình chính theo khả năng Web Push của thiết bị.
 
 Các kiểm tra bảo mật dùng database QA ngẫu nhiên và SMTP sink cục bộ, không gửi email tới địa chỉ thật.

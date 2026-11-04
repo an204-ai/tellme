@@ -25,6 +25,7 @@
 .daily-space .daily-compose:hover .daily-compose-action > span { text-decoration: none; }
 .guest-invitation > span { font-size: 16px; max-width: none; }
 .guest-invitation > a { min-height: 44px; font-size: 14px; }
+.guest-invitation-join-compact { display: none; }
 .daily-entry > .daily-caption { padding-left: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 .daily-entry-music { padding-left: 56px; }
 
@@ -109,8 +110,18 @@
   .daily-space .daily-compose-prompt { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; font-size: 15px; line-height: 1.5; }
   .daily-space .daily-compose-action { width: 44px; height: 44px; min-height: 44px; padding: 0; border-radius: 50%; color: var(--primary); }
   .daily-compose-action > span { display: none; }
-  .guest-invitation { flex-wrap: wrap; gap: 6px 12px; padding: 14px; }
-  .guest-invitation > span { font-size: 16px; }
-  .guest-invitation > a { font-size: 14px; margin-left: auto; }
+  .guest-invitation { flex-wrap: nowrap; gap: 8px; padding: 10px 12px; }
+  .guest-invitation > span { min-width: 0; max-width: none; overflow: hidden; font-size: 13px; line-height: 1.3; text-overflow: ellipsis; white-space: nowrap; }
+  .guest-invitation > a { flex: 0 0 auto; gap: 5px; min-height: 36px; margin-left: auto; font-size: 12px; white-space: nowrap; }
+  .guest-invitation-join-compact { display: none; }
   .daily-entry-music { padding-left: 47px; }
+}
+
+@media (max-width: 380px) {
+  .guest-invitation { gap: 6px; padding-inline: 9px; }
+  .guest-invitation > span { font-size: 12px; }
+  .guest-invitation-join-full { display: none; }
+  .guest-invitation-join-compact { display: inline; }
+  .guest-invitation > a { gap: 4px; font-size: 12px; }
+  .guest-invitation > a > svg { width: 14px; height: 14px; }
 }

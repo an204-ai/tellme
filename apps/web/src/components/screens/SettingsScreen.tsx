@@ -118,11 +118,11 @@ export function SettingsScreen() {
               />
             </div>
           ))}
-          {pushAvailable && (
+          {pushAvailable ? (
             <div className="setting-toggle-row">
               <div>
                 <strong>Thông báo trên thiết bị</strong>
-                <p>Nhận thông báo Tellme ngay cả khi bạn đang ở trang khác.</p>
+                <p>Nhận tin nhắn và lượt cảm xúc khi Tellme đang đóng hoặc chạy nền.</p>
               </div>
               <Switch
                 checked={pushEnabled}
@@ -131,7 +131,12 @@ export function SettingsScreen() {
                   setPushBusy(true);
                   let created: PushSubscription | undefined;
                   try {
+                    const isAppleMobile = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+                    const isInstalled = window.matchMedia("(display-mode: standalone)").matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
+                    if (checked && isAppleMobile && !isInstalled)
+                      throw new Error("Trên iPhone/iPad, hãy cài Tellme từ Safari vào Màn hình chính rồi mở biểu tượng Tellme để bật thông báo.");
                     const registration = await navigator.serviceWorker.register("/sw.js");
+                    await navigator.serviceWorker.ready;
                     const current = await registration.pushManager.getSubscription();
                     if (!checked) {
                       if (current) {
@@ -142,7 +147,9 @@ export function SettingsScreen() {
                       notify("Đã tắt thông báo trên thiết bị.");
                     } else {
                       const permission = Notification.permission === "granted" ? "granted" : await Notification.requestPermission();
-                      if (permission !== "granted") throw new Error("Bạn chưa cho phép thông báo trên trình duyệt.");
+                      if (permission !== "granted") throw new Error(isAppleMobile
+                        ? "Thông báo đang bị từ chối. Hãy bật quyền Thông báo cho Tellme trong Cài đặt iPhone."
+                        : "Bạn chưa cho phép thông báo trên trình duyệt.");
                       const base64Key = data.features!.pushPublicKey!.replace(/-/g, "+").replace(/_/g, "/");
                       const key = Uint8Array.from(atob(base64Key + "=".repeat((4 - base64Key.length % 4) % 4)), (char) => char.charCodeAt(0));
                       const subscription = current || await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
@@ -160,6 +167,15 @@ export function SettingsScreen() {
                 }}
                 label="Thông báo trên thiết bị"
               />
+            </div>
+          ) : (
+            <div className="setting-toggle-row">
+              <div>
+                <strong>Thông báo trên thiết bị</strong>
+                <p>{data.features?.pushPublicKey
+                  ? "Trình duyệt hoặc thiết bị này chưa hỗ trợ Web Push. Trên iPhone, hãy mở bản Tellme đã cài từ Safari trên Màn hình chính."
+                  : "Máy chủ chưa cấu hình Web Push. Cần khai báo cặp khóa VAPID trong môi trường production để bật thông báo ngoài ứng dụng."}</p>
+              </div>
             </div>
           )}
         </section>

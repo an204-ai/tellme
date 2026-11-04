@@ -14,6 +14,7 @@ import {
   canViewMoment,
   visibility,
   personDTO,
+  notify,
 } from "../../backend/domain.js";
 import { normalizeReaction } from "../../backend/social-assets.js";
 import * as v from "../../backend/validation.js";
@@ -218,14 +219,18 @@ export function registerStoryRoutes(api: Hono<Env>) {
     if (reaction && story.userId === me._id) fail(403, "Bạn không thể thả cảm xúc vào khoảnh khắc của mình.");
     if (!(await canViewMoment(story, momentId, me)))
       fail(404, "Khoảnh khắc không tồn tại hoặc bạn không có quyền xem.");
+    const previouslyReacted = Boolean(story.items.find((item) => item.id === momentId)?.reactions[me._id]);
     const result = await stories.updateOne(
       { _id: story._id, "items.id": momentId },
       reaction
         ? { $set: { [`items.$.reactions.${me._id}`]: reaction } }
         : { $unset: { [`items.$.reactions.${me._id}`]: "" } },
     );
-    if (result.modifiedCount && story.userId !== me._id)
+    if (result.modifiedCount && story.userId !== me._id) {
       void publishUpdate([story.userId], "story.reactions", { storyId: story._id, momentId });
+      if (reaction && !previouslyReacted)
+        void notify(story.userId, me._id, "đã bày tỏ cảm xúc về khoảnh khắc của bạn.", undefined, "like", undefined, { storyId: story._id, momentId }).catch(() => undefined);
+    }
     return c.json({ ok: true });
   });
 }

@@ -14,18 +14,30 @@ export async function deliverNotification(data: Record<string, unknown>, id: str
   const [recipient, actor] = await Promise.all([users.findOne({ _id: recipientId }), users.findOne({ _id: userId })]);
   if (!recipient || !actor || recipientId === userId || recipient.blocked.includes(userId) || actor.blocked.includes(recipientId)) return;
   if (!(data.kind === "message" ? recipient.settings.notifyMessages : recipient.settings.notifyLikes)) return;
-  await notices.updateOne({ _id: id }, { $setOnInsert: { recipientId, userId, text: String(data.text), read: false, at: String(data.at), kind: data.kind === "message" ? "message" : "like", ...(data.postId ? { postId: String(data.postId) } : {}) } }, { upsert: true });
+  await notices.updateOne({ _id: id }, { $setOnInsert: { recipientId, userId, text: String(data.text), read: false, at: String(data.at), kind: data.kind === "message" ? "message" : "like", ...(data.postId ? { postId: String(data.postId) } : {}), ...(data.storyId ? { storyId: String(data.storyId) } : {}), ...(data.momentId ? { momentId: String(data.momentId) } : {}), ...(data.conversationId ? { conversationId: String(data.conversationId) } : {}) } }, { upsert: true });
   await publishUpdate([recipientId], "notifications", { noticeId: id });
-  if (config.VAPID_PRIVATE_KEY && config.VAPID_PUBLIC_KEY) await enqueue("notification.push", { recipientId, noticeId: id }, { id: `push-${id}` });
+  if (config.VAPID_PRIVATE_KEY && config.VAPID_PUBLIC_KEY && await pushSubscriptions.findOne({ userId: recipientId }, { projection: { _id: 1 } }))
+    await enqueue("notification.push", { recipientId, noticeId: id }, { id: `push-${id}` });
 }
 // Retained to drain old queued jobs without sending interaction emails.
 export async function sendEmail(_data: Record<string, unknown>, _id: string) { return; }
 export async function sendPush(data: Record<string, unknown>) {
-  if (!config.VAPID_PRIVATE_KEY || !config.VAPID_PUBLIC_KEY) throw new Error("Web Push is not configured");
+  if (!config.VAPID_PRIVATE_KEY || !config.VAPID_PUBLIC_KEY) return;
   const recipient = await users.findOne({ _id: String(data.recipientId) });
   const notice = await notices.findOne({ _id: String(data.noticeId), recipientId: recipient?._id });
-  if (!recipient || !notice || !(notice.kind === "message" ? recipient.settings.notifyMessages : recipient.settings.notifyLikes)) return;
-  await pushToUser(recipient._id, { title: "Tellme", body: "Bạn có thông báo mới.", url: "/community/today", tag: String(data.noticeId) });
+  if (!recipient || !notice || notice.read || !(notice.kind === "message" ? recipient.settings.notifyMessages : recipient.settings.notifyLikes)) return;
+  const actor = await users.findOne({ _id: notice.userId }, { projection: { name: 1, blocked: 1 } });
+  if (!actor || recipient.blocked.includes(actor._id) || actor.blocked.includes(recipient._id)) return;
+  const url = notice.conversationId
+    ? `/community/messages/${encodeURIComponent(notice.conversationId)}`
+    : notice.postId ? `/post/${encodeURIComponent(notice.postId)}` : "/community/today";
+  const tagContext = notice.kind === "message" ? notice.conversationId || actor._id : actor._id;
+  await pushToUser(recipient._id, {
+    title: actor.name,
+    body: notice.text,
+    url,
+    tag: `tellme-${notice.kind || "like"}-${recipient._id}-${tagContext}`.slice(0, 100),
+  });
 }
 export async function pushToUser(userId: string, payload: { title: string; body: string; url: string; tag: string; icon?: string }, ttl = 3600) {
   if (!config.VAPID_PRIVATE_KEY || !config.VAPID_PUBLIC_KEY) return;

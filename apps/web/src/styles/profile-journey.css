@@ -34,10 +34,9 @@
 .journey-navigation button:disabled { opacity: .35; cursor: default; }
 .journey-month { display: grid; grid-template-rows: max-content minmax(0, 1fr); height: 100%; width: 100%; min-height: 0; min-width: 0; }
 .journey-month-meta { display: flex; align-items: center; justify-content: center; gap: 8px; min-width: 0; padding-inline: 4px; color: #586982; font-size: 11px; line-height: 1.5; text-align: center; }
-.journey-month-meta.is-empty { display: none; }
 .journey-month-meta > span { min-width: 0; }
 .journey-status { display: flex; align-items: center; gap: 12px; }
-.journey-status button, .journey-add { display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex-shrink: 0; min-height: 30px; padding: 4px 8px; border: 0; border-radius: 99px; background: var(--primary); color: white; cursor: pointer; font: inherit; font-size: 11px; }
+.journey-status button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex-shrink: 0; min-height: 30px; padding: 4px 8px; border: 0; border-radius: 99px; background: var(--primary); color: white; cursor: pointer; font: inherit; font-size: 11px; }
 .journey-month-stage { position: relative; z-index: 1; min-width: 0; min-height: 0; width: 100%; overflow: hidden; border-radius: 14px; touch-action: pan-y pinch-zoom; user-select: none; -webkit-user-select: none; }
 .journey-month-track { position: relative; width: 100%; height: 100%; transform: translate3d(var(--journey-offset, 0px), 0, 0); }
 .journey-month-page { position: absolute; top: 0; width: 100%; height: 100%; background: #fff; }
@@ -69,7 +68,7 @@
 .journey-stop:not(.is-empty):is(:hover, :focus-visible, :active, .is-selected) .journey-stop-image { box-shadow: 0 10px 20px #07327f30; }
 .journey-stop:focus-visible { outline: none; }
 .journey-stop:focus-visible .journey-stop-image { outline: 2px solid var(--primary); outline-offset: 3px; }
-.journey-navigation button:focus-visible, .journey-add:focus-visible, .journey-status button:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+.journey-navigation button:focus-visible, .journey-status button:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
 .journey-corner { position: absolute; z-index: auto; bottom: -1px; width: clamp(116px, 25%, 190px); height: 64px; pointer-events: none; }
 .journey-corner-left { left: -1px; }
 .journey-corner-right { right: -1px; }

@@ -1,5 +1,4 @@
 "use client";
-import { BRAND_DESCRIPTION } from "@/lib/brand";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -74,8 +73,7 @@ export function AuthScreen({ register = false }: { register?: boolean }) {
             <br />
             <strong>chuyện để kể.</strong>
           </h1>
-          <p>{BRAND_DESCRIPTION}</p>
-          <span>Your day. Your stories.</span>
+          <p>Chuyện đi làm, kể Tellme nghe.</p>
         </div>
       </section>
       <section className="auth-form-area">
@@ -86,8 +84,8 @@ export function AuthScreen({ register = false }: { register?: boolean }) {
             </div>
             <p className="auth-description">
               {register
-                ? "Tạo tài khoản để lưu ảnh, kể chuyện đi làm và làm quen."
-                : "Hôm nay đi làm thế nào? Vào kể một chút nhé."}
+                ? "Tạo tài khoản để kể chuyện đi làm."
+                : "Đăng nhập để tiếp tục."}
             </p>
             <form className="form" onSubmit={submit} noValidate>
               {register && (

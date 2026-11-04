@@ -144,6 +144,9 @@ export interface Notice {
   read: boolean;
   at: string;
   postId?: string;
+  storyId?: string;
+  momentId?: string;
+  conversationId?: string;
   groupCount?: number;
   unreadCount?: number;
 }

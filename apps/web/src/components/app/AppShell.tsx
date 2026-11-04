@@ -3,7 +3,7 @@ import { useChatViewport } from "@/hooks/use-chat-viewport";
 import Link from "next/link";
 import { WeatherWidget } from "@/components/weather/WeatherWidget";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ArrowUpRight,
   Archive,
@@ -164,6 +164,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { data, error, refetch } = useCommunity();
   const queryClient = useQueryClient();
+  const [compactNavigation, setCompactNavigation] = useState(false);
+  const compactNavigationRef = useRef(false);
+  const navigationScrollTargetRef = useRef<EventTarget | null>(null);
+  const navigationScrollYRef = useRef(0);
+  const navigationInteractionAtRef = useRef(0);
   useEffect(() => {
     if (error instanceof ApiError && error.status === 401)
       router.replace(`/auth/login?next=${encodeURIComponent(pathname)}`);
@@ -171,6 +176,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { search, setSearch } = useAppStore();
   const searchRef = useRef<HTMLInputElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
+  const setNavigationCompact = useCallback((compact: boolean) => {
+    if (compactNavigationRef.current === compact) return;
+    compactNavigationRef.current = compact;
+    setCompactNavigation(compact);
+  }, []);
+  const expandNavigation = useCallback(() => {
+    setNavigationCompact(false);
+    navigationScrollTargetRef.current = null;
+    navigationScrollYRef.current = 0;
+    navigationInteractionAtRef.current = performance.now();
+  }, [setNavigationCompact]);
   const navigation = usePageNavigation(pathname);
   const selectionPath = navigation.pendingHref?.split("?")[0] || pathname;
   const me = data?.people.find((person) => person.id === "me");
@@ -222,8 +238,63 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("keydown", handler);
   }, [router]);
   useEffect(() => {
+    expandNavigation();
     window.scrollTo({ top: 0, behavior: "instant" });
-  }, [pathname]);
+  }, [pathname, expandNavigation]);
+  useEffect(() => {
+    const mobile = window.matchMedia("(max-width: 640px)");
+    const onScroll = (event: Event) => {
+      if (!mobile.matches) {
+        setNavigationCompact(false);
+        return;
+      }
+      const target = event.target;
+      let scroller: HTMLElement | null = null;
+      let y = 0;
+      if (target === window || target === document || target === document.documentElement || target === document.body) {
+        y = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop;
+        scroller = document.documentElement;
+      } else if (target instanceof HTMLElement) {
+        if (target.closest("dialog, [popover], .notifications-popover-list, .emoji-popover")) return;
+        scroller = target.matches(".pull-refresh-viewport, .chat-messages, .main-content")
+          ? target
+          : target.closest<HTMLElement>(".pull-refresh-viewport, .chat-messages, .main-content");
+        if (!scroller || scroller.scrollHeight <= scroller.clientHeight + 2) return;
+        y = scroller.scrollTop;
+      } else return;
+
+      // Ignore route-change scroll restoration immediately after selecting a tab.
+      if (performance.now() - navigationInteractionAtRef.current < 350) {
+        navigationScrollTargetRef.current = scroller;
+        navigationScrollYRef.current = y;
+        return;
+      }
+      if (scroller !== navigationScrollTargetRef.current) {
+        navigationScrollTargetRef.current = scroller;
+        navigationScrollYRef.current = y;
+        if (y > 36) setNavigationCompact(true);
+        return;
+      }
+      const delta = y - navigationScrollYRef.current;
+      navigationScrollYRef.current = y;
+      if (delta !== 0) {
+        setNavigationCompact(true);
+      }
+    };
+    const resetViewport = () => {
+      navigationScrollTargetRef.current = null;
+      navigationScrollYRef.current = 0;
+      setNavigationCompact(false);
+    };
+    document.addEventListener("scroll", onScroll, { passive: true, capture: true });
+    window.addEventListener("scroll", onScroll, { passive: true });
+    mobile.addEventListener("change", resetViewport);
+    return () => {
+      document.removeEventListener("scroll", onScroll, true);
+      window.removeEventListener("scroll", onScroll);
+      mobile.removeEventListener("change", resetViewport);
+    };
+  }, [setNavigationCompact]);
   useEffect(() => {
     const dismiss = (event: MouseEvent) => {
       const target = event.target as Element;
@@ -449,7 +520,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </main>
         {!fullSection && data && <SupportRail data={data} />}
       </div>
-      <nav className="mobile-nav" aria-label="Điều hướng di động" data-has-active={mobileIndex >= 0}>
+      <nav className="mobile-nav" aria-label="Điều hướng di động" data-has-active={mobileIndex >= 0} data-compact={compactNavigation} onClickCapture={expandNavigation} onFocusCapture={expandNavigation}>
         <LiquidNavigation pathname={selectionPath} className="mobile-nav-track">
           {mobileNavigation.map((item, index) => (
               <Link

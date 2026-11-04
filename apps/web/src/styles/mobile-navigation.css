@@ -1,9 +1,10 @@
 /* Adapted from the owner's radio/glider sample; anchors retain real route navigation. */
 @media (max-width: 640px) {
+  .messages-frame[data-keyboard-open="true"] { --site-header-height: 0px; }
   .mobile-nav {
     position: fixed;
     z-index: 40;
-    inset: auto 12px calc(12px + env(safe-area-inset-bottom));
+    inset: auto 12px max(4px, calc(env(safe-area-inset-bottom) - 8px));
     width: calc(100% - 24px);
     max-width: 480px;
     min-height: 0;
@@ -14,7 +15,9 @@
     border-radius: 999px;
     background: #fff;
     box-shadow: 0 6px 18px #07327f24;
+    transition: padding 190ms cubic-bezier(.2, .75, .25, 1), box-shadow 190ms ease;
   }
+  .mobile-nav[data-compact="true"] { padding: 4px 6px; box-shadow: 0 4px 12px #07327f20; }
   .mobile-nav-track {
     position: relative;
     display: grid;
@@ -40,8 +43,11 @@
     text-decoration: none;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
-    transition: color 150ms ease-out;
+    transition: color 150ms ease-out, min-height 190ms cubic-bezier(.2, .75, .25, 1), gap 190ms ease, padding 190ms ease;
   }
+  .mobile-nav[data-compact="true"] .mobile-nav-track > a { min-height: 38px; gap: 1px; padding: 2px; }
+  .mobile-nav[data-compact="true"] .mobile-nav-track > a svg { width: 20px; height: 20px; }
+  .mobile-nav[data-compact="true"] .mobile-nav-label { font-size: clamp(9px, 2.6vw, 11px); }
   .mobile-nav-track > a.active { color: #07327f; }
   .mobile-nav-track > a:focus-visible { outline: 2px solid #07327f; outline-offset: -3px; }
   .mobile-nav-label { white-space: nowrap; font-size: clamp(10px, 2.9vw, 12px); letter-spacing: -.01em; }
@@ -66,11 +72,12 @@
   /* The same floating pill on every route; reserve space in the scroll content. */
   .messages-frame > .mobile-nav {
     position: fixed;
-    inset: auto 12px calc(12px + env(safe-area-inset-bottom));
+    inset: auto 12px max(4px, calc(env(safe-area-inset-bottom) - 8px));
     width: calc(100% - 24px);
     margin: 0 auto;
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  .mobile-nav,
   .mobile-nav-track > a { transition: none; }
 }

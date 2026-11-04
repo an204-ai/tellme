@@ -3,7 +3,7 @@
 import { useCallback, useContext, useEffect, useId, useState } from "react";
 import { X } from "lucide-react";
 import { Button, IconButton } from "@/components/ui/Primitives";
-import { getInstallPlatform, installInstructions } from "@/lib/install-tellme";
+import { getInstallPlatform, installBannerDescription, installInstructions } from "@/lib/install-tellme";
 import { InstallContext } from "@/providers/InstallProvider";
 import { useBrandIntroFinished } from "./BrandIntro";
 import styles from "./InstallTellmeBanner.module.css";
@@ -48,8 +48,11 @@ export function InstallTellmeBanner() {
     <section className={styles.banner} aria-labelledby={headingId}>
       <img className={styles.icon} src="/brand/app-icons/tellme-192.png" width={44} height={44} alt="" />
       <div className={styles.copy}>
-        <h2 id={headingId}>Cài ứng dụng Tellme</h2>
-        <p>{platform === "desktop" ? "Mở Tellme trong cửa sổ riêng." : "Mở Tellme ngay từ màn hình chính."}</p>
+        <h2 id={headingId}>
+          <span className={styles.desktopTitle}>Cài ứng dụng Tellme</span>
+          <span className={styles.mobileTitle}>Thêm Tellme</span>
+        </h2>
+        <p>{installBannerDescription(platform)}</p>
       </div>
       <Button
         className={styles.action}
@@ -66,7 +69,8 @@ export function InstallTellmeBanner() {
           else if (!outcome) setGuideOpen(true);
         }}
       >
-        {guideOpen && !canPrompt ? "Ẩn hướng dẫn" : "Cài Tellme"}
+        <span className={styles.desktopAction}>{guideOpen && !canPrompt ? "Ẩn hướng dẫn" : "Cài Tellme"}</span>
+        <span className={styles.mobileAction}>{guideOpen && !canPrompt ? "Đóng" : "Cài"}</span>
       </Button>
       <IconButton className={styles.close} label="Đóng lời mời cài Tellme" tooltip={false} onClick={dismiss}>
         <X size={18} />

@@ -166,6 +166,9 @@ export interface Notice {
   read: boolean;
   at: string;
   postId?: string;
+  storyId?: string;
+  momentId?: string;
+  conversationId?: string;
   kind?: "like" | "message";
 }
 export interface Media {

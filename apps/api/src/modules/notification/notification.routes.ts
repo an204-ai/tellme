@@ -42,7 +42,7 @@ export function registerNotificationRoutes(api: Hono<Env>) {
       { $limit: limit + 1 },
       { $project: {
         _id: "$latest._id", userId: "$latest.userId", kind: { $ifNull: ["$latest.kind", "like"] },
-        text: "$latest.text", at: "$latest.at", postId: "$latest.postId", groupCount: 1, unreadCount: 1,
+        text: "$latest.text", at: "$latest.at", postId: "$latest.postId", storyId: "$latest.storyId", momentId: "$latest.momentId", conversationId: "$latest.conversationId", groupCount: 1, unreadCount: 1,
       } },
     ];
     const [rows, olderCount, systemNotices] = await Promise.all([
@@ -56,6 +56,9 @@ export function registerNotificationRoutes(api: Hono<Env>) {
       text: String(row.text), at: String(row.at), read: Number(row.unreadCount) === 0,
       groupCount: Number(row.groupCount), unreadCount: Number(row.unreadCount),
       ...(row.postId ? { postId: String(row.postId) } : {}),
+      ...(row.storyId ? { storyId: String(row.storyId) } : {}),
+      ...(row.momentId ? { momentId: String(row.momentId) } : {}),
+      ...(row.conversationId ? { conversationId: String(row.conversationId) } : {}),
     }));
     const systems = systemNotices.map((notice) => ({ ...notice, groupCount: 1, unreadCount: Number(!notice.read) }));
     const items = [...groups, ...systems].sort((a, b) => b.at.localeCompare(a.at));

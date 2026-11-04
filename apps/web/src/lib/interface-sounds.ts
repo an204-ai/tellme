@@ -1,5 +1,5 @@
 const storageKey = "tellme:interface-sounds";
-const volume = .22;
+const volume = .30;
 const listeners = new Set<() => void>();
 let enabled = true;
 let audio: AudioContext | undefined;

@@ -7,12 +7,15 @@ self.addEventListener("push", (event) => {
   }
   const title = typeof payload.title === "string" ? payload.title.slice(0, 80) : "Tellme";
   const body = typeof payload.body === "string" ? payload.body.slice(0, 180) : "Bạn có thông báo mới.";
-  event.waitUntil(self.registration.showNotification(title, {
-    body,
-    tag: typeof payload.tag === "string" ? payload.tag.slice(0, 100) : "tellme-notice",
-    icon: typeof payload.icon === "string" && ["/brand/logos/tellme-symbol-on-light.png", "/images/reactions/like.png"].includes(payload.icon) ? payload.icon : "/brand/logos/tellme-symbol-on-light.png",
-    badge: "/brand/logos/tellme-symbol-on-light.png",
-    data: { url: typeof payload.url === "string" ? payload.url : "/community/today" },
+  event.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+    if (clients.some((client) => client.visibilityState === "visible")) return;
+    return self.registration.showNotification(title, {
+      body,
+      tag: typeof payload.tag === "string" ? payload.tag.slice(0, 100) : "tellme-notice",
+      icon: typeof payload.icon === "string" && ["/brand/logos/tellme-symbol-on-light.png", "/images/reactions/like.png"].includes(payload.icon) ? payload.icon : "/brand/logos/tellme-symbol-on-light.png",
+      badge: "/brand/logos/tellme-symbol-on-light.png",
+      data: { url: typeof payload.url === "string" ? payload.url : "/community/today" },
+    });
   }));
 });
 

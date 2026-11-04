@@ -196,6 +196,7 @@ export async function notify(
   postId?: string,
   kind: "like" | "message" = "like",
   messageContext?: { messageId: string; conversationId: string; at: string },
+  storyContext?: { storyId: string; momentId: string },
 ) {
   if (recipientId === userId) return;
   const recipient = await users.findOne({ _id: recipientId });
@@ -214,6 +215,8 @@ export async function notify(
     read: false,
     at: messageContext?.at || now(),
     ...(postId ? { postId } : {}),
+    ...(storyContext ? storyContext : {}),
+    ...(messageContext ? { conversationId: messageContext.conversationId } : {}),
     kind,
   }, messageContext ? { id: `message-${messageContext.messageId}-${recipientId}` } : {});
 }

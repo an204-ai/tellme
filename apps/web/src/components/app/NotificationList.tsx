@@ -78,6 +78,8 @@ export function NotificationList({ active, onNavigate, fullPage = false }: { act
         const person = community?.people.find((entry) => entry.id === notice.userId);
         const destination = notice.kind === "system" ? notice.url || "/community/today" : notice.postId
           ? `/post/${notice.postId}`
+          : notice.conversationId ? `/community/messages/${encodeURIComponent(notice.conversationId)}`
+          : notice.storyId ? "/community/today"
           : person?.username ? `/community/profile/${person.username}` : "/community/notifications";
         const unreadCount = notice.unreadCount ?? Number(!notice.read);
         return <Link

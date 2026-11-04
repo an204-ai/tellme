@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Camera, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { apiRepository } from "@/lib/api-repository";
 import { localDay } from "@/lib/validation";
 import { enableMonthSwipe } from "@/lib/month-swipe";
@@ -91,8 +91,8 @@ function monthRoute(month: string, width: number, height: number) {
   return { points: best.points, path, size: Math.max(14, Math.floor(best.size)), width, height };
 }
 
-function MonthMap({ month, personId, isMe, onBounds }: {
-  month: string; personId: string; isMe: boolean; onBounds: (firstDay: string) => void;
+function MonthMap({ month, personId, onBounds }: {
+  month: string; personId: string; onBounds: (firstDay: string) => void;
 }) {
   const root = useRef<HTMLDivElement>(null);
   const map = useRef<HTMLDivElement>(null);
@@ -100,7 +100,6 @@ function MonthMap({ month, personId, isMe, onBounds }: {
   const [nearby, setNearby] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const viewStory = useAppStore((state) => state.viewStory);
-  const open = useAppStore((state) => state.open);
   const query = useQuery({
     queryKey: ["tellme", "stories", "journey", personId, month],
     queryFn: () => apiRepository.getJourneyMonth(personId, month),
@@ -130,12 +129,8 @@ function MonthMap({ month, personId, isMe, onBounds }: {
   const days = query.data?.days || [];
   const savedDays = new Map(days.map((day) => [day.day, day]));
   const route = useMemo(() => monthRoute(month, bounds.width, bounds.height), [month, bounds.width, bounds.height]);
-  const canAddMoment = isMe && !!query.data && !days.length && month === localDay().slice(0, 7);
   return <div ref={root} className="journey-month" role="group" aria-label={monthLabel(month)}>
-    <div className={`journey-month-meta${query.isError || canAddMoment ? "" : " is-empty"}`}>
-      {query.isError && <span className="journey-status" role="alert">Chưa tải được ảnh.<button type="button" onClick={() => void query.refetch()}>Thử lại</button></span>}
-      {canAddMoment && <button className="journey-add" type="button" onClick={() => open("moment")}><Camera size={15} />Chụp ảnh</button>}
-    </div>
+    {query.isError && <div className="journey-month-meta"><span className="journey-status" role="alert">Chưa tải được ảnh.<button type="button" onClick={() => void query.refetch()}>Thử lại</button></span></div>}
     <div ref={map} className="journey-map" style={{ "--journey-stop-size": `${route.size}px` } as CSSProperties} aria-busy={query.isFetching}>
         <svg className="journey-road" viewBox={`0 0 ${route.width} ${route.height}`} preserveAspectRatio="none" aria-hidden="true">
           <path d={route.path} fill="none" stroke="currentColor" strokeWidth="5" strokeDasharray="3 15" vectorEffect="non-scaling-stroke" strokeLinecap="round" />
@@ -216,7 +211,7 @@ export function ProfileJourney({ personId, isMe }: { personId: string; isMe: boo
               <img src="/brand/stickers/tellme-wait.png" alt="" aria-hidden="true" width="112" height="112" draggable={false} />
               <h3>Tháng mới, mình lại có chuyện để kể.</h3>
               <p>Những khoảnh khắc tiếp theo sẽ ở đây.<br />Cứ sống ngày của bạn, rồi kể Tellme nghe nhé.</p>
-            </div> : <MonthMap month={pageMonth} personId={personId} isMe={isMe} onBounds={setFirstMonth} />}
+            </div> : <MonthMap month={pageMonth} personId={personId} onBounds={setFirstMonth} />}
           </div>;
         })}
       </div>
