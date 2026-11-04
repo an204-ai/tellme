@@ -9,6 +9,7 @@ import { Camera, Music2, Plus } from "lucide-react";
 import { useStoryPages } from "@/hooks/use-posts";
 import { InfiniteTrigger } from "@/components/app/InfiniteTrigger";
 import { GuestInvitation } from "@/components/app/GuestInvitation";
+import { InstallTellmeBanner } from "@/components/app/InstallTellmeBanner";
 import { StoryMenu } from "@/components/app/StoryMenu";
 import { TodayStoryHighlights } from "@/components/app/TodayStoryHighlights";
 import { DAILY_TITLE, workplaceCopy } from "@/lib/brand";
@@ -45,6 +46,7 @@ export function TodayScreen({ onlyMine = false }: { onlyMine?: boolean }) {
   return (
     <PullToRefresh onRefresh={refreshTimeline}><div className="daily-space">
       <h1 className="sr-only">{DAILY_TITLE}</h1>
+      {!onlyMine && <InstallTellmeBanner />}
       {data.authenticated === false ? <GuestInvitation next="/community/today" /> : <button type="button" className="daily-compose" aria-label="Chụp khoảnh khắc hôm nay" onClick={() => open("moment")}>
         <Avatar person={me} />
         <span className="daily-compose-field">

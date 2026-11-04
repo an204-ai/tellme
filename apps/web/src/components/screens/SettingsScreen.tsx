@@ -1,6 +1,7 @@
 "use client";
 import { AccountSecurity } from "@/components/app/AccountSecurity";
 import { AccountBlockPicker } from "@/components/app/AccountBlockPicker";
+import { InstallTellmeSetting } from "@/components/app/InstallTellmeSetting";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { playInterfaceSound, getDefaultInterfaceSoundsEnabled, getInterfaceSoundsEnabled, setInterfaceSoundsEnabled, subscribeToInterfaceSounds } from "@/lib/interface-sounds";
 import {
@@ -189,6 +190,7 @@ export function SettingsScreen() {
               label="Giảm chuyển động"
             />
           </div>
+          <InstallTellmeSetting />
         </section>
         </div>
         <section className="settings-section settings-blocking">

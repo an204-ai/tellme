@@ -1,5 +1,6 @@
 "use client";
 import { PullToRefresh } from "@/components/ui/PullToRefresh";
+import { InstallTellmeBanner } from "@/components/app/InstallTellmeBanner";
 import { useWeather } from "@/providers/WeatherProvider";
 import { weatherVoice } from "@/lib/weather";
 import { useTimelineRefresh } from "@/hooks/use-timeline-refresh";
@@ -42,6 +43,7 @@ export function FeedScreen() {
   return (
     <PullToRefresh onRefresh={refreshTimeline}>
       <h1 className="sr-only">{FEED_TITLE}</h1>
+      <InstallTellmeBanner />
       {data.authenticated === false ? <GuestInvitation next="/community/feed" /> : <section className="feed-composer" aria-label="Tạo bài viết">
         <div className="composer-prompt">
           <Avatar person={me} />

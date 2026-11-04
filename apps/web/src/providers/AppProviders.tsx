@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { enableInterfaceSoundGestures } from "@/lib/interface-sounds";
 import { WeatherProvider } from "./WeatherProvider";
+import { InstallProvider } from "./InstallProvider";
 export function AppProviders({ children }: { children: React.ReactNode }) {
   useEffect(enableInterfaceSoundGestures, []);
   const [client] = useState(
@@ -15,5 +16,9 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
         },
       }),
   );
-  return <QueryClientProvider client={client}><WeatherProvider>{children}</WeatherProvider></QueryClientProvider>;
+  return (
+    <QueryClientProvider client={client}>
+      <InstallProvider><WeatherProvider>{children}</WeatherProvider></InstallProvider>
+    </QueryClientProvider>
+  );
 }

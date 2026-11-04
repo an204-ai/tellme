@@ -1,0 +1,54 @@
+.banner {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 0 0 16px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--primary-tint);
+}
+
+.icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 9px;
+}
+
+.copy h2 {
+  color: var(--primary);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.copy p,
+.guide {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.guide {
+  grid-column: 2 / -1;
+  padding-block-start: 8px;
+  border-block-start: 1px solid var(--line);
+}
+
+@media (max-width: 640px) {
+  .banner {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    margin-inline: 12px;
+  }
+
+  .action {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .close {
+    grid-area: 1 / 3;
+    align-self: start;
+  }
+}
