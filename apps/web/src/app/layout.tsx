@@ -31,6 +31,8 @@ import "../styles/themes.css";
 import "../styles/theme-switch.css";
 import "../styles/story-stack.css";
 import "../styles/profile-close.css";
+import "../styles/founding-members.css";
+import "../styles/moment-layout.css";
 export async function generateViewport(): Promise<Viewport> {
   const dark = (await cookies()).get("tellme_theme")?.value === "dark";
   return { width: "device-width", initialScale: 1, viewportFit: "cover", interactiveWidget: "resizes-content", themeColor: dark ? "#102238" : "#dceafa" };

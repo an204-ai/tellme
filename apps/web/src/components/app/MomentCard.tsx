@@ -104,7 +104,7 @@ export function MomentCard({ moment, behind, previous, next, discovered, onDisco
     }).catch(() => {});
   };
   return <article className="now-moment now-fixed-moment">
-    <div className={`now-photo-stack ${behind ? "has-next-photo" : ""}`}>
+    <div className="now-photo-stack">
       {behind && <img className="now-next-preview" src={behind.item.image} alt="" draggable={false} />}
       <div className="now-photo">
         <button ref={surface} type="button" className="now-photo-surface" aria-label={inViewer ? behind ? "Xem ảnh tiếp theo trong ngày" : "Xem xong ngày này" : "Xem ảnh cũ hơn"} aria-describedby={hintId} aria-keyshortcuts="ArrowLeft ArrowRight" disabled={busy} aria-busy={busy}

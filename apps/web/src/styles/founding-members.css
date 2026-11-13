@@ -1,0 +1,44 @@
+.founding-mark { display: inline-flex; flex: 0 0 auto; vertical-align: middle; }
+.founding-badge { position: relative; display: inline-flex; align-items: center; gap: 4px; border: 0; border-radius: 10px; padding: 4px 7px; background: #fae8b9; color: #624306; font: 900 11px/1.3 "Nunito", sans-serif; white-space: nowrap; cursor: pointer; }
+.founding-badge::after { content: ""; position: absolute; inset: -13px -3px; }
+.founding-badge:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+.founding-note { position: fixed; inset: auto 0 max(112px, calc(env(safe-area-inset-bottom) + 94px)); margin: 0 auto; width: min(300px, calc(100vw - 32px)); padding: 22px; border: 0; border-radius: 22px; background: var(--paper); color: var(--ink); box-shadow: 0 12px 36px #07162b30; text-align: left; }
+.founding-note:popover-open { display: grid; gap: 12px; }
+.founding-note > svg { color: #aa7414; }
+.founding-note strong { font: 900 20px/1.3 "Nunito", sans-serif; }
+.founding-note > span { font: 700 14px/1.7 "Nunito", sans-serif; }
+.founding-note::backdrop { background: #07162b18; }
+[data-theme="dark"] .founding-badge { background: #f0ce79; color: #392900; }
+[data-theme="dark"] .founding-note > svg { color: #f0ce79; }
+.profile-handle-line { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 9px; margin-top: 7px; }
+.profile-handle-line .profile-handle { margin-top: 0; min-width: 0; max-width: 100%; }
+
+/* A fine gold orbit and a soft star identify founding avatars without a numeric label. */
+.avatar.avatar-founding { overflow: visible; }
+.avatar-founding::before { content: ""; position: absolute; inset: -3px; border: 1.5px solid #d4a83f; border-radius: inherit; pointer-events: none; z-index: 2; }
+.avatar-founding-star { position: absolute; top: -6px; right: -5px; width: 36%; height: 36%; min-width: 13px; min-height: 13px; max-width: 22px; max-height: 22px; z-index: 4; filter: drop-shadow(0 1px 2px #5a400e44); pointer-events: none; }
+.avatar-founding-star > img { display: block; width: 100%; height: 100%; object-fit: contain; }
+[data-theme="dark"] .avatar-founding::before { border-color: #edca70; }
+.app-dialog.founding-welcome { width: 100vw; max-width: none; height: 100dvh; max-height: none; margin: 0; padding: max(16px, env(safe-area-inset-top)) 20px max(16px, env(safe-area-inset-bottom)); border: 0; border-radius: 0; background: transparent; color: #fff; overflow: hidden; }
+.app-dialog.founding-welcome::backdrop { background: #081729e8; backdrop-filter: blur(9px); }
+.app-dialog.founding-welcome > .dialog-content { width: min(100%, 440px); height: 100%; max-height: none; margin: auto; padding: 0; border: 0; border-radius: 0; background: transparent; color: #fff; box-shadow: none; display: flex; flex-direction: column; overflow: visible; }
+.app-dialog.founding-welcome .dialog-header { padding: 0; border: 0; background: transparent; justify-content: flex-end; }
+.founding-welcome .dialog-header h2 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.app-dialog.founding-welcome .dialog-header .icon-button { background: #ffffff14; color: #fff; border-radius: 50%; width: 44px; height: 44px; }
+.founding-celebration { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 26px; padding: 16px 4px 44px; text-align: center; }
+.founding-welcome-star { position: relative; width: clamp(100px, 18vh, 160px); aspect-ratio: 1; animation: founding-star-arrive 1500ms cubic-bezier(.2,.7,.25,1) both; }
+.founding-welcome-star > img { width: 100%; height: 100%; filter: drop-shadow(0 0 30px #eec55c38); }
+.founding-welcome-star::after { content: ""; position: absolute; inset: 0; border: 2px solid #f4d276; border-radius: 50%; animation: founding-star-pop 600ms 1050ms both; }
+.founding-confetti { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
+.founding-confetti i { position: absolute; top: 48%; left: 50%; width: 7px; height: 12px; border-radius: 2px; background: var(--confetti-color); opacity: 0; animation: founding-confetti 2000ms ease-out both; }
+.founding-welcome-copy { max-width: 36ch; animation: founding-copy-in 500ms 1350ms both; }
+.app-dialog.founding-welcome h3 { color: #fff; font: 900 clamp(28px, 7.5vw, 38px)/1.15 "Nunito", sans-serif; margin: 12px 0 20px; letter-spacing: -.035em; }
+.founding-welcome-copy > button { margin-top: 14px; padding: 14px 24px; min-height: 48px; border: 0; border-radius: 22px; background: #f2ce79; color: #35290c; font: 900 16px "Nunito", sans-serif; cursor: pointer; }
+@keyframes founding-star-arrive { 0% { transform: translateY(40vh) rotate(-200deg) scale(.15); opacity: 0; } 48% { opacity: 1; } 70% { transform: translateY(16vh) rotate(345deg) scale(1.1); } 86% { transform: translateY(16vh) rotate(370deg) scale(1.18); } 100% { transform: translateY(0) rotate(360deg) scale(1); opacity: 1; } }
+@keyframes founding-star-pop { from { transform: scale(.5); opacity: 0; } 25% { opacity: .8; } to { transform: scale(2.8); opacity: 0; } }
+@keyframes founding-confetti { 0% { transform: translate(0,0) rotate(0) scale(.3); opacity: 0; } 10% { opacity: 1; } 65% { opacity: 1; } 100% { transform: translate(var(--confetti-x),calc(var(--confetti-y) + 120px)) rotate(var(--confetti-turn)); opacity: 0; } }
+@keyframes founding-copy-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-height: 650px) { .founding-celebration { gap: 12px; padding-bottom: 8px; } .founding-welcome-star { width: 90px; } .app-dialog.founding-welcome h3 { margin: 8px 0 12px; font-size: 28px; } }
+@media (prefers-reduced-motion: reduce) { .founding-welcome-star, .founding-welcome-copy, .founding-welcome-star::after, .founding-confetti i { animation: none; } .founding-confetti, .founding-welcome-star::after { display: none; } }
+.reduce-motion :is(.founding-welcome-star, .founding-welcome-copy, .founding-welcome-star::after, .founding-confetti i) { animation: none; }
+.reduce-motion :is(.founding-confetti, .founding-welcome-star::after) { display: none; }

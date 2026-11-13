@@ -1,8 +1,8 @@
-/** Center crop matches the 4:3 camera viewfinder without stretching the image. */
+/** Center crop matches the square camera viewfinder without stretching the image. */
 export function cameraCrop(width: number, height: number, zoom = 1) {
   if (width <= 0 || height <= 0) throw new Error("Camera chưa sẵn sàng. Bạn đợi một chút nhé.");
-  const sourceWidth = Math.min(width, height * 4 / 3) / Math.max(1, Number.isFinite(zoom) ? zoom : 1);
-  const sourceHeight = sourceWidth * 3 / 4;
+  const sourceWidth = Math.min(width, height) / Math.max(1, Number.isFinite(zoom) ? zoom : 1);
+  const sourceHeight = sourceWidth;
   const outputWidth = Math.min(1600, Math.floor(sourceWidth));
   return {
     x: (width - sourceWidth) / 2,
@@ -10,7 +10,7 @@ export function cameraCrop(width: number, height: number, zoom = 1) {
     sourceWidth,
     sourceHeight,
     width: outputWidth,
-    height: Math.round(outputWidth * 3 / 4),
+    height: outputWidth,
   };
 }
 

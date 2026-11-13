@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { FoundingBadge } from "@/components/ui/FoundingBadge";
 import {
   Camera,
   MessageCircle,
@@ -63,9 +64,9 @@ export function ProfileScreen({ username }: { username: string }) {
           <Avatar person={person} size="xl" className="profile-portrait" />
           <div className="profile-heading">
             <h1>{person.name}</h1>
-            <span className="profile-handle" title={`@${person.username}`}>
+            <div className="profile-handle-line"><span className="profile-handle" title={`@${person.username}`}>
               @{person.username}
-            </span>
+            </span><FoundingBadge visible={person.foundingMember} /></div>
             {person.bio && <p className="profile-intro">{person.bio}</p>}
           </div>
           {!isMe && <div className="profile-message">

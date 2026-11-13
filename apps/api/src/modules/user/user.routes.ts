@@ -12,6 +12,13 @@ import {
 import * as v from "../../backend/validation.js";
 import { withMediaChange, scheduleCleanup, publishUpdate, config, pushSubscriptions, validPushEndpoint, registerSystemRecipient } from "@tellme/database";
 export function registerUserRoutes(api: Hono<Env>) {
+  // Atomically claim this one-time welcome for the authenticated account across devices.
+  api.post("/users/me/founding-welcome", async (c) => {
+    const me = c.get("user");
+    if (!Number.isInteger(me.memberNumber) || me.memberNumber! < 1 || me.memberNumber! > 100) return c.json({ celebrate: false });
+    const result = await users.updateOne({ _id: me._id, foundingWelcomedAt: { $exists: false } }, { $set: { foundingWelcomedAt: new Date().toISOString() } });
+    return c.json({ celebrate: result.matchedCount === 1 });
+  });
   api.get("/users/:username", async (c) => {
     const user = await users.findOne({ username: c.req.param("username") }, { projection: { passwordHash: 0, email: 0 } });
     if (!user || (await relations(c.get("user"))).blocked.includes(user._id))

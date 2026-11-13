@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start --hostname 0.0.0.0 --port 3000",
     "check-types": "tsc --noEmit",
-    "test:received-reactions": "node --experimental-strip-types tests/received-reactions.test.ts"
+    "test:received-reactions": "node --experimental-strip-types tests/received-reactions.test.ts",
+    "test:camera": "node --experimental-strip-types tests/camera.test.ts"
   },
   "dependencies": {
     "@emoji-mart/data": "^1.2.1",

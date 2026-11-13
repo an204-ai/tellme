@@ -44,10 +44,19 @@ TELLME_LOW_MEMORY_BUILD=1 pnpm --filter @tellme/web build
 
 Kết quả lần QA ban đầu: 11/11 test qua; TypeScript và build production Next.js thành công (23 trang tĩnh và các route động), `git diff --check` qua. Không có route/asset QA trong bản build.
 
-11 test kiểm tra: số request hẹp, queue đồng thời/lỗi, optimistic count, đổi/bỏ cảm xúc, rollback giữ dữ liệu khác, cache feed/detail/profile/story, đối soát dữ liệu server, crop 4:3/zoom và ảnh selfie. Không dùng database hoặc webcam.
+11 test kiểm tra: số request hẹp, queue đồng thời/lỗi, optimistic count, đổi/bỏ cảm xúc, rollback giữ dữ liệu khác, cache feed/detail/profile/story, đối soát dữ liệu server, crop camera/zoom và ảnh selfie. Không dùng database hoặc webcam.
 
 ## Giới hạn
 
 Responsive và thao tác được thử bằng Chromium, không phải iPhone vật lý. Cần xác nhận Safari sau deploy cho bàn phím thật, safe area và capability camera. Các số phản hồi trên là mẫu đo local trong điều kiện cố định, không đảm bảo cùng kết quả trên mạng/thiết bị thật. Không thay cấu hình hạ tầng, MongoDB Atlas hoặc dữ liệu production.
 
 Detector CSS báo ba heuristic về separator 6px. Đây là đường phân vùng xám trung tính toàn chiều rộng theo ảnh tham khảo; các khối trên điện thoại đã đặt border-radius: 0, được kiểm tra bằng giao diện render, không phải accent border trên card bo góc.
+
+
+## Device fit and founding-member release — 2026-11-14
+
+Checked the home layout at 320×568, 360×640, 375×667, 375×812, 390×844, 393×852, 402×874, 412×915, 430×932, 768×1024, 1024×768, 1440×900, 1920×1080 and 874×402. The document had no vertical overflow; photos retained 1:1, with inner scrolling on short phones and a two-column arrangement in landscape. At 402×874, an emulated 62px top / 34px bottom safe area kept the initial photo below the transparent header. This is Chromium viewport/safe-area QA, not physical iOS Safari verification.
+
+Desktop profile checks confirmed a 30px outer radius, 20px frame padding, 22px journey inset, circular borderless profile avatar and no month-selector stem. The founding-member avatar and profile mark were checked in day/night themes. The welcome is server-claimed once; header scrolling was checked with content visibly moving behind its individual controls. Square camera crop tests cover portrait/landscape inputs and zoom.
+
+After the last photo, the end screen reserves the same invisible square and identity/response rows. At 402×874, the home dock measured y=659px before and after the final photo. No decorative backing layer remains.

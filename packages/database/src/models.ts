@@ -20,6 +20,9 @@ export interface Preferences {
 }
 export interface User {
   _id: string;
+  /** Immutable creation order, retained in the counter after deletion. */
+  memberNumber?: number;
+  foundingWelcomedAt?: string;
   email: string;
   passwordHash: string;
   emailVerifiedAt?: string;

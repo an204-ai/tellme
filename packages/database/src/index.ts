@@ -14,3 +14,5 @@ export * from "./account-email.js";
 export * from "./weather-service.js";
 export * from "./weather-cache.js";
 export * from "./system-notifications.js";
+
+export * from "./member-number.js";

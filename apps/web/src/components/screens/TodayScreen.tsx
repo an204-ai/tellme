@@ -99,11 +99,11 @@ export function TodayScreen() {
     {view === "today" ? <><div className="now-today-toolbar"><button type="button" aria-label="Đóng Hôm nay, về trang chủ" onClick={() => setView("photos")}><X size={23} /></button></div><section className="now-today" tabIndex={0} aria-label="Chuỗi khoảnh khắc hôm nay — cuộn dọc để xem bạn bè">
       <TodayStoryHighlights stories={today} people={data.people} me={me} reducedMotion={data.settings.reducedMotion} />
     </section></> : <>
-      {ended ? <section className="now-empty now-end" aria-label="Đã xem hết ảnh">
+      {ended ? <><div className="now-photo-stack now-ended-photo-space" aria-hidden="true" /><section className="now-empty now-end" aria-label="Đã xem hết ảnh">
         <img src="/brand/stickers/tellme-wait.png" alt="" width="100" height="100" />
         <h2>Hết ảnh rồi nè.</h2><p>Bạn đã xem hết những ngày được gửi tới mình. Chút nữa lại ghé, biết đâu có chuyện mới.</p>
         <Button variant="ghost" onClick={() => { setSelected(moments[0]?.item.id || null); setEnded(false); }}>Xem lại từ ảnh mới nhất</Button>
-      </section> : current ? <MomentCard key={current.item.id} moment={current} behind={moments[index + 1]} canPrevious={index > 0} busy={!!pendingAdvance} previous={() => step(-1)} next={() => step(1)} discovered={discovered} onDiscover={() => setDiscovered(true)} composer={composer} />
+      </section></> : current ? <MomentCard key={current.item.id} moment={current} behind={moments[index + 1]} canPrevious={index > 0} busy={!!pendingAdvance} previous={() => step(-1)} next={() => step(1)} discovered={discovered} onDiscover={() => setDiscovered(true)} composer={composer} />
         : feed.isPending ? <div className="now-empty"><Loader /></div>
         : feed.isError ? <div className="now-empty"><Empty icon={<Images size={36} />} title="Chưa tải được ảnh" text="Bạn thử tải lại nhé." action={<Button onClick={() => void feed.refetch()}>Thử lại</Button>} /></div>
         : <div className="now-empty"><div className="now-empty-photo"><Camera size={45} /></div><h2>Một chút hôm nay?</h2><p>{data.connections.length ? "Chụp một khoảnh khắc để bắt đầu câu chuyện." : "Thêm một người bạn, rồi kể nhau nghe hôm nay."}</p>{!data.connections.length && <Link className="close-primary" href="/community/friends"><UsersRound size={19} />Thêm bạn bằng Tellme ID</Link>}</div>}

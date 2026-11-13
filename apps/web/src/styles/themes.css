@@ -56,7 +56,7 @@ html { scrollbar-color: var(--line) var(--canvas); }
 /* Keep a 44px touch target around the smaller visual button. */
 .close-app .profile-owner-menu > summary { position: relative; }
 .close-app .profile-owner-menu > summary::after { content: ""; position: absolute; inset: -4px; }
-.close-app .now-photo-stack::before, .close-app .now-empty-photo { background: var(--primary-tint); }
+.close-app .now-empty-photo { background: var(--primary-tint); }
 .close-app :is(.now-reactions-row > .icon-button, .now-reaction-strip > button[aria-pressed="true"], .close-request) { background: var(--primary-tint); }
 .close-app :is(.close-id-field input, .now-image-retry) { background: var(--paper); color: var(--ink); border-color: var(--line); }
 .close-app :is(.now-turn-hint, .now-image-retry) { background: var(--paper); color: var(--ink); }

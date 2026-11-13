@@ -1,4 +1,5 @@
 "use client";
+import { FoundingWelcome } from "./FoundingWelcome";
 import { MomentComposer } from "./MomentComposer";
 import { SupportModal } from "./TellmeSupport";
 import { MusicOverlays } from "@/components/music/StoryMusic";
@@ -224,6 +225,7 @@ export function GlobalOverlays() {
         />
       )}
       <MusicOverlays />
+      <FoundingWelcome />
       {toast && (
         <div className="toast" role="status">
           <Check size={18} />

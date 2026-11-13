@@ -60,7 +60,7 @@ export async function visibility(
 export function personDTO(
   user: Pick<
     User,
-    "_id" | "username" | "name" | "avatar" | "cover" | "bio"
+    "_id" | "username" | "name" | "avatar" | "cover" | "bio" | "memberNumber" | "foundingWelcomedAt"
   >,
   me: User,
   full = true,
@@ -68,6 +68,8 @@ export function personDTO(
   return {
     id: externalId(user._id, me),
     username: user.username,
+    foundingMember: Number.isInteger(user.memberNumber) && user.memberNumber! >= 1 && user.memberNumber! <= 100,
+    ...(user._id === me._id ? { foundingWelcomePending: Number.isInteger(user.memberNumber) && user.memberNumber! >= 1 && user.memberNumber! <= 100 && !user.foundingWelcomedAt } : {}),
     name: user.name,
     avatar: user.avatar,
     cover: full ? user.cover : "",

@@ -93,7 +93,8 @@ components:
     height: "60px"
   moment-photo:
     rounded: "{rounded.photo}"
-    width: "min(100%, 420px, calc(100dvh - 508px))"
+    width: "min(100%, 480px)"
+    aspectRatio: "1 / 1"
   reply-surface:
     backgroundColor: "{colors.paper}"
     textColor: "{colors.ink}"
@@ -293,4 +294,14 @@ Home starts at the newest photo and advances toward older photos across API page
 
 The home dock places Today on the left, camera/send in the center, and share/download on the right. The Today shelf has two cards per row and a close button, with no heading, description or bottom camera dock. A single-author day closes back to the shelf after its final photo.
 
-The profile month selector is a small waypoint with a dotted stem leading into the journey map; no full-width title bar. Full-size sleeping-cat loaders stay at viewport center throughout route and query fallbacks. Settings dialogs, block picker and fields inherit semantic day/night colors.
+The profile month selector is a small waypoint above the journey map, without a dotted stem; no full-width title bar. Full-size sleeping-cat loaders stay at viewport center throughout route and query fallbacks. Settings dialogs, block picker and fields inherit semantic day/night colors.
+
+
+## Founding members and device fit — 2026-11-14
+
+A small gold sparkle marks the first 100 accounts ever created. Profiles say “Mở lối” beside the Tellme ID; avatars elsewhere use a fine gold orbit and soft star, without a numeric label. The popover explains this is a thank-you, without showing an account’s private sequence number. Both themes use gold with readable contrast. The profile mark has a minimum 44px touch target.
+
+Phone photos and camera output are square (1:1), use available width with 16–20px side spacing, and center-crop older images without stretching them. Short phones scroll the inner canvas instead of shrinking photos. The header floats above a full-height scrolling canvas. Only its controls are painted; no bar, blur, pseudo-layer or clipped strip obscures scrolling content. Initial content spacing includes header height and the top safe-area inset. Landscape phones place the image beside the controls. Profile avatars are plain circles; the desktop profile has a 30px outer radius, 20px frame padding and 22px journey inset.
+
+
+The last real photo has no decorative backing card; only a real next photo creates the stacked preview. A server-claimed, one-time welcome for founding accounts starts after the brand intro: the soft gold star rises and spins, a brief confetti burst spreads outward, then the single sentence “Chúc mừng bạn là một trong 100 người mở lối cùng Tellme!” appears. Reduced motion keeps the static star and greeting. There is no looping animation or mandatory wait to close.

@@ -14,7 +14,7 @@ import {
 import { defaults, type User } from "../../backend/models.js";
 import { now, personDTO } from "../../backend/domain.js";
 import * as v from "../../backend/validation.js";
-import { config, enqueue, publishUpdate } from "@tellme/database";
+import { config, enqueue, publishUpdate, allocateMemberNumber } from "@tellme/database";
 import { resetPasswordWithGrant, issueAccountCode, verifyEmailCode, verifyPasswordResetCode, requireAccountCodes } from "./account-security.js";
 export const authRouter = new Hono<Env>();
 authRouter.use("*", rateLimit(60, 60000));
@@ -46,7 +46,13 @@ authRouter.post("/register", async (c) => {
     settings: { ...defaults },
     createdAt: now(),
   };
-  await users.insertOne(user);
+  const session = mongo.startSession();
+  try {
+    await session.withTransaction(async () => {
+      user.memberNumber = await allocateMemberNumber(mongo.db(config.MONGODB_DB), session);
+      await users.insertOne(user, { session });
+    });
+  } finally { await session.endSession(); }
   await createSession(c, id);
   let verificationEmailSent = true;
   try { await issueAccountCode(user, "verify-email"); }

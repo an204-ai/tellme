@@ -8,7 +8,7 @@ The final database has 7 users, 3 conversations, 54 messages and 3 stories. Veri
 
 ## Collection audit
 
-All 12 existing collections are referenced by current services. **No existing collection is obsolete or ready to drop.** Empty collections still support active features.
+The original 12 collections are referenced by current services. The founding-member feature adds `system_counters`, making 13 active collections. **No current collection is obsolete or ready to drop.** Empty collections still support active features.
 
 - `users`, `friend_requests`: identity and accepted friendships.
 - `sessions`, `auth_tokens`: sign-in and verification/recovery.
@@ -17,5 +17,6 @@ All 12 existing collections are referenced by current services. **No existing co
 - `notifications`, `push_subscriptions`: notifications.
 - `reports`: reporting/moderation.
 - `background_jobs`: active media and notification outbox.
+- `system_counters`: permanent account-creation sequence for the first 100 accounts.
 
 The completed one-time cleanup scripts and their disposable fixtures were removed before release. This cleanup is not a deployment hook.

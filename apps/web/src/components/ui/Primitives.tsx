@@ -52,13 +52,14 @@ export function Avatar({
   size = "md",
   className = "",
 }: {
-  person?: Pick<Person, "name" | "avatar"> & Partial<Pick<Person, "id">>;
+  person?: Pick<Person, "name" | "avatar"> & Partial<Pick<Person, "id" | "foundingMember">>;
   size?: "xs" | "sm" | "md" | "lg" | "xl";
   className?: string;
 }) {
   const online = usePresenceStore((state) => !!person?.id && !!state.online[person.id]);
+  const founding = person?.foundingMember && size !== "xs" && !className.includes("profile-portrait");
   return (
-    <span className={`avatar avatar-${size} ${className}`}>
+    <span className={`avatar avatar-${size} ${founding ? "avatar-founding" : ""} ${className}`} title={founding ? "Người mở lối của Tellme" : undefined}>
       {person?.avatar ? (person.avatar.startsWith("/images/group-avatars/") ? <Image src={person.avatar} alt={person.name} width={120} height={120} sizes="120px" /> : <img
         src={person?.avatar}
         alt={person?.name || "Thành viên Tellme"}
@@ -73,6 +74,7 @@ export function Avatar({
       <span className="avatar-fallback" aria-hidden="true">
         {person?.name.charAt(0) || "T"}
       </span>
+      {founding && <span className="avatar-founding-star" role="img" aria-label="Người mở lối"><img src="/images/journey-star-yellow.svg" alt="" /></span>}
       {online && <span className="avatar-online" role="img" aria-label="Đang hoạt động" title="Đang hoạt động" />}
     </span>
   );

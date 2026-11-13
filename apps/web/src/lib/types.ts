@@ -1,6 +1,8 @@
 export type Privacy = "public" | "connections" | "private";
 export type Reaction = import("@tellme/shared/reactions").MomentReaction;
 export interface Person {
+  foundingMember?: boolean;
+  foundingWelcomePending?: boolean;
   id: string;
   username: string;
   name: string;

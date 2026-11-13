@@ -42,7 +42,6 @@ body { font-family: "Nunito", sans-serif; font-size: 17px; font-weight: 700; }
 .now-space { width: min(100%, 500px); padding: 16px 24px max(24px, env(safe-area-inset-bottom)); margin: 0 auto; }
 .now-moment { text-align: center; }
 .now-photo-stack { position: relative; isolation: isolate; }
-.now-photo-stack::before { content: ""; position: absolute; inset: 0; background: #dce8fa; border-radius: 34px; transform: rotate(3deg); z-index: -1; }
 .now-photo { aspect-ratio: 1; position: relative; width: 100%; border-radius: 32px; touch-action: pan-y; }
 .now-photo:focus-visible { outline: 3px solid var(--primary); outline-offset: 6px; }
 .now-photo .daily-story-menu { position: absolute; top: 12px; right: 12px; margin: 0; }
@@ -137,7 +136,7 @@ body { font-family: "Nunito", sans-serif; font-size: 17px; font-weight: 700; }
   .close-profile-link > .avatar { width: 36px; height: 36px; }
   .close-main { padding: 14px 20px 32px; }
   .now-space { padding: 12px 22px max(26px, env(safe-area-inset-bottom)); }
-  .now-photo, .now-photo-stack::before { border-radius: 30px; }
+  .now-photo { border-radius: 30px; }
   .now-byline { margin-top: 21px; gap: 5px 10px; }
   .now-byline strong { font-size: 17px; }
   .now-caption { font-size: 23px; line-height: 1.4; }
@@ -205,7 +204,6 @@ body { font-family: "Nunito", sans-serif; font-size: 17px; font-weight: 700; }
 .now-space { height: calc(100% - 20px); min-height: 0; padding-top: 8px; padding-bottom: 0; display: grid; grid-template-columns: minmax(0, 1fr); }
 .now-fixed-moment { display: contents; }
 .now-photo-stack { grid-row: 1; align-self: end; justify-self: center; min-width: min(180px, 100%); margin: 0 0 12px; }
-.now-photo-stack.has-next-photo::before { display: none; }
 .now-next-preview { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 32px; transform: rotate(4deg) scale(.98); z-index: -1; }
 .now-photo { overflow: visible; background: transparent; }
 .now-photo-surface { --card-x: 0px; --card-y: 0px; --card-angle: 0deg; position: relative; display: block; width: 100%; height: 100%; border: 0; border-radius: inherit; padding: 0; overflow: hidden; background: #e1eaf7; transform: translate3d(var(--card-x), var(--card-y), 0) rotate(var(--card-angle)); transform-origin: 50% 85%; transition: transform 360ms cubic-bezier(.16,1,.3,1); cursor: grab; touch-action: pan-y; }
@@ -286,7 +284,6 @@ body { font-family: "Nunito", sans-serif; font-size: 17px; font-weight: 700; }
   .close-home { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
   .close-home > .close-main { padding: 0; }
   .now-space { padding-top: 5px; padding-bottom: 0; }
-  .now-photo-stack { width: min(100%, calc(100dvh - 430px)); min-width: min(165px, 100%); }
   .now-caption-button .now-caption { font-size: 21px; }
   .now-dock { padding: 6px 0 2px; grid-template-columns: 1fr 86px 1fr; }
   .close-messages { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
@@ -307,18 +304,9 @@ body { font-family: "Nunito", sans-serif; font-size: 17px; font-weight: 700; }
 @media (prefers-reduced-motion: reduce) { .now-photo-surface { transition: none; } .now-send-progress { animation: none; } }
 .reduce-motion .now-photo-surface { transition: none; }
 .reduce-motion .now-send-progress { animation: none; }
-/* Reserve two caption lines and the complete response bar at every viewport height. */
-.now-space { grid-template-rows: minmax(0, 1fr) 112px 68px 100px; }
-.now-photo-stack { width: min(100%, 420px, calc(100dvh - 508px)); }
-@media (max-height: 740px) and (max-width: 640px) {
-  .now-space { height: calc(100% - 16px); grid-template-rows: minmax(0, 1fr) 106px 68px 88px; }
-  .now-photo-stack { width: min(100%, calc(100dvh - 460px)); }
-}
 @media (max-height: 620px) {
   .close-header { height: 60px; min-height: 60px; }
   .close-home { padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
-  .now-space { height: calc(100% - 12px); grid-template-rows: minmax(0, 1fr) 98px 62px 76px; padding-top: 5px; }
-  .now-photo-stack { min-width: min(100px, 100%); width: min(100%, 420px, calc(100dvh - 420px)); margin-bottom: 6px; }
   .now-identity-slot { padding-top: 4px; }
   .now-caption-button { padding-top: 10px; }
   .now-caption-button .now-caption { font-size: 18px; }

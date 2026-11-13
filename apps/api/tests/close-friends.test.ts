@@ -17,10 +17,10 @@ const { registerUserRoutes } = await import("../src/modules/user/user.routes.js"
 const { registerStoryRoutes } = await import("../src/modules/story/story.routes.js");
 const { registerMediaRoutes } = await import("../src/modules/media/media.routes.js");
 const { protectedMediaUrl } = await import("@tellme/database");
-const { canViewMoment, storyDTO } = await import("../src/backend/domain.js");
+const { canViewMoment, storyDTO, personDTO } = await import("../src/backend/domain.js");
 const { isMomentReaction } = await import("@tellme/shared/reactions");
 const { normalizeReaction } = await import("../src/backend/social-assets.js");
-const { momentSchema, settingsSchema, reaction: reactionSchema } = await import("../src/backend/validation.js");
+const { profileSchema, momentSchema, settingsSchema, reaction: reactionSchema } = await import("../src/backend/validation.js");
 const { canView } = await import("../../web/src/lib/visibility.ts");
 
 type Doc = Record<string, any>;
@@ -29,6 +29,9 @@ let people: Doc[] = ["alice.01", "bob.11", "charlie.03", "daisy.04"].map((userna
   _id: ids[i], username, name: username.split(".")[0], avatar: "", cover: "private cover", bio: "private biography", location: "private location",
   following: [], blocked: [], settings: { ...defaults }, createdAt: "2026-11-13T00:00:00.000Z",
 }));
+for (const number of [1, 100]) assert.equal(personDTO({ ...people[0], memberNumber: number } as any, people[0] as any).foundingMember, true);
+for (const number of [undefined, 0, 101, 1.5]) assert.equal(personDTO({ ...people[0], memberNumber: number } as any, people[0] as any).foundingMember, false);
+assert.equal("memberNumber" in profileSchema.parse({ ...people[0], memberNumber: 1 }), false, "A profile update cannot award the founding mark");
 let pending: Doc[] = [];
 const mediaRecords: Doc[] = [];
 const moments = ["public", "connections", "private"].map((privacy, i) => ({ id: `moment-${i}`, image: `image-${i}`, caption: privacy, at: "2026-11-13T00:00:00Z", privacy, reactions: {} }));
@@ -111,6 +114,17 @@ async function call(actor: number, path: string, method = "GET", body?: unknown,
   assert.equal(response.status, expected, `${method} ${path}: ${JSON.stringify(result)}`);
   return result;
 }
+// The welcome belongs only to the authenticated founding account, and can be claimed once.
+people[0]!.memberNumber = 1;
+assert.equal((await call(0, "/users/me/founding-welcome", "POST")).celebrate, true);
+const welcomedAt = people[0]!.foundingWelcomedAt;
+assert.equal((await call(0, "/users/me/founding-welcome", "POST")).celebrate, false);
+assert.equal(people[0]!.foundingWelcomedAt, welcomedAt);
+assert.equal((await call(1, "/users/me/founding-welcome", "POST")).celebrate, false);
+assert.equal(people[1]!.foundingWelcomedAt, undefined);
+assert.equal(personDTO(people[0] as any, people[0] as any).foundingWelcomePending, false);
+assert.equal("foundingWelcomePending" in personDTO(people[0] as any, people[1] as any), false);
+assert.equal("foundingWelcomedAt" in profileSchema.parse({ ...people[0], foundingWelcomedAt: "forged" }), false);
 // The retired bulk-delete endpoint must stay absent; individual photo deletion remains registered.
 await call(0, "/stories/bob-day", "DELETE", undefined, 404);
 const musicCatalog = await import("../src/modules/music/catalog.js");

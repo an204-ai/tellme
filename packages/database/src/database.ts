@@ -38,6 +38,7 @@ export async function connectDatabase() {
     authTokens.createIndex({ tokenHash: 1 }, { unique: true }),
     users.createIndex({ email: 1 }, { unique: true }),
     users.createIndex({ username: 1 }, { unique: true }),
+    users.createIndex({ memberNumber: 1 }, { unique: true, partialFilterExpression: { memberNumber: { $type: "number" } } }),
     friendRequests.createIndex({ toId: 1, at: -1 }),
     friendRequests.createIndex({ fromId: 1, at: -1 }),
     sessions.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }),
