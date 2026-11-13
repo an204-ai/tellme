@@ -8,7 +8,8 @@ export type Reaction =
   | "cheer"
   | "celebrate"
   | "appreciate"
-  | "smile";
+  | "smile"
+  | `emoji:${string}`;
 export interface Preferences {
   audience: Privacy;
   notifyLikes: boolean;
@@ -28,18 +29,8 @@ export interface User {
   avatar: string;
   cover: string;
   bio: string;
-  location: string;
-  birthday?: string;
-  occupation?: string;
-  interests?: string;
-  breakTime?: string;
-  favoriteLunch?: string;
-  favoriteDrink?: string;
   following: string[];
   blocked: string[];
-  hiddenPosts: string[];
-  hiddenStories?: string[];
-  savedStories?: string[];
   settings: Preferences;
   createdAt: string;
   suspension?: { reason: string; at: string; actorId: string; until?: string };
@@ -68,41 +59,12 @@ export interface Session {
   userId: string;
   expiresAt: Date;
 }
-export interface Comment {
-  id: string;
-  userId: string;
-  content: string;
-  createdAt: string;
-  parentId?: string;
-  likedBy: string[];
-  /** New reaction map; likedBy remains readable for comments created before reactions existed. */
-  reactions?: Record<string, Reaction>;
-  moderation?: ModerationState;
-  media?: {
-    id: string;
-    kind: "gif" | "sticker";
-    url: string;
-    alt: string;
-    width: number;
-    height: number;
-  };
-}
-export interface Post {
+export interface FriendRequest {
+  /** One pending request per pair, regardless of who sends it. */
   _id: string;
-  authorId: string;
-  content: string;
-  image: string;
-  topic: string;
-  privacy: Privacy;
-  anonymous: boolean;
-  /** Absent on older posts: retain the original per-post alias. */
-  anonymousVersion?: 1 | 2;
-  createdAt: string;
-  reactions: Record<string, Reaction>;
-  comments: Comment[];
-  savedBy: string[];
-  sharedBy: string[];
-  moderation?: ModerationState;
+  fromId: string;
+  toId: string;
+  at: string;
 }
 export interface Moment {
   id: string;
@@ -114,12 +76,11 @@ export interface Moment {
   reactions: Record<string, Reaction>;
 }
 export interface StoryMusic {
-  provider: "epidemic-sound" | "youtube";
+  provider: "epidemic-sound";
   trackId: string;
   title: string;
   artists: string[];
   cover: string;
-  metadataUpdatedAt?: string;
   durationSeconds?: number;
   startSeconds?: number;
 }
@@ -154,7 +115,6 @@ export interface Message {
   conversationId: string;
   senderId: string;
   text: string;
-  postId?: string;
   storyReply?: { storyId: string; momentId: string };
   at: string;
 }
@@ -165,7 +125,6 @@ export interface Notice {
   text: string;
   read: boolean;
   at: string;
-  postId?: string;
   storyId?: string;
   momentId?: string;
   conversationId?: string;
@@ -177,10 +136,11 @@ export interface Media {
   url: string;
   createdAt: string;
   state?: "active" | "deleting";
+  deliveryType?: "upload" | "authenticated";
   lastReferencedAt?: string;
   variants?: { feed: string; thumbnail: string; blurhash: string; width: number; height: number };
 }
-export type JobKind = "media.process" | "media.cleanup" | "media.sweep" | "feed.rebuild" | "notification.deliver" | "notification.email" | "notification.push" | "notification.account-email" | "notification.system";
+export type JobKind = "media.process" | "media.cleanup" | "media.sweep" | "notification.deliver" | "notification.email" | "notification.push" | "notification.account-email" | "notification.system";
 export interface BackgroundJob {
   _id: string;
   kind: JobKind;
@@ -198,17 +158,16 @@ export interface PushSubscriptionRecord {
   subscription: { endpoint: string; expirationTime?: number | null; keys: { p256dh: string; auth: string } };
 }
 export interface Report {
-  targetType?: "post" | "story" | "user";
-  targetId?: string;
+  targetType: "story" | "user";
+  targetId: string;
   _id: string;
   userId: string;
-  postId: string;
   reason: string;
   at: string;
-  resolution?: { action: "dismiss" | "remove-post" | "hide-content" | "suspend-user"; actorId: string; at: string; reason?: string };
+  resolution?: { action: "dismiss" | "hide-content" | "suspend-user"; actorId: string; at: string; reason?: string };
 }
 export const defaults: Preferences = {
-  audience: "public",
+  audience: "connections",
   notifyLikes: true,
   notifyMessages: true,
   notifySystem: true,

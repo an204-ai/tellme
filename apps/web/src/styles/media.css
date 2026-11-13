@@ -1,45 +1,3 @@
-.post-photo {
-  position: relative;
-  display: block;
-  width: calc(100% - 20px);
-  margin: 0 10px;
-  padding: 0;
-  border: 0;
-  border-radius: 10px;
-  background: #f5f5f5;
-  overflow: hidden;
-  cursor: zoom-in;
-}
-.post-photo > img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center 40%;
-}
-.post-photo-expand {
-  position: absolute;
-  right: 12px;
-  bottom: 12px;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 8px 10px;
-  border-radius: 8px;
-  color: #fff;
-  background: #000b;
-  font-size: 12px;
-}
-.upload-preview {
-  max-height: none;
-}
-.upload-preview > .post-photo {
-  margin: 0;
-  width: 100%;
-  max-height: 360px;
-}
-.upload-preview > .post-photo > img {
-  object-fit: contain;
-}
 .photo-viewer-dialog {
   width: 1120px;
   max-width: calc(100vw - 32px);
@@ -165,7 +123,6 @@
   width: 100%;
   margin-top: 4px;
 }
-.day-moment-overlay .story-reply { margin: 0; }
 .story-reply-input {
   display: flex;
   align-items: center;
@@ -175,53 +132,6 @@
   border-radius: 24px;
   background: #fff;
 }
-.day-moment-overlay .story-reply-input {
-  border-color: #ffffff80;
-  background: #07192c26;
-  color: white;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-.day-moment-overlay .story-reply-input:focus-within {
-  border-color: #fff;
-  box-shadow: 0 0 0 2px #ffffff24;
-}
-.day-moment-overlay .story-reply-input > input { color: white; }
-.day-moment-overlay .story-reply-input > input::placeholder { color: #ffffffd6; }
-.day-moment-overlay .story-reply-input > .icon-button {
-  flex: 0 0 36px;
-  width: 36px;
-  height: 36px;
-  border: 1px solid #fff;
-  background: #fff;
-  color: var(--primary);
-  box-shadow: 0 2px 8px #06132630;
-}
-.day-moment-overlay .story-reply-input > .icon-button:hover { background: #edf3ff; color: var(--primary); }
-.day-moment-overlay .story-reply-input:has(.story-reply-send:not(:disabled)) > .icon-button,
-.day-moment-overlay .story-reply-send:not(:disabled) {
-  border-color: var(--primary);
-  background: var(--primary);
-  color: #fff;
-}
-.day-moment-overlay .story-reply-input:has(.story-reply-send:not(:disabled)) > .icon-button:hover,
-.day-moment-overlay .story-reply-send:not(:disabled):hover { background: #17499a; }
-.day-moment-overlay .story-reply-send {
-  border: 1px solid #ffffff73;
-  background: #ffffff20;
-  color: white;
-}
-@media (max-width: 700px) {
-  .day-moment-overlay .story-reply { min-width: 0; }
-  .day-moment-overlay .story-reply-input { gap: 3px; padding: 3px 4px 3px 10px; }
-  .day-moment-overlay .story-reply-input > input { padding: 2px 0; font-size: 16px; }
-  .day-moment-overlay .story-reply-input > .icon-button,
-  .day-moment-overlay .story-reply-send { flex-basis: 32px; width: 32px; height: 32px; min-height: 32px; }
-  .day-moment-overlay .story-reply-input > .icon-button svg,
-  .day-moment-overlay .story-reply-send svg { width: 16px; height: 16px; }
-}
-.day-moment-overlay .story-reply > p,
-.day-moment-overlay .story-reply-sent > a { color: white; text-shadow: 0 1px 4px #000a; }
 .story-reply-input:focus-within {
   border-color: var(--primary);
 }
@@ -304,10 +214,6 @@
   font-size: 12px;
 }
 @media (max-width: 640px) {
-  .post-photo {
-    width: calc(100% - 14px);
-    margin-inline: 7px;
-  }
   .photo-viewer-dialog {
     max-width: calc(100vw - 16px);
   }

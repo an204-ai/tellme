@@ -18,7 +18,7 @@ export const useWeather = () => useContext(Context);
 
 export function WeatherProvider({ children }: { children: React.ReactNode }) {
   const path = usePathname(), client = useQueryClient();
-  const active = path === "/community/today" || path === "/community/feed";
+  const active = path === "/community/today";
   const [coords, setCoords] = useState<{ lat: number; lon: number } | null>(null);
   const [state, setState] = useState<LocationState>("idle");
   const [error, setError] = useState("");

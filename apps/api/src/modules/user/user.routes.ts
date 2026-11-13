@@ -1,51 +1,24 @@
 import { Hono } from "hono";
 import { z } from "zod";
-import { users, posts, reports, stories } from "../../backend/database.js";
+import { users, reports, stories } from "../../backend/database.js";
 import { fail, type Env } from "../../backend/security.js";
-import { type Post } from "../../backend/models.js";
 import { createHash, randomUUID } from "node:crypto";
 import {
   internalId,
   relations,
   visibility,
   personDTO,
-  postDTO,
-  storyDTO,
-  notify,
-  postFilter,
 } from "../../backend/domain.js";
 import * as v from "../../backend/validation.js";
-import { withMediaChange, scheduleCleanup, publishUpdate, config, enqueue, pushSubscriptions, validPushEndpoint, registerSystemRecipient } from "@tellme/database";
+import { withMediaChange, scheduleCleanup, publishUpdate, config, pushSubscriptions, validPushEndpoint, registerSystemRecipient } from "@tellme/database";
 export function registerUserRoutes(api: Hono<Env>) {
-  for (const kind of ["followers", "following"] as const) {
-    api.get(`/users/:username/${kind}`, async (c) => {
-      const me = c.get("user"), viewer = await relations(me);
-      const owner = await users.findOne({ username: c.req.param("username") });
-      if (!owner || viewer.blocked.includes(owner._id)) fail(404, "Hồ sơ không khả dụng.");
-      const { cursor, limit } = v.pageSchema.parse(c.req.query());
-      const excluded = [...new Set([...viewer.blocked, ...owner.blocked])];
-      const filter = {
-        _id: { $nin: excluded, ...(kind === "following" ? { $in: owner.following } : {}) },
-        blocked: { $nin: [owner._id, me._id] },
-        ...(kind === "followers" ? { following: owner._id } : {}),
-      };
-      const [people, total] = await Promise.all([
-        users.find(filter, { projection: { _id: 1, username: 1, name: 1, avatar: 1 } }).sort({ _id: 1 }).skip(cursor).limit(limit).toArray(),
-        users.countDocuments(filter),
-      ]);
-      // Relationship lists expose identity only, never email, sessions or private profile data.
-      return c.json({ items: people.map((person) => ({ id: person._id === me._id ? "me" : person._id, username: person.username, name: person.name, avatar: person.avatar })), total, nextCursor: cursor + limit < total ? cursor + limit : null });
-    });
-  }
   api.get("/users/:username", async (c) => {
     const user = await users.findOne({ username: c.req.param("username") }, { projection: { passwordHash: 0, email: 0 } });
     if (!user || (await relations(c.get("user"))).blocked.includes(user._id))
       fail(404, "Hồ sơ không khả dụng.");
-    const [followersCount, followingCount] = await Promise.all([
-      users.countDocuments({ following: user._id, _id: { $nin: user.blocked }, blocked: { $ne: user._id } }),
-      users.countDocuments({ _id: { $in: user.following, $nin: user.blocked }, blocked: { $ne: user._id } }),
-    ]);
-    return c.json({ ...personDTO(user, c.get("user")), followersCount, followingCount });
+    const me = c.get("user"), r = await relations(me);
+    if (user._id !== me._id && !r.mutual.includes(user._id)) fail(404, "Kết nối hai chiều để xem trang cá nhân của nhau.");
+    return c.json(personDTO(user, me));
   });
   api.patch("/users/me", async (c) => {
     const input = v.profileSchema.parse(await c.req.json()),
@@ -106,30 +79,6 @@ export function registerUserRoutes(api: Hono<Env>) {
     await pushSubscriptions.deleteOne({ userId: c.get("user")._id, "subscription.endpoint": endpoint });
     return c.json({ ok: true });
   });
-  api.put("/users/:id/follow", async (c) => {
-    const me = c.get("user"),
-      id = internalId(c.req.param("id"), me),
-      { following } = z
-        .object({ following: z.boolean() })
-        .parse(await c.req.json());
-    if (
-      id === me._id ||
-      !(await users.findOne({ _id: id })) ||
-      (await relations(me)).blocked.includes(id)
-    )
-      fail(400, "Không thể follow tài khoản này.");
-    await users.updateOne(
-      { _id: me._id },
-      following
-        ? { $addToSet: { following: id } }
-        : { $pull: { following: id } },
-    );
-    await enqueue("feed.rebuild", {});
-    await publishUpdate([me._id, id], "relations");
-    if (following && !me.following.includes(id))
-      await notify(id, me._id, "đã bắt đầu follow bạn.");
-    return c.json({ ok: true });
-  });
   api.put("/users/:id/block", async (c) => {
     const me = c.get("user"),
       id = internalId(c.req.param("id"), me),
@@ -153,16 +102,9 @@ export function registerUserRoutes(api: Hono<Env>) {
     if (id === me._id) fail(400, "Bạn không thể báo cáo chính mình.");
     if (!(await users.findOne({ _id: id })) || (await relations(me)).blocked.includes(id)) fail(404, "Hồ sơ không khả dụng.");
     await reports.updateOne(
-      { userId: me._id, postId: `user:${id}` },
+      { userId: me._id, targetType: "user", targetId: id },
       { $setOnInsert: { _id: randomUUID(), at: new Date().toISOString() }, $set: { targetType: "user", targetId: id, reason } },
       { upsert: true },
-    );
-    return c.json({ ok: true });
-  });
-  api.delete("/users/me/hidden-posts", async (c) => {
-    await users.updateOne(
-      { _id: c.get("user")._id },
-      { $set: { hiddenPosts: [], hiddenStories: [] } },
     );
     return c.json({ ok: true });
   });
@@ -172,14 +114,13 @@ export function registerUserRoutes(api: Hono<Env>) {
     const month = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/).parse(c.req.query("month"));
     const relation = await relations(me);
     const owner = await users.findOne({ _id: id }, { projection: { createdAt: 1 } });
-    if (!owner || relation.blocked.includes(id)) fail(404, "Hồ sơ không khả dụng.");
+    if (!owner || relation.blocked.includes(id) || id !== me._id && !relation.mutual.includes(id)) fail(404, "Hồ sơ không khả dụng.");
     const mutual = relation.mutual;
     const result = await stories.aggregate([
       { $match: { $and: [await visibility(me, "userId"), { userId: id }] } },
       { $project: { day: 1, items: { $filter: { input: "$items", as: "item", cond: { $or: [
         { $eq: ["$userId", me._id] },
-        { $eq: [{ $ifNull: ["$$item.privacy", "$privacy"] }, "public"] },
-        { $and: [{ $eq: [{ $ifNull: ["$$item.privacy", "$privacy"] }, "connections"] }, { $in: ["$userId", mutual] }] },
+        { $and: [{ $in: [{ $ifNull: ["$$item.privacy", "$privacy"] }, ["public", "connections"]] }, { $in: ["$userId", mutual] }] },
       ] } } } } },
       { $match: { "items.0": { $exists: true } } },
       { $project: { day: 1, count: { $size: "$items" }, cover: { $arrayElemAt: ["$items.image", -1] } } },
@@ -199,98 +140,6 @@ export function registerUserRoutes(api: Hono<Env>) {
       firstDay: result?.bounds[0]?.firstDay || null,
       accountCreatedAt: owner.createdAt,
       latestDay: result?.bounds[0]?.latestDay || null,
-    });
-  });
-  api.get("/users/:id/activity", async (c) => {
-    const me = c.get("user"),
-      id = internalId(c.req.param("id"), me),
-      { cursor, limit } = v.pageSchema.parse(c.req.query());
-    const mutual = (await relations(me)).mutual;
-    // Mongo performs the merge, ordering and pagination; no full feed is sent to the client.
-    const filter = await postFilter(me, { view: "profile", authorId: id });
-    const pipeline = [
-      { $match: filter },
-      { $addFields: { kind: { $literal: "post" }, sortAt: "$createdAt" } },
-      {
-        $unionWith: {
-          coll: "stories",
-          pipeline: [
-            {
-              $match: {
-                $and: [await visibility(me, "userId"), { userId: id }],
-              },
-            },
-            {
-              $addFields: {
-                items: {
-                  $filter: {
-                    input: "$items",
-                    as: "item",
-                    cond: {
-                      $or: [
-                        { $eq: ["$userId", me._id] },
-                        { $eq: [{ $ifNull: ["$$item.privacy", "$privacy"] }, "public"] },
-                        {
-                          $and: [
-                            { $eq: [{ $ifNull: ["$$item.privacy", "$privacy"] }, "connections"] },
-                            { $in: ["$userId", mutual] },
-                          ],
-                        },
-                      ],
-                    },
-                  },
-                },
-                kind: { $literal: "day" },
-                sortAt: "$updatedAt",
-              },
-            },
-            { $match: { "items.0": { $exists: true } } },
-          ],
-        },
-      },
-      { $sort: { sortAt: -1 as const, _id: -1 as const } },
-      {
-        $facet: {
-          items: [{ $skip: cursor }, { $limit: limit }],
-          count: [{ $count: "total" }],
-        },
-      },
-    ];
-    const result = await posts
-      .aggregate<{
-        items: (
-          | (Post & { kind: "post"; sortAt: string })
-          | (import("../../backend/models.js").Story & {
-              kind: "day";
-              sortAt: string;
-            })
-        )[];
-        count: { total: number }[];
-      }>(pipeline)
-      .next();
-    const total = result?.count[0]?.total || 0;
-    type ActivityDTO =
-      | { kind: "post"; id: string; at: string; post: ReturnType<typeof postDTO> }
-      | { kind: "day"; id: string; at: string; story: ReturnType<typeof storyDTO> };
-    const items: ActivityDTO[] = [];
-    for (const item of result?.items || []) {
-      if (item.kind === "post") {
-        items.push({
-          kind: "post",
-          id: `post-${item._id}`,
-          at: item.sortAt,
-          post: postDTO(item, me),
-        });
-      } else {
-        const story = storyDTO(item, me, mutual);
-        if (story.items.length)
-          items.push({ kind: "day", id: `day-${item._id}`, at: item.sortAt, story });
-      }
-    }
-    return c.json({
-      items,
-      total,
-      nextCursor: cursor + limit < total ? cursor + limit : null,
     });
   });
 }

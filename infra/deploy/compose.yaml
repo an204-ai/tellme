@@ -50,9 +50,7 @@ services:
       MONGODB_DB: ${MONGODB_DB:-tellme}
       REDIS_URL: "redis://default:${REDIS_PASSWORD:?Set REDIS_PASSWORD in Coolify}@redis:6379"
       CLOUDINARY_URL: ${CLOUDINARY_URL:?Set CLOUDINARY_URL in Coolify}
-      GIPHY_API_KEY: ${GIPHY_API_KEY:?Set GIPHY_API_KEY in Coolify}
       OPENWEATHER_API_KEY: ${OPENWEATHER_API_KEY:-}
-      YOUTUBE_API_KEY: ${YOUTUBE_API_KEY:-}
       EPIDEMIC_SOUND_API_KEY: ${EPIDEMIC_SOUND_API_KEY:-}
       AUTH_CODE_SECRET: ${AUTH_CODE_SECRET:?Set AUTH_CODE_SECRET in Coolify}
       SMTP_URL: ${SMTP_URL:?Set SMTP_URL in Coolify}
@@ -85,20 +83,6 @@ services:
       dockerfile: infra/docker/worker.Dockerfile
       args:
         WORKER: "@tellme/worker-media"
-    restart: unless-stopped
-    environment: *tellme-api-environment
-    depends_on:
-      redis:
-        condition: service_healthy
-    logging: *default-logging
-
-  worker-feed:
-    image: tellme-worker-feed:production
-    build:
-      context: .
-      dockerfile: infra/docker/worker.Dockerfile
-      args:
-        WORKER: "@tellme/worker-feed"
     restart: unless-stopped
     environment: *tellme-api-environment
     depends_on:

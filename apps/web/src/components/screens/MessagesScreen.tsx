@@ -58,7 +58,6 @@ function conversationPerson(
       avatar: chat.avatar || DEFAULT_GROUP_AVATAR,
       bio: "",
       cover: "",
-      location: "",
     };
   return data?.people.find((person) => person.id === chat?.userId);
 }
@@ -152,7 +151,7 @@ export function MessagesScreen({
         <aside className="conversation-list">
           <header>
             <h2>
-              Tin nhắn <span>{conversations.length}</span>
+              Tin nhắn
             </h2>
             <div className="message-create-actions">
               <TooltipIconButton label="Tạo nhóm chat" onClick={() => setCreatingGroup(true)}><Users size={20} /></TooltipIconButton>
@@ -166,6 +165,7 @@ export function MessagesScreen({
             onChange={(event) => setSearch(event.target.value)}
           />
           <div className="conversation-rows">
+            {!visibleConversations.length && <p className="conversation-empty">{search ? "Chưa tìm thấy cuộc trò chuyện này." : "Gửi một lời chào cho người bạn của mình nhé."}</p>}
             {visibleConversations.map((entry) => {
                 const user = conversationPerson(data, entry);
                 const last = entry.messages.at(-1);
@@ -341,7 +341,7 @@ export function MessagesScreen({
                     aria-label="Gửi tin nhắn"
                     disabled={(!text.trim() && !stickerId) || saving || sending}
                   >
-                    <Send size={20} />
+                    <Send size={23} />
                   </button>
                 </div>
                 {error && (
@@ -349,7 +349,7 @@ export function MessagesScreen({
                     {error}
                   </p>
                 )}
-              </form> : <div className="chat-unavailable" role="status">{conversation.kind === "group" ? "Nhóm hiện không thể gửi tin. Kiểm tra các tài khoản đã chặn hoặc không còn khả dụng." : "Hai người cần follow nhau để tiếp tục nhắn tin. Lịch sử trò chuyện vẫn được giữ lại."}</div>}
+              </form> : <div className="chat-unavailable" role="status">{conversation.kind === "group" ? "Nhóm hiện không thể gửi tin. Kiểm tra các tài khoản đã chặn hoặc không còn khả dụng." : "Hai người cần chấp nhận kết bạn để tiếp tục nhắn tin. Lịch sử trò chuyện vẫn được giữ lại."}</div>}
             </>
           ) : (
             <Empty
@@ -413,7 +413,7 @@ export function MessagesScreen({
                   <MessageCircle size={19} />
                 </button>
               ))}
-            {!data.people.some((entry) => canMessagePerson(entry.id, data)) && <p>Chưa có bạn bè để nhắn tin. Khi hai người cùng follow nhau, họ sẽ xuất hiện ở đây.</p>}
+            {!data.people.some((entry) => canMessagePerson(entry.id, data)) && <p>Chưa có bạn bè để nhắn tin. Khi lời mời kết bạn được chấp nhận, bạn có thể nhắn tin tại đây.</p>}
           </div>
         </Modal>
       )}

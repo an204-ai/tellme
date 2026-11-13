@@ -170,6 +170,9 @@ importers:
       '@fontsource/be-vietnam-pro':
         specifier: ^5.2.0
         version: 5.3.0
+      '@fontsource/nunito':
+        specifier: ^5.2.0
+        version: 5.3.0
       '@fontsource/poppins':
         specifier: ^5.2.0
         version: 5.3.0
@@ -315,6 +318,9 @@ importers:
 
   packages/shared:
     dependencies:
+      emoji-regex:
+        specifier: ^10.0.0
+        version: 10.6.0
       zod:
         specifier: ^3.23.8
         version: 3.25.76
@@ -344,25 +350,6 @@ importers:
       tailwindcss:
         specifier: ^4.0.0
         version: 4.3.3
-      typescript:
-        specifier: ^5.7.0
-        version: 5.9.3
-
-  workers/feed-builder:
-    dependencies:
-      '@tellme/database':
-        specifier: workspace:*
-        version: link:../../packages/database
-    devDependencies:
-      '@tellme/config':
-        specifier: workspace:*
-        version: link:../../packages/config
-      '@types/node':
-        specifier: ^22.10.2
-        version: 22.20.5
-      tsx:
-        specifier: ^4.23.15
-        version: 4.23.15
       typescript:
         specifier: ^5.7.0
         version: 5.9.3
@@ -1556,6 +1543,9 @@ packages:
 
   '@fontsource/be-vietnam-pro@5.3.0':
     resolution: {integrity: sha512-xhAQBGHDxP5BF8IJxedy5MoWUmc1DlPCcZbMLhvnPkf8TaYCbbUVs3LjpuJ4BYdTrdiCLaewNaY8z+owq/FqFw==}
+
+  '@fontsource/nunito@5.3.0':
+    resolution: {integrity: sha512-vw9TaTQJ/zpEpKrsODuPmOvaVjXgdda6B+xXA4YqjrdeJ62MLgVoDerdRXFQHyBnSCt2yQ2nHKCHPP/Pv7Xq4Q==}
 
   '@fontsource/poppins@5.3.0':
     resolution: {integrity: sha512-cms1nM7U6SN8epIV1WMVOV8VsA645aSm3wHfzIQnkk188U341ThbJGSl2Sv54V29gnDbT2arMPfLzvVIIVCceQ==}
@@ -3195,6 +3185,9 @@ packages:
 
   emoji-mart@5.6.0:
     resolution: {integrity: sha512-eJp3QRe79pjwa+duv+n7+5YsNhRcMl812EcFVwrnRvYKoNPoQb5qxU8DG6Bgwji0akHdp6D4Ln6tYLG58MFSow==}
+
+  emoji-regex@10.6.0:
+    resolution: {integrity: sha512-toUI84YS5YmxW219erniWD0CIVOo46xGKColeNQRgOzDorgBi1v4D71/OFzgD9GO2UGKIv1C3Sp8DAn0+j5w7A==}
 
   emoji-regex@8.0.0:
     resolution: {integrity: sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==}
@@ -7190,6 +7183,8 @@ snapshots:
 
   '@fontsource/be-vietnam-pro@5.3.0': {}
 
+  '@fontsource/nunito@5.3.0': {}
+
   '@fontsource/poppins@5.3.0': {}
 
   '@hono/node-server@1.19.17(hono@4.13.14)':
@@ -8948,6 +8943,8 @@ snapshots:
   electron-to-chromium@1.5.467: {}
 
   emoji-mart@5.6.0: {}
+
+  emoji-regex@10.6.0: {}
 
   emoji-regex@8.0.0: {}
 

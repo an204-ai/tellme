@@ -43,11 +43,9 @@ export function useCommunity() {
     },
     onSuccess: (data) => {
       queryClient.setQueryData(communityKey, data);
-      void queryClient.invalidateQueries({ queryKey: ["tellme", "posts"] });
       void queryClient.invalidateQueries({ queryKey: ["tellme", "story"] });
       void queryClient.invalidateQueries({ queryKey: ["tellme", "stories"] });
       void queryClient.invalidateQueries({ queryKey: ["tellme", "person"] });
-      void queryClient.invalidateQueries({ queryKey: ["tellme", "archive"] });
       void queryClient.invalidateQueries({ queryKey: ["tellme", "chat-tools"] });
     },
     onError: (error) =>

@@ -55,7 +55,7 @@
 .chat-found-item > div:first-child { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-bottom: 10px; font-size: 11px; }
 .chat-found-item > div:first-child strong { font-weight: 600; }
 .chat-found-item > p { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; line-height: 1.7; }
-.chat-found-item .chat-shared-post, .chat-found-item .story-reply-preview { width: 100%; min-width: 0; max-width: 100%; }
+.chat-found-item .story-reply-preview { width: 100%; min-width: 0; max-width: 100%; }
 .chat-found-item .story-reply-preview > img { width: 56px; height: 70px; flex-basis: 56px; }
 .chat-confirmation > p { font-size: 14px; line-height: 1.8; }
 .chat-confirmation > div { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 12px; margin-top: 24px; }

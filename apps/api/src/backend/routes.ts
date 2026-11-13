@@ -1,8 +1,7 @@
 import { authRouter } from "../modules/auth/auth.routes.js";
-import { registerSearchRoutes } from "../modules/search/search.routes.js";
 import { registerBootstrapRoutes } from "../modules/bootstrap/bootstrap.routes.js";
+import { registerFriendRoutes } from "../modules/user/friend.routes.js";
 import { registerUserRoutes } from "../modules/user/user.routes.js";
-import { registerPostRoutes } from "../modules/post/post.routes.js";
 import { registerStoryRoutes } from "../modules/story/story.routes.js";
 import { registerMessageRoutes } from "../modules/message/message.routes.js";
 import { registerNotificationRoutes } from "../modules/notification/notification.routes.js";
@@ -16,12 +15,11 @@ import { HTTPException } from "hono/http-exception";
 import { MongoServerError } from "mongodb";
 import { config } from "./config.js";
 import { mongo } from "./database.js";
-import { optionalAuthenticate, checkOrigin, rateLimit, type Env } from "./security.js";
+import { authenticate, checkOrigin, rateLimit, type Env } from "./security.js";
 import { HTTPException as AuthError } from "hono/http-exception";
 import { MediaUnavailable, isTransientConnectionError, connectionFailure, databaseUnavailable, logEvent } from "@tellme/database";
 import { registerRealtimeRoutes } from "./realtime.js";
 import { registerAdminRoutes } from "../modules/admin/admin.routes.js";
-import { registerArchiveRoutes } from "../modules/archive/archive.routes.js";
 import { registerMusicRoutes } from "../modules/music/music.routes.js";
 import { registerWeatherRoutes } from "../modules/weather/weather.routes.js";
 import { observeRequest } from "./observability.js";
@@ -94,20 +92,20 @@ app.get("/health", async (c) => {
 app.route("/api/auth", authRouter);
 registerWeatherRoutes(app);
 const api = new Hono<Env>();
-api.use("*", optionalAuthenticate, rateLimit(300, 60000));
+api.use("*", authenticate, rateLimit(300, 60000));
 api.use("*", async (c, next) => {
-  const publicRead = c.req.method === "GET" && (/^\/api\/(bootstrap|search|posts(?:\/[^/]+)?|stories(?:\/[^/]+)?|users\/[^/]+(?:\/(?:activity|journey|followers|following))?)$/.test(c.req.path) || /^\/api\/stories\/[^/]+\/music\/stream$/.test(c.req.path));
-  if (c.get("user")._id === "guest" && (!publicRead || c.req.path === "/api/stories/saved" || c.req.query("view") === "saved" || c.req.query("tab") === "following"))
-    throw new AuthError(401, { message: "Đăng nhập để sử dụng chức năng này." });
   const user = c.get("user");
   if (!["GET", "HEAD", "OPTIONS"].includes(c.req.method) && user.emailVerificationRequired && !user.emailVerifiedAt)
     throw new AuthError(403, { message: "Xác thực email trong Cài đặt tài khoản trước khi chia sẻ hoặc tương tác nhé." });
   await next();
 });
+api.get("/session", (c) => {
+  c.header("Cache-Control", "private, no-store");
+  return c.json({ authenticated: true });
+});
 registerBootstrapRoutes(api);
-registerSearchRoutes(api);
+registerFriendRoutes(api);
 registerUserRoutes(api);
-registerPostRoutes(api);
 registerStoryRoutes(api);
 registerMusicRoutes(api);
 registerMessageRoutes(api);
@@ -115,6 +113,5 @@ registerNotificationRoutes(api);
 registerMediaRoutes(api);
 registerRealtimeRoutes(api);
 registerAdminRoutes(api);
-registerArchiveRoutes(api);
 app.route("/api", api);
 app.notFound((c) => c.json({ error: "Đường dẫn không tồn tại." }, 404));

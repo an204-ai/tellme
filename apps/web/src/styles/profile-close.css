@@ -1,0 +1,77 @@
+/* A cover and one identity row lead straight into the journey. */
+.close-app .close-profile { background: transparent; border-radius: 0; overflow: visible; }
+.close-app .close-profile .profile-cover { height: clamp(160px, 18vw, 230px); border-radius: 26px; background: var(--primary-tint); }
+.profile-identity { position: relative; padding: 0 10px 12px; }
+.profile-identity-row { position: relative; display: grid; grid-template-columns: 86px minmax(0, 1fr) auto; align-items: start; gap: 14px; margin-top: -30px; }
+.close-profile .profile-portrait { width: 86px; height: 86px; border: 5px solid var(--canvas); border-radius: 28px; background: var(--canvas); box-shadow: none; }
+.profile-heading { min-width: 0; padding-top: 38px; }
+.close-app .profile-heading h1 { margin: 0; font-size: 29px; line-height: 1.2; font-weight: 900; overflow-wrap: anywhere; letter-spacing: -.025em; }
+.profile-handle { display: block; margin-top: 6px; color: var(--muted); font-size: 14px; line-height: 1.45; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.profile-message { padding-top: 39px; }
+.close-app .profile-message .button { min-height: 44px; border: 0; border-radius: 16px; padding: 10px 14px; font-size: 14px; }
+.profile-intro { max-width: 60ch; margin: 8px 0 0; color: var(--ink); font-size: 16px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+.close-app .close-profile .profile-journey { margin-top: 12px; margin-bottom: 10px; height: 470px; min-height: 470px; max-height: 470px; background: transparent; border: 0; box-shadow: none; padding: 6px 0 0; }
+
+.close-profile .journey-heading h2 { font-size: 18px; }
+[data-theme="dark"] .close-profile .journey-stop time, [data-theme="dark"] .close-profile .journey-stop.is-latest time { background: var(--stop-tone); border-color: #ffffffb0; color: #1b2432; }
+.close-profile .journal-composer { width: 100%; margin: 8px 0 16px; padding: 12px; border-radius: 18px; }
+@media (max-width: 640px) {
+  .close-app .close-profile .profile-cover { height: 138px; border-radius: 24px; }
+  .profile-identity { padding: 0 4px 6px; }
+  .profile-identity-row { grid-template-columns: 72px minmax(0, 1fr) auto; gap: 10px; margin-top: -24px; }
+  .close-profile .profile-portrait { width: 72px; height: 72px; border-radius: 24px; border-width: 4px; }
+  .profile-heading { padding-top: 32px; }
+  .close-app .profile-heading h1 { font-size: 23px; line-height: 1.22; }
+  .profile-handle { margin-top: 5px; font-size: 12px; }
+  .profile-message { padding-top: 32px; }
+  .close-app .profile-message .button { width: 42px; height: 44px; min-height: 44px; padding: 0; display: grid; place-items: center; border-radius: 15px; }
+  .profile-message-label { display: none; }
+  .profile-message .button svg { width: 21px; height: 21px; }
+  .profile-intro { margin-top: 8px; font-size: 14px; line-height: 1.5; }
+  .close-app .close-profile .profile-journey { height: 448px; min-height: 448px; max-height: 448px; margin-top: 8px; }
+  .close-profile .journey-heading h2 { font-size: 16px; }
+  .close-profile .journey-heading { grid-template-rows: 1fr; }
+}
+
+.now-home-dock > .now-day-trigger { grid-column: 1; grid-row: 1; }
+.now-home-dock > .moment-actions, .now-home-dock > .now-dock-spacer { grid-column: 3; grid-row: 1; justify-self: center; }
+.story-stack-dock > .moment-actions { grid-column: 1; grid-row: 1; justify-self: center; }
+.moment-actions { min-width: 0; }
+.moment-share-icon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 16px; background: var(--paper); color: var(--primary); }
+.moment-share-menu { position: fixed; inset: auto 0 max(110px, calc(env(safe-area-inset-bottom) + 94px)); margin: 0 auto; width: min(330px, calc(100vw - 32px)); padding: 12px; border: 0; border-radius: 22px; background: var(--paper); color: var(--ink); box-shadow: 0 16px 48px #07162b30; }
+.moment-share-menu::backdrop { background: #07162b28; }
+.moment-share-menu header { display: flex; align-items: center; gap: 10px; padding: 4px 0 12px; margin-bottom: 4px; border-bottom: 1px solid var(--border); }
+.moment-share-menu header img { width: 44px; height: 44px; object-fit: cover; border-radius: 12px; }
+.moment-share-menu header div { flex: 1; min-width: 0; }
+.moment-share-menu strong { font-size: 14px; font-weight: 900; }
+.moment-share-menu header p { margin: 3px 0 0; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.moment-share-menu header button { display: grid; place-items: center; flex: 0 0 44px; height: 44px; border: 0; background: transparent; color: inherit; border-radius: 12px; }
+.moment-share-menu > button { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 62px; padding: 10px; border: 0; background: transparent; color: inherit; text-align: left; border-radius: 14px; cursor: pointer; }
+.moment-share-menu > button:hover { background: var(--primary-tint); }
+.moment-share-menu > button:disabled { opacity: .55; cursor: default; }
+.moment-share-menu > button span { display: grid; gap: 3px; }
+.moment-share-menu small { font-size: 12px; color: var(--muted); }
+.moment-share-error { margin: 4px 8px; font-size: 13px; }
+.moment-share-error button { border: 0; padding: 8px; background: transparent; color: var(--primary); text-decoration: underline; }
+.story-stack-dialog .story-stack-dock { grid-template-columns: 1fr 70px 1fr; }
+.story-stack-dialog .story-stack-dock > .now-shutter { grid-column: 2; }
+.story-stack-dialog .moment-share-trigger { color: #f1f6ff; }
+.story-stack-dialog .moment-share-icon { background: #ffffff1c; color: #f1f6ff; }
+.story-music-coming { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 12px; color: #c0d1e8; }
+
+/* The month is a waypoint above the dotted path, rather than a separate toolbar. */
+.close-app .close-profile .profile-journey { grid-template-rows: 64px minmax(0, 1fr); gap: 0; margin-top: 14px; }
+.close-app .close-profile .journey-heading { display: flex; align-items: center; justify-content: center; gap: 0; padding: 0; background: transparent; border-radius: 0; overflow: visible; }
+.close-app .close-profile .journey-heading > .journey-navigation { position: relative; flex: 0 0 auto; width: auto; height: 54px; padding: 0; background: transparent; border-radius: 0; gap: 6px; }
+.close-profile .journey-navigation::after { content: ""; position: absolute; top: calc(100% - 3px); left: calc(50% - 2px); height: 24px; border-left: 4px dotted #a6b6e4; pointer-events: none; }
+.close-app .close-profile .journey-navigation > span { display: flex; align-items: baseline; justify-content: center; gap: 6px; width: auto; min-width: 126px; padding: 12px 14px; border-radius: 22px 24px 18px 24px; background: var(--paper-soft); color: var(--ink); }
+.close-profile .journey-navigation strong { font-size: 17px; font-weight: 900; }
+.close-profile .journey-navigation small { font-size: 12px; font-weight: 700; color: var(--muted); }
+.close-app .close-profile .journey-navigation button { position: relative; background: transparent; }
+.close-profile .journey-navigation button::before { content: ""; position: absolute; inset: 6px; border-radius: 50%; background: var(--paper-soft); z-index: -1; }
+.close-app .close-profile .journey-month-page { background: transparent; }
+.close-profile .journey-month-stage { border-radius: 0 0 18px 18px; }
+@media (max-width: 640px) {
+ .close-app .close-profile .profile-journey { grid-template-rows: 60px minmax(0, 1fr); margin-top: 8px; }
+ .close-profile .journey-navigation strong { font-size: 16px; }
+}

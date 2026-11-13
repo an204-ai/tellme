@@ -7,7 +7,7 @@ if [ "$#" -eq 0 ]; then
   echo 'Usage: sh infra/deploy/build-images.sh docker compose [global Compose options]' >&2
   exit 2
 fi
-for service in api worker-media worker-feed worker-notification web-app web-edge landing admin-edge; do
+for service in api worker-media worker-notification web-app web-edge landing admin-edge; do
   echo "Building Tellme service: $service"
   # Plain progress includes compiler output in Coolify's captured stderr logs.
   if "$@" --progress plain build "$service"; then

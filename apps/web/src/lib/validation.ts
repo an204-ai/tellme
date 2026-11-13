@@ -1,47 +1,16 @@
 import { z } from "zod";
 import { getTellmeSticker } from "@tellme/shared/stickers";
 
-export const postSchema = z
-  .object({
-    content: z.string().trim().max(5000, "Bài viết tối đa 5.000 ký tự."),
-    image: z.string(),
-    topic: z.string().trim().max(40, "Chủ đề tối đa 40 ký tự."),
-    privacy: z.enum(["public", "connections", "private"]),
-    anonymous: z.boolean(),
-  })
-  .refine((value) => value.content.length > 0 || value.image.length > 0, {
-    message: "Viết một câu chuyện hoặc thêm ảnh để chia sẻ.",
-    path: ["content"],
-  });
-
 export const replySchema = z
   .string()
   .trim()
-  .min(1, "Bạn chưa nhập bình luận.")
-  .max(1000, "Bình luận tối đa 1.000 ký tự.");
+  .min(1, "Bạn chưa nhập lời trả lời.")
+  .max(1000, "Lời trả lời tối đa 1.000 ký tự.");
 export const messageDraftSchema = z.object({
   replyToId: z.string().uuid().optional(),
   text: z.string().trim().max(1000, "Tin nhắn tối đa 1.000 ký tự."),
   stickerId: z.string().refine((id) => !!getTellmeSticker(id), "Chọn sticker hợp lệ.").optional(),
 }).refine((draft) => !!draft.text || !!draft.stickerId, "Nhập tin nhắn hoặc chọn sticker.");
-export const commentMediaSchema = z.object({
-  id: z.string().min(1),
-  kind: z.enum(["gif", "sticker"]),
-  url: z.string(),
-  alt: z.string(),
-  width: z.number().positive(),
-  height: z.number().positive(),
-}).refine((media) => media.kind === "sticker" && getTellmeSticker(media.id)?.src === media.url
-  || media.url.startsWith("https://") && URL.canParse(media.url), "Chọn GIF/sticker hợp lệ.");
-export const commentSchema = z
-  .object({
-    text: z.string().trim().max(1000, "Bình luận tối đa 1.000 ký tự."),
-    media: commentMediaSchema.nullable(),
-  })
-  .refine((value) => value.text.length > 0 || value.media !== null, {
-    message: "Viết bình luận hoặc chọn GIF/sticker.",
-    path: ["text"],
-  });
 export const profileSchema = z.object({
   username: z
     .string()
@@ -59,16 +28,7 @@ export const profileSchema = z.object({
     ),
   name: z.string().trim().min(2, "Tên cần ít nhất 2 ký tự.").max(50),
   bio: z.string().trim().max(200, "Giới thiệu tối đa 200 ký tự."),
-  location: z.string().trim().max(60),
-  birthday: z.string().refine((value) => !value || (/^\d{4}-\d{2}-\d{2}$/.test(value) && value >= "1900-01-01" && value <= new Date().toISOString().slice(0, 10) && !Number.isNaN(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value), "Ngày sinh không hợp lệ."),
-  occupation: z.string().trim().max(60, "Công việc tối đa 60 ký tự."),
-  interests: z.string().trim().max(80, "Sở thích tối đa 80 ký tự."),
-  favoriteLunch: z.string().trim().max(60, "Món ăn trưa tối đa 60 ký tự."),
-  favoriteDrink: z.string().trim().max(60, "Đồ uống tối đa 60 ký tự."),
 });
-const personalInfoFields = { location: true, birthday: true, occupation: true, interests: true, favoriteLunch: true, favoriteDrink: true } as const;
-export const personalInfoSchema = profileSchema.pick(personalInfoFields);
-export const profileIdentitySchema = profileSchema.omit(personalInfoFields);
 export const loginSchema = z.object({
   email: z.string().email("Email chưa đúng định dạng."),
   password: z.string().min(8, "Mật khẩu cần ít nhất 8 ký tự.").max(128),
@@ -79,10 +39,8 @@ export const registerSchema = loginSchema.extend({
 export const momentSchema = z.object({
   image: z.string().min(1, "Chụp một bức ảnh cho khoảnh khắc này."),
   caption: z.string().trim().max(300, "Chú thích tối đa 300 ký tự."),
-  storyPrivacy: z.enum(["public", "connections", "private"]),
-  privacy: z.enum(["public", "connections", "private"]).optional(),
+  storyPrivacy: z.literal("connections"),
 });
-export type PostInput = z.infer<typeof postSchema>;
 
 export function localDay(value = new Date()) {
   return new Intl.DateTimeFormat("en-CA", {

@@ -1,11 +1,11 @@
 import type { Hono } from "hono";
 import { z } from "zod";
 import type { Filter } from "mongodb";
-import { users, posts, stories, sessions, reports, messages, config, enqueue, publishUpdate, isSuspended } from "@tellme/database";
+import { users, stories, sessions, reports, messages, config, publishUpdate, isSuspended } from "@tellme/database";
 import type { User } from "@tellme/database";
 import { fail, type Env } from "../../backend/security.js";
 import { pageSchema } from "../../backend/validation.js";
-import { idSchema, isAdmin, moderateContent, reasonSchema, suspendAccount, transaction } from "./admin.service.js";
+import { idSchema, isAdmin, moderateStory, reasonSchema, suspendAccount, transaction } from "./admin.service.js";
 const escaped = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const queryText = (value?: string) => z.string().trim().max(100).parse(value || "");
 const userProjection = { name: 1, username: 1, avatar: 1, email: 1, emailVerifiedAt: 1, createdAt: 1, suspension: 1 };
@@ -22,13 +22,12 @@ export function registerManagementRoutes(api: Hono<Env>) {
   api.get("/admin/users/:id", async (c) => {
     const id = idSchema.parse(c.req.param("id")), user = await users.findOne({ _id: id }, { projection: userProjection });
     if (!user) fail(404, "Tài khoản không tồn tại.");
-    const [postCount, storyCount, commentCount, messageCount, sessionCount, reportCount] = await Promise.all([
-      posts.countDocuments({ authorId: id }), stories.countDocuments({ userId: id }),
-      posts.aggregate([{ $match: { "comments.userId": id } }, { $unwind: "$comments" }, { $match: { "comments.userId": id } }, { $count: "count" }]).toArray(),
+    const [storyCount, messageCount, sessionCount, reportCount] = await Promise.all([
+      stories.countDocuments({ userId: id }),
       messages.countDocuments({ senderId: id }), sessions.countDocuments({ userId: id, expiresAt: { $gt: new Date() } }),
       reports.countDocuments({ targetType: "user", targetId: id }),
     ]);
-    return c.json({ user: userDTO(user), stats: { posts: postCount, stories: storyCount, comments: Number(commentCount[0]?.count || 0), messages: messageCount, sessions: sessionCount, reports: reportCount } });
+    return c.json({ user: userDTO(user), stats: { stories: storyCount, messages: messageCount, sessions: sessionCount, reports: reportCount } });
   });
   api.post("/admin/users/:id/action", async (c) => {
     const id = idSchema.parse(c.req.param("id")), actor = c.get("user")._id;
@@ -49,50 +48,34 @@ export function registerManagementRoutes(api: Hono<Env>) {
     return c.json({ ok: true });
   });
   api.get("/admin/content", async (c) => {
-    const type = z.enum(["post", "story", "comment"]).parse(c.req.query("type") || "post");
+    z.literal("story").parse(c.req.query("type") || "story");
     const state = z.enum(["all", "visible", "hidden"]).parse(c.req.query("state") || "all");
     const q = queryText(c.req.query("q")), author = queryText(c.req.query("author")), { cursor, limit } = pageSchema.parse(c.req.query());
-    const field = type === "comment" ? "comments.moderation.hidden" : "moderation.hidden";
-    const match = { ...(state === "all" ? {} : { [field]: state === "hidden" ? true : { $ne: true } }), ...(author ? { [type === "post" ? "authorId" : type === "story" ? "userId" : "comments.userId"]: author } : {}), ...(q ? { [type === "post" ? "content" : type === "story" ? "items.caption" : "comments.content"]: { $regex: escaped(q), $options: "i" } } : {}) };
-    const collection = type === "story" ? stories : posts;
-    const result = await collection.aggregate([
-      ...(type === "comment" ? [{ $unwind: "$comments" }] : []), { $match: match },
-      { $facet: { count: [{ $count: "total" }], items: [{ $sort: type === "story" ? { updatedAt: -1, _id: -1 } : type === "comment" ? { "comments.createdAt": -1, "comments.id": -1 } : { createdAt: -1, _id: -1 } }, { $skip: cursor }, { $limit: limit }, { $project: type === "post" ? { authorId: 1, content: 1, image: 1, privacy: 1, anonymous: 1, createdAt: 1, moderation: 1 } : type === "story" ? { userId: 1, day: 1, items: 1, updatedAt: 1, privacy: 1, moderation: 1 } : { comments: 1, privacy: 1 } }] } },
-    ]).toArray();
-    const rows = result[0]?.items || [], total = Number(result[0]?.count[0]?.total || 0);
-    const ids = rows.map((row: Record<string, any>) => type === "post" ? row.authorId : type === "story" ? row.userId : row.comments.userId);
-    const authors = await users.find({ _id: { $in: ids } }, { projection: { name: 1, username: 1 } }).toArray();
-    const image = (url: string) => url.startsWith("/") ? `${config.APP_URL}${url}` : url;
-    const items = rows.map((row: Record<string, any>) => {
-      const value = type === "comment" ? row.comments : row;
-      const authorId = type === "post" ? row.authorId : type === "story" ? row.userId : value.userId;
-      return { _id: type === "comment" ? value.id : row._id, postId: type === "comment" ? row._id : undefined, type, authorId, author: authors.find((person) => person._id === authorId)?.name || "Tài khoản không còn tồn tại", text: type === "story" ? row.items.map((item: { caption: string }) => item.caption).filter(Boolean).join("\n").slice(0, 600) : value.content?.slice(0, 600), images: (type === "story" ? row.items.slice(0, 4).map((item: { image: string }) => item.image) : type === "comment" ? value.media ? [value.media.url] : [] : row.image ? [row.image] : []).map(image), at: row.updatedAt || value.createdAt, day: row.day, privacy: row.privacy, anonymous: !!row.anonymous, moderation: value.moderation || null, moments: type === "story" ? row.items.length : undefined };
-    });
-    return c.json({ items, total, nextCursor: cursor + items.length < total ? cursor + items.length : null });
+    const match = { ...(state === "all" ? {} : { "moderation.hidden": state === "hidden" ? true : { $ne: true } }), ...(author ? { userId: author } : {}), ...(q ? { "items.caption": { $regex: escaped(q), $options: "i" } } : {}) };
+    const [rows, total] = await Promise.all([
+      stories.find(match).sort({ updatedAt: -1, _id: -1 }).skip(cursor).limit(limit).toArray(), stories.countDocuments(match),
+    ]);
+    const authors = await users.find({ _id: { $in: rows.map((row) => row.userId) } }, { projection: { name: 1 } }).toArray();
+    return c.json({ items: rows.map((row) => ({ _id: row._id, type: "story", authorId: row.userId,
+      author: authors.find((person) => person._id === row.userId)?.name || "Tài khoản không còn tồn tại",
+      text: row.items.map((item) => item.caption).filter(Boolean).join("\n").slice(0, 600),
+      images: row.items.slice(0, 4).map((item) => item.image.startsWith("/") ? `${config.APP_URL}${item.image}` : item.image),
+      at: row.updatedAt, day: row.day, privacy: row.privacy, moderation: row.moderation || null, moments: row.items.length,
+    })), total, nextCursor: cursor + rows.length < total ? cursor + rows.length : null });
   });
   api.post("/admin/content/:type/:id/moderate", async (c) => {
-    const type = z.enum(["post", "story", "comment"]).parse(c.req.param("type")), id = idSchema.parse(c.req.param("id"));
-    const { hidden, reason, postId } = z.object({ hidden: z.boolean(), reason: reasonSchema, postId: idSchema.optional() }).parse(await c.req.json());
-    await transaction(async (session) => { await moderateContent(type, id, hidden, c.get("user")._id, reason, session, postId); await enqueue("feed.rebuild", {}, { session }); });
+    z.literal("story").parse(c.req.param("type"));
+    const id = idSchema.parse(c.req.param("id"));
+    const { hidden, reason } = z.object({ hidden: z.boolean(), reason: reasonSchema }).parse(await c.req.json());
+    await transaction(async (session) => { await moderateStory(id, hidden, c.get("user")._id, reason, session); });
     await publishUpdate([], "community");
     return c.json({ ok: true });
   });
   api.get("/admin/content/:type/:id", async (c) => {
-    const type = z.enum(["post", "story", "comment"]).parse(c.req.param("type")), id = idSchema.parse(c.req.param("id"));
-    const postId = c.req.query("postId") ? idSchema.parse(c.req.query("postId")) : undefined;
-    if (type === "comment" && !postId) fail(400, "Thiếu mã bài viết của bình luận.");
-    let entry;
-    if (type === "story") {
-      const story = await stories.findOne({ _id: id });
-      if (!story) fail(404, "Chuỗi ảnh không tồn tại.");
-      entry = { _id: id, authorId: story.userId, text: story.items.map((item) => item.caption).filter(Boolean).join("\n\n"), images: story.items.map((item) => item.image), at: story.updatedAt, day: story.day, privacy: story.privacy, moments: story.items.length, moderation: story.moderation || null, anonymous: false };
-    } else {
-      const post = await posts.findOne(type === "post" ? { _id: id } : { _id: postId, "comments.id": id });
-      if (!post) fail(404, "Bài viết không tồn tại.");
-      const comment = type === "comment" ? post.comments.find((item) => item.id === id) : undefined;
-      if (type === "comment" && !comment) fail(404, "Bình luận không tồn tại.");
-      entry = comment ? { _id: id, postId: post._id, authorId: comment.userId, text: comment.content, images: comment.media ? [comment.media.url] : [], at: comment.createdAt, privacy: post.privacy, moderation: comment.moderation || null, anonymous: post.anonymous && comment.userId === post.authorId } : { _id: id, authorId: post.authorId, text: post.content, images: post.image ? [post.image] : [], at: post.createdAt, privacy: post.privacy, moderation: post.moderation || null, anonymous: post.anonymous };
-    }
+    const type = z.literal("story").parse(c.req.param("type")), id = idSchema.parse(c.req.param("id"));
+    const story = await stories.findOne({ _id: id });
+    if (!story) fail(404, "Chuỗi ảnh không tồn tại.");
+    const entry = { _id: id, authorId: story.userId, text: story.items.map((item) => item.caption).filter(Boolean).join("\n\n"), images: story.items.map((item) => item.image), at: story.updatedAt, day: story.day, privacy: story.privacy, moments: story.items.length, moderation: story.moderation || null };
     const author = await users.findOne({ _id: entry.authorId }, { projection: { name: 1 } });
     return c.json({ ...entry, type, author: author?.name || "Tài khoản không còn tồn tại", images: entry.images.map((url) => url.startsWith("/") ? `${config.APP_URL}${url}` : url) });
   });

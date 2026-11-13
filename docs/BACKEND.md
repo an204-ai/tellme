@@ -19,16 +19,16 @@ Lệnh phát triển khởi động Redis bằng Docker Compose nếu chưa có 
 | API | `http://127.0.0.1:4000` |
 | Health | `GET /health` |
 
-Biến chính được khai báo trong `.env.example`: `MONGODB_URI`, `MONGODB_DB`, `CLOUDINARY_URL`, `GIPHY_API_KEY`, `REDIS_URL`, `API_INTERNAL_URL`, `APP_URL`, `WEB_ORIGINS`, `PORT`, `API_HOST`, `NODE_ENV`. `SMTP_URL`/`EMAIL_FROM` bật gửi email; `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` bật Web Push; `ADMIN_EMAILS` cấp quyền API quản trị. `MEDIA_ORPHAN_HOURS` điều chỉnh thời gian lưu media chưa có tham chiếu trước khi sweeper dọn.
+Biến chính được khai báo trong `.env.example`: `MONGODB_URI`, `MONGODB_DB`, `CLOUDINARY_URL`, `REDIS_URL`, `API_INTERNAL_URL`, `APP_URL`, `WEB_ORIGINS`, `PORT`, `API_HOST`, `NODE_ENV`. `SMTP_URL`/`EMAIL_FROM` bật gửi email; `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` bật Web Push; `ADMIN_EMAILS` cấp quyền API quản trị. `MEDIA_ORPHAN_HOURS` điều chỉnh thời gian lưu media chưa có tham chiếu trước khi sweeper dọn.
 
 Đặt `NODE_ENV=production`, origin HTTPS chính xác và truyền secrets bằng môi trường của nền tảng khi triển khai. `.dockerignore` loại `.env` khỏi image. Compose phát triển `infra/dev/compose.yaml` chỉ khởi chạy Redis; production dùng `infra/deploy/compose.yaml` cho Redis, web, landing, admin, API và workers, còn API/worker kết nối MongoDB Atlas hiện tại bằng `MONGODB_URI`. Không có MongoDB container, replica set trên VPS hay bước migration/reset database trong stack này. Hướng dẫn domain/biến môi trường/Atlas Network Access: [infra/deploy/README.md](../infra/deploy/README.md). Dockerfile API/worker dùng chung giữ tại `infra/docker/`; script phát triển ở `infra/scripts/`. Redis dev giữ project `docker` và volume cũ sau khi chuyển đường dẫn. Production yêu cầu `ADMIN_EMAILS` thực tế, không còn email mặc định; bỏ trống sẽ bị Compose từ chối. Kết quả build/TypeScript và thử RAM tại [infra/deploy/REVIEW.md](../infra/deploy/REVIEW.md).
 
 ## Truy cập và đăng nhập
 
 - `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout`; `GET /api/auth/me`.
-- Khách không đăng nhập được phép đọc bootstrap công khai, feed/bài public, chuỗi ảnh public và hồ sơ public. `/community/today` và `/community/feed` có thể xem trước khi đăng nhập.
-- Ghi bài, bình luận, reaction, follow, chat, upload, thông báo, cài đặt và các nội dung cá nhân yêu cầu session hợp lệ.
-- Bài/chuỗi ảnh connections chỉ hiển thị khi hai người follow lẫn nhau; chặn áp dụng hai chiều. API kiểm tra quyền trước khi tạo DTO.
+- Khách chỉ nhận bootstrap rỗng để biết trạng thái đăng nhập. Ảnh, hồ sơ và tìm Tellme ID đều yêu cầu phiên.
+- Kết nối bằng đúng Tellme ID và lời mời được người nhận chấp nhận; không còn follow một chiều hoặc gợi ý tài khoản.
+- API kiểm tra quan hệ bạn bè hiện tại và chặn ở tất cả đường đọc. Ảnh cũ public cũng chỉ dành cho bạn bè; ảnh/ngày private cũ vẫn chỉ dành cho chủ sở hữu.
 - Session nằm trong cookie HttpOnly/SameSite=Lax; production bật Secure. DB chỉ lưu SHA-256 của token ngẫu nhiên; mật khẩu dùng scrypt.
 
 ## Các route nghiệp vụ
@@ -37,35 +37,36 @@ Tất cả route dưới `/api`; JSON trừ upload multipart.
 
 | Nhóm | Route tiêu biểu |
 | --- | --- |
-| Public read | `GET /bootstrap`, `/posts`, `/posts/:id`, `/stories/:id`, `/users/:username`, `/users/:id/activity` |
-| Người dùng | `PATCH /users/me`, `PUT /users/me/settings`, `PUT/DELETE /users/me/push-subscription`, `PUT /users/:id/follow`, `/block` |
-| Bài viết | `POST/DELETE /posts`, reaction, save, share, comments, hide, report |
-| Tell me · Tell you | `POST /stories/moments`, phản ứng và xóa mốc ảnh |
+| Trạng thái phiên | `GET /bootstrap`; khách nhận danh sách rỗng |
+| Người dùng | `PATCH /users/me`, `PUT /users/me/settings`, `PUT/DELETE /users/me/push-subscription`, `PUT /users/:id/block`; kết bạn qua `/friends/lookup`, `/friends/requests`, `/friends/:id` |
+| Tell me now | `POST /stories/moments`, phản ứng và xóa mốc ảnh |
 | Tin nhắn | Tạo hội thoại; đọc/gửi tin; đánh dấu đã đọc; hỗ trợ trả lời một mốc ảnh bằng `storyReply: {storyId,momentId}` |
-| Media | `POST /media/upload`, `GET /media/giphy` |
-| Admin API | Tổng quan, `/admin/infrastructure`, `/admin/audit`, `/admin/analytics`, người dùng/chi tiết/thao tác, nội dung/kiểm duyệt, job/retry, báo cáo/xử lý và dựng bảng tin. Hộp thông báo có phân trang `/notifications/inbox`, nhóm theo người gửi/loại; 7 ngày gần nhất tải trước, lịch sử cũ tải khi người dùng chọn xem thêm. Chỉ email quản trị đã xác thực trong `ADMIN_EMAILS`. Xem [ADMIN.md](ADMIN.md). |
-| Kho lưu trữ | `GET /archive?view=saved\|hidden&cursor=0&limit=12` gộp bài viết và chuỗi; `DELETE /posts/:id/hidden`, `DELETE /stories/:id/hidden` hiện lại từng mục. Luôn kiểm tra quyền xem hiện tại và quyền từng ảnh trước khi phân trang. |
+| Media | `POST /media/upload`, `GET /media/images/:key`; ảnh mới authenticated, proxy kiểm tra quyền |
+| Admin API | Tổng quan, `/admin/infrastructure`, `/admin/audit`, `/admin/analytics`, người dùng/chi tiết/thao tác, nội dung/kiểm duyệt, job/retry, báo cáo/xử lý. Hộp thông báo có phân trang `/notifications/inbox`, nhóm theo người gửi/loại; 7 ngày gần nhất tải trước, lịch sử cũ tải khi người dùng chọn xem thêm. Chỉ email quản trị đã xác thực trong `ADMIN_EMAILS`. Xem [ADMIN.md](ADMIN.md). |
 
 Admin web: mở `http://127.0.0.1:3001` khi chạy `pnpm dev`, hoặc chạy riêng `pnpm --filter @tellme/admin dev`. Dùng tài khoản Tellme riêng có email đã xác thực và nằm trong `ADMIN_EMAILS` ở `.env` gốc; không có mật khẩu admin mặc định. Danh sách phân trang 20 mục. Vite proxy `/api` tới `API_INTERNAL_URL`, dùng session HttpOnly và kiểm tra origin; `ADMIN_APP_URL` phải đúng origin khi triển khai. Đổi `.env` cần khởi động lại API. Có tạm khóa/mở khóa/thu hồi phiên, ẩn/khôi phục nội dung, xử lý báo cáo, retry job và nhật ký có lý do. Log ứng dụng giữ 7 ngày; thống kê hoạt động bắt đầu ghi từ khi triển khai, không có lịch sử trước đó. Dữ liệu job không trả payload/error thô; API không trả password hash/token hoặc nội dung chat riêng. Cách vận hành, quyền hạn, giới hạn đo lường và kiểm thử tại [ADMIN.md](ADMIN.md).
 
-Hồ sơ có 6 mục tự chọn: `location`, `birthday` (YYYY-MM-DD), `occupation`, `interests`, `favoriteLunch`, `favoriteDrink`; API kiểm tra độ dài và ngày hợp lệ. `GET /users/:username` trả thêm `followersCount`/`followingCount` tính từ quan hệ thật, bỏ các quan hệ chặn hai chiều.
+Hồ sơ chỉ còn danh tính, avatar/bìa và giới thiệu. `GET /users/:username` yêu cầu chính chủ/bạn bè hiện tại, không chạy truy vấn đếm bạn bè/khoảnh khắc. Đã gỡ API kho lưu trữ, lưu/ẩn/hiện lại chuỗi, các bộ lọc và field bootstrap liên quan; lịch sử ảnh trong hành trình vẫn giữ.
 
 Input được xác thực lại bằng Zod. API lấy actor từ session, kiểm tra quyền trên MongoDB và trả lỗi JSON có status HTTP phù hợp. Upload được giới hạn ở 50 MB mỗi ảnh; endpoint cho phép thêm multipart metadata. Các định dạng được xác định bằng chữ ký file, gồm JPEG, PNG, WebP, GIF, AVIF, HEIC/HEIF, BMP và TIFF. Khả năng Cloudinary nhận/biến đổi file phụ thuộc tài khoản Cloudinary.
 
 ## MongoDB và media lifecycle
 
-`@tellme/database` quản lý các collections `users`, `sessions`, `posts`, `stories`, `conversations`, `messages`, `notifications`, `media`, `reports`, `background_jobs` và `push_subscriptions`, cùng indexes/TTL.
+`@tellme/database` quản lý các collections `users`, `friend_requests`, `sessions`, `stories`, `conversations`, `messages`, `notifications`, `media`, `reports`, `background_jobs` và `push_subscriptions`, cùng indexes/TTL.
 
-Ảnh chỉ được gắn vào nội dung nếu URL thuộc media của người đăng. Khi xóa bài/mốc ảnh hoặc thay avatar/bìa, transaction ghi cleanup job vào outbox cùng thay đổi dữ liệu. Worker rà tham chiếu từ bài, stories và hồ sơ trước khi gọi Cloudinary destroy; nếu URL còn được dùng thì giữ lại. Sweeper chạy định kỳ để xử lý ảnh mồ côi hoặc cleanup job đã gián đoạn. Ảnh mới được đưa vào Cloudinary với kích thước gốc, worker tạo URL thumbnail/feed và blurhash.
+Ảnh chỉ được gắn vào nội dung nếu URL thuộc media của người đăng. Khi xóa mốc ảnh hoặc thay avatar/bìa, transaction ghi cleanup job vào outbox cùng thay đổi dữ liệu. Worker rà tham chiếu stories, hồ sơ và nhóm trước khi gọi Cloudinary destroy; nếu URL còn được dùng thì giữ lại. Sweeper xử lý ảnh mồ côi. Ảnh mới dùng delivery type `authenticated`; trình duyệt chỉ nhận endpoint kiểm tra phiên. Worker dùng đúng delivery type để xử lý/dọn media. Ảnh cũ có bước chuyển riêng trong [PRIVATE-MEDIA-ROLLOUT.md](PRIVATE-MEDIA-ROLLOUT.md).
+
+## Phạm vi đã gỡ — 13/11/2026
+
+Không còn `GET /search`, `GET /posts` hoặc `POST /posts`. Thống kê chủ đề, cache bảng bài và worker dựng bảng bài đã được gỡ. Không còn model, collection hoặc API bài viết/bình luận, kể cả dữ liệu cũ trên hồ sơ và trong chat. Dispatcher đánh dấu hoàn tất các outbox entry thuộc queue đã nghỉ, không tạo lại queue đó. Khi deploy, dừng/xóa service worker bảng bài cũ nếu nền tảng vẫn giữ orphan service; chỉ chạy script dọn phần Khám phá, không flush toàn bộ Redis.
 
 ## Redis, outbox và worker
 
 Ghi tác vụ nền đầu tiên vào `background_jobs` trong MongoDB để thao tác chính không mất yêu cầu khi Redis tạm thời ngắt. Dispatcher đưa outbox vào BullMQ; BullMQ dùng retry exponential backoff, worker ghi `completed`/`failed`, API admin có thể retry job lỗi.
 
-Ba worker:
+Hai worker:
 
 - `@tellme/worker-media`: biến thể ảnh và dọn Cloudinary media.
-- `@tellme/worker-feed`: feed public cache và thống kê chủ đề.
 - `@tellme/worker-notification`: thông báo in-app, Web Push và email bảo mật sau khi thay đổi mật khẩu.
 
 Worker heartbeat được lưu trong Redis để `/api/admin/status` có thể báo worker đang hoạt động. Realtime gửi sự kiện qua WebSocket `/api/realtime` và Redis Pub/Sub; nếu Redis không kết nối, web tiếp tục polling, ẩn chấm xanh chưa xác nhận và job outbox vẫn đợi dispatcher. SSE `/api/events` chỉ giữ để tương thích client cũ.
@@ -82,7 +83,7 @@ pnpm check-types
 pnpm build
 ```
 
-Các tệp kiểm thử và lệnh test đã được xóa theo yêu cầu của chủ dự án. Kiểm tra workspace bằng `pnpm check-types` và `pnpm build`.
+Kiểm tra workspace bằng `pnpm check-types`, `pnpm build`. Bộ hồi quy quyền kết bạn/ảnh/emoji chạy bằng `pnpm --filter @tellme/api test:close-friends` sau khi build database; mọi storage trong bộ này nằm trong bộ nhớ, không kết nối DB/Cloudinary thật.
 
 
 ## Xác thực email, mật khẩu và Web Push
@@ -139,19 +140,19 @@ Các kiểm tra bảo mật dùng database QA ngẫu nhiên và SMTP sink cục 
 
 Trường cũ `breakTime` được giữ tương thích trong database/API input nhưng không còn hiển thị trên hồ sơ. Không tự chuyển nội dung giờ nghỉ cũ sang món ăn trưa để tránh đổi sai ý nghĩa thông tin người dùng.
 
-Quyền chat được thực thi trong API: chat riêng yêu cầu hai người follow hai chiều, không có block. Khi tạo nhóm, mỗi người được mời chỉ cần là bạn bè hai chiều của người tạo; người được mời không cần follow nhau. Sau khi tạo, quyền gửi tin/chia sẻ vào nhóm dựa trên thành viên hiện tại, tài khoản khả dụng và không có block; bỏ follow không tự xóa tư cách thành viên. Có chung nhóm không mở quyền nhắn riêng với người lạ. Bootstrap trả `canMessage` theo đúng quy tắc này; API vẫn kiểm tra lại khi gửi text, chia sẻ bài viết và trả lời khoảnh khắc. Không xóa lịch sử hay quan hệ người dùng khi áp dụng quy tắc.
+Quyền chat được thực thi trong API: chat riêng yêu cầu hai người follow hai chiều, không có block. Khi tạo nhóm, mỗi người được mời chỉ cần là bạn bè hai chiều của người tạo; người được mời không cần follow nhau. Sau khi tạo, quyền gửi tin/chia sẻ vào nhóm dựa trên thành viên hiện tại, tài khoản khả dụng và không có block; bỏ follow không tự xóa tư cách thành viên. Có chung nhóm không mở quyền nhắn riêng với người lạ. Bootstrap trả `canMessage` theo đúng quy tắc này; API vẫn kiểm tra lại khi gửi text/sticker và trả lời khoảnh khắc. Không xóa lịch sử hay quan hệ người dùng khi áp dụng quy tắc.
 
 ### Avatar nhóm và bộ cảm xúc
 
 `POST /conversations` nhận `avatar` cho nhóm: một trong 6 đường dẫn preset được cho phép hoặc URL media do người tạo upload. Bỏ trống dùng avatar nhóm mặc định. Transaction `withMediaChange` kiểm tra quyền sở hữu và lưu tham chiếu ảnh cùng nhóm; worker cleanup/sweeper kiểm tra cả `conversations.avatar`, giữ ảnh khi nhóm vẫn đang sử dụng. DTO hội thoại trả lại avatar và WebSocket báo cập nhật cho thành viên.
 
-API ghi cảm xúc nhận `like`, `love`, `haha`, `wow`, `sad` hoặc `null` để bỏ. DTO chuẩn hóa dữ liệu cũ khi đọc (`cheer → like`, `celebrate → wow`, `appreciate → love`, `smile → haha`) mà không thay đổi dữ liệu gốc. DTO bài viết có `reactorReactions` để danh sách người phản ứng hiển thị đúng artwork.
+API ghi cảm xúc nhận `like`, `love`, `haha`, `wow`, `sad` hoặc `null` để bỏ. DTO chuẩn hóa dữ liệu cũ khi đọc (`cheer → like`, `celebrate → wow`, `appreciate → love`, `smile → haha`) mà không thay đổi dữ liệu gốc.
 
 ### MongoDB bị mất kết nối / TLS alert 80
 
 Chạy `pnpm db:check` ở gốc để ping bằng chính cấu hình `.env`, không đọc/ghi dữ liệu và không in URI hoặc mật khẩu. `ERR_SSL_TLSV1_ALERT_INTERNAL_ERROR` là kết nối TLS bị ngắt; riêng log này chưa xác định được lỗi IP Access List, cluster hay đường truyền/VPN. Kiểm tra IP public hiện tại trong Atlas Network Access, trạng thái cluster, rồi thử mạng khác nếu vẫn lỗi. Không tắt xác minh chứng chỉ hoặc hạ phiên bản TLS để che lỗi.
 
-API và cả ba worker dùng chung `waitForDatabase`: lỗi kết nối tạm thời sẽ thử lại với thời gian chờ tăng dần 1–30 giây kèm jitter. Lỗi xác thực/cấu hình không bị lặp vô hạn. API mở cổng HTTP ngay khi khởi động và trả `503` + `Retry-After` trong lúc chờ MongoDB; sau khi kết nối và khởi tạo dịch vụ xong, API phục vụ bình thường. Khi đã chạy, MongoDB driver tiếp tục quản lý reconnect; lỗi kết nối của request trả 503 và log nguyên nhân rút gọn tối đa một lần mỗi 30 giây. Worker không khởi tạo consumer hoặc lên lịch job trước khi database sẵn sàng. `Ctrl+C` hủy quá trình chờ và đóng kết nối.
+API và cả hai worker dùng chung `waitForDatabase`: lỗi kết nối tạm thời sẽ thử lại với thời gian chờ tăng dần 1–30 giây kèm jitter. Lỗi xác thực/cấu hình không bị lặp vô hạn. API mở cổng HTTP ngay khi khởi động và trả `503` + `Retry-After` trong lúc chờ MongoDB; sau khi kết nối và khởi tạo dịch vụ xong, API phục vụ bình thường. Khi đã chạy, MongoDB driver tiếp tục quản lý reconnect; lỗi kết nối của request trả 503 và log nguyên nhân rút gọn tối đa một lần mỗi 30 giây. Worker không khởi tạo consumer hoặc lên lịch job trước khi database sẵn sàng. `Ctrl+C` hủy quá trình chờ và đóng kết nối.
 
 ### Thông tin và quản lý hội thoại
 
@@ -172,7 +173,7 @@ DTO trả `ownerId` (alias `me` khi là chính mình) và `muted`; nhóm cũ ch�
 
 `GET /api/realtime` nâng cấp WebSocket trên chính API HTTP/1, dùng cookie HttpOnly đã có. Server kiểm tra Origin trong WEB_ORIGINS và session MongoDB lúc bắt tay; không nhận userId hay danh sách người cần theo dõi từ client. Next external rewrite hỗ trợ upgrade; proxy triển khai phải chuyển tiếp Upgrade/Connection (đã có mẫu trong infra/deploy/nginx/web.conf và infra/deploy/nginx/admin.conf). Tối đa 8 socket/tài khoản, frame 1 KB, có giới hạn tần suất và đóng client nhận quá chậm. Đăng xuất thu hồi socket theo session; đổi/khôi phục mật khẩu thu hồi các socket cũ.
 
-Client dùng một kết nối cho cập nhật chat, feed, thông báo, hồ sơ và presence. Heartbeat `h` / xác nhận `p` rất nhỏ, mỗi lần cách 22–32 giây với jitter mới; reconnect có backoff và jitter. Heartbeat không tạo HTTP và không đọc/ghi MongoDB. Query metadata đối soát mỗi 60 giây khi realtime khỏe, quay về 10 giây khi lỗi; đây là polling dữ liệu dự phòng, không phải heartbeat.
+Client dùng một kết nối cho cập nhật chat, chuỗi khoảnh khắc, thông báo, hồ sơ và presence. Heartbeat `h` / xác nhận `p` rất nhỏ, mỗi lần cách 22–32 giây với jitter mới; reconnect có backoff và jitter. Heartbeat không tạo HTTP và không đọc/ghi MongoDB. Query metadata đối soát mỗi 60 giây khi realtime khỏe, quay về 10 giây khi lỗi; đây là polling dữ liệu dự phòng, không phải heartbeat.
 
 RedisPresence giữ sorted set lease theo user và connectionId, TTL 75 giây; index toàn cục chứa hạn lease mới nhất. Lua gia hạn/rời kết nối/prune và publish online ↔ offline trong một bước nguyên tử. Gia hạn không publish lại. Đóng một tab chỉ xóa lease của tab đó, không làm tài khoản offline nếu còn tab/thiết bị khác. Sweeper mỗi khoảng 5–7 giây dọn lease quá hạn của cả API server bị chết; nhiều API cùng sweep vẫn chỉ publish một lần. Tất cả node dùng chung prefix từ MONGODB_DB và Redis.
 
@@ -182,3 +183,7 @@ Các kiểm tra realtime trước đây đã dùng database/namespace riêng và
 
 
 Thông báo nhắc giờ/thời tiết dùng Redis inbox có TTL và BullMQ trực tiếp, không ghi MongoDB outbox; xem lịch, giới hạn gửi, consent vị trí và kiểm tra trong [WEATHER.md](WEATHER.md#thông-báo-hệ-thống-và-worker-31102026).
+
+## Dọn dữ liệu Khám phá cũ
+
+Dữ liệu Khám phá cũ đã được dọn khỏi database, gồm bài viết, tham chiếu chia sẻ và các job liên quan. Script dọn một lần đã được gỡ; deploy không chạy lại thao tác xóa dữ liệu. Validator `background_jobs` tiếp tục từ chối `feed.rebuild`, ngăn worker cũ tạo lại job Khám phá. Các job media/thông báo vẫn hoạt động.

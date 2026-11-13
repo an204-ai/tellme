@@ -44,9 +44,6 @@ jobs:
           - name: worker-media
             file: infra/docker/worker.Dockerfile
             args: WORKER=@tellme/worker-media
-          - name: worker-feed
-            file: infra/docker/worker.Dockerfile
-            args: WORKER=@tellme/worker-feed
           - name: worker-notification
             file: infra/docker/worker.Dockerfile
             args: WORKER=@tellme/worker-notification
@@ -87,7 +84,7 @@ jobs:
           DOCKERHUB_REPOSITORY: ${{ vars.DOCKERHUB_REPOSITORY }}
         run: |
           {
-            echo "### All eight Tellme images published"
+            echo "### All seven Tellme images published"
             echo
             echo "Copy these values into the Coolify Tellme resource:"
             echo
@@ -139,7 +136,7 @@ jobs:
             exit 1
           }
 
-          # Select the same commit for both the Compose file and all eight images.
+          # Select the same commit for both the Compose file and all seven images.
           coolify --request PATCH --data "$(jq -nc --arg sha "$GITHUB_SHA" '{key:"TELLME_IMAGE_REVISION",value:$sha}')" "$app/envs" > /dev/null
           coolify --request PATCH --data "$(jq -nc --arg sha "$GITHUB_SHA" '{git_commit_sha:$sha}')" "$app" > /dev/null
           deployment=$(coolify --request POST --data "$(jq -nc --arg uuid "$COOLIFY_APP_UUID" '{uuid:$uuid,force:true}')" "$api/deploy" |

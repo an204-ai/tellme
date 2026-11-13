@@ -3,6 +3,6 @@ export interface ChatMessage {
   conversationId: string;
   senderId: string;
   content: string;
-  type: "text" | "image" | "post_share" | "story_share";
+  type: "text" | "image" | "story_share";
   createdAt: string;
 }

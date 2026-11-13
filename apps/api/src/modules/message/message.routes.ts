@@ -8,7 +8,6 @@ import {
   now,
   internalId,
   relations,
-  requirePost,
   requireConversation,
   requireStory,
   canViewMoment,
@@ -42,7 +41,7 @@ export function registerMessageRoutes(api: Hono<Env>) {
         participants.length
     )
       fail(400, "Thành viên không khả dụng.");
-    if (!await chatAllowed(participants, input.kind === "group" ? me._id : undefined)) fail(403, input.kind === "group" ? "Chỉ có thể mời bạn bè của bạn vào nhóm. Kiểm tra lại các tài khoản đã chặn." : "Hai người cần follow nhau để nhắn tin riêng.");
+    if (!await chatAllowed(participants, input.kind === "group" ? me._id : undefined)) fail(403, input.kind === "group" ? "Chỉ có thể mời bạn bè của bạn vào nhóm. Kiểm tra lại các tài khoản đã chặn." : "Hai người cần chấp nhận kết bạn để nhắn tin riêng.");
     const directKey =
       input.kind === "direct" ? [...participants].sort().join(":") : undefined;
     if (directKey) {
@@ -72,13 +71,6 @@ export function registerMessageRoutes(api: Hono<Env>) {
     const me = c.get("user"),
       chat = await requireConversation(c.req.param("id"), me, true),
       input = v.messageSchema.parse(await c.req.json());
-    if (input.postId) {
-      const post = await requirePost(input.postId, me);
-      for (const id of chat.participants) {
-        const recipient = await users.findOne({ _id: id });
-        if (recipient) await requirePost(post._id, recipient);
-      }
-    }
     if (input.storyReply) {
       const story = await requireStory(input.storyReply.storyId, me);
       if (!(await canViewMoment(story, input.storyReply.momentId, me)))
@@ -90,7 +82,7 @@ export function registerMessageRoutes(api: Hono<Env>) {
     if (input.replyToId && !original) fail(404, "Tin nhắn cần trả lời không còn khả dụng.");
     const message = {
       ...(original ? { replyTo: { messageId: original._id, senderId: original.senderId,
-        text: original.text || (original.postId ? "Bài viết được chia sẻ" : original.storyReply ? "Khoảnh khắc" : ""),
+        text: original.text || (original.storyReply ? "Khoảnh khắc" : ""),
         ...(original.stickerId ? { stickerId: original.stickerId } : {}),
       } } : {}),
       _id: input.id,
@@ -99,7 +91,6 @@ export function registerMessageRoutes(api: Hono<Env>) {
       text: input.text,
       ...(input.stickerId ? { stickerId: input.stickerId } : {}),
       at: now(),
-      ...(input.postId ? { postId: input.postId } : {}),
       ...(input.storyReply ? { storyReply: input.storyReply } : {}),
     };
     await messages.insertOne(message);
@@ -108,7 +99,7 @@ export function registerMessageRoutes(api: Hono<Env>) {
       { $set: { updatedAt: now() } },
     );
     const dto = await messageDTO(message, me);
-    await publishUpdate(chat.participants, "chat.message", { conversationId: chat._id, message: { id: message._id, userId: me._id, text: message.text, at: message.at, ...(message.stickerId ? { stickerId: message.stickerId } : {}), ...(message.postId ? { postId: message.postId } : {}), ...(dto.storyReply ? { storyReply: dto.storyReply } : {}), ...(message.replyTo ? { replyTo: { messageId: message.replyTo.messageId, userId: message.replyTo.senderId, text: message.replyTo.text, ...(message.replyTo.stickerId ? { stickerId: message.replyTo.stickerId } : {}) } } : {}) } });
+    await publishUpdate(chat.participants, "chat.message", { conversationId: chat._id, message: { id: message._id, userId: me._id, text: message.text, at: message.at, ...(message.stickerId ? { stickerId: message.stickerId } : {}), ...(dto.storyReply ? { storyReply: dto.storyReply } : {}), ...(message.replyTo ? { replyTo: { messageId: message.replyTo.messageId, userId: message.replyTo.senderId, text: message.replyTo.text, ...(message.replyTo.stickerId ? { stickerId: message.replyTo.stickerId } : {}) } } : {}) } });
     await Promise.all(
       chat.participants
         .filter((id) => id !== me._id && !chat.mutedBy?.includes(id))
@@ -117,7 +108,6 @@ export function registerMessageRoutes(api: Hono<Env>) {
             id,
             me._id,
             "đã gửi cho bạn một tin nhắn.",
-            undefined,
             "message",
             { messageId: message._id, conversationId: chat._id, at: message.at },
           ),

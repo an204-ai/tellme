@@ -53,28 +53,6 @@
 .tellme-intro-words > span:nth-child(1) { --word-angle: -3deg; animation-delay: 60ms; }
 .tellme-intro-words > span:nth-child(2) { --word-angle: 2deg; animation-delay: 280ms; }
 .tellme-intro-words > span:nth-child(3) { --word-angle: -2deg; animation-delay: 500ms; }
-.tellme-intro-skip {
-  position: absolute;
-  z-index: 2;
-  right: max(24px, env(safe-area-inset-right));
-  bottom: max(24px, env(safe-area-inset-bottom));
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 44px;
-  padding: 8px 16px;
-  border: 1px solid #ffffff66;
-  border-radius: 99px;
-  background: transparent;
-  color: #fffaf0;
-  font: inherit;
-  font-size: 13px;
-  line-height: 1.5;
-  cursor: pointer;
-}
-.tellme-intro-skip:hover { background: #ffffff14; }
-.tellme-intro-skip:focus-visible { outline: 2px solid #fffaf0; outline-offset: 4px; }
 .tellme-entry-content.is-entering { animation: tellme-intro-page-in 900ms 1200ms cubic-bezier(.45,0,.2,1) backwards; }
 @keyframes tellme-intro-stamp {
   0% { opacity: 0; transform: translateY(16px) scale(1.4) rotate(var(--word-angle)); }

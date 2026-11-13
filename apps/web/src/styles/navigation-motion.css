@@ -15,22 +15,6 @@
   inset: 0;
   background: linear-gradient(125deg, #ffffff10, transparent 65%);
 }
-.desktop-nav-track > a { position: relative; z-index: 1; transition: color 180ms ease-out, background-color 180ms ease-out; }
-.desktop-nav-track > .nav-item.active,
-.desktop-nav-track > .nav-item[data-selected="true"] { background: transparent; }
-.desktop-nav-track > .nav-item[data-selected="true"],
-.desktop-nav-track > .nav-item[data-selected="true"] svg { color: #fff; }
-.desktop-nav-track > .nav-item[data-selected="false"],
-.desktop-nav-track > .nav-item[data-selected="false"] svg { color: #000; }
-.desktop-nav-track > .nav-item[data-selected="false"]:hover { background: #f4f4f4; }
-.desktop-nav-track > .nav-item[data-selected="true"] .nav-badge { color: #fff; }
-@media (max-width: 640px) {
-  .mobile-nav-track > .nav-liquid-glider { border-radius: 999px; background: #e6eef9; }
-  .mobile-nav-track > a[data-selected="false"] { color: #000; }
-  .mobile-nav-track > a[data-selected="true"] { color: #07327f; }
-}
-@media (prefers-reduced-motion: reduce) { .desktop-nav-track > a { transition: none; } }
-.reduce-motion .desktop-nav-track > a { transition: none; }
 
 /* One transition: the loading veil recedes. New content stays fully opaque. */
 .route-content { min-width: 0; }

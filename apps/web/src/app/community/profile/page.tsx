@@ -10,5 +10,5 @@ export default function Page() {
   useEffect(() => {
     if (me) router.replace(`/community/profile/${me.username}`);
   }, [me, router]);
-  return <Loader label="Đang mở hồ sơ…" />;
+  return <Loader />;
 }

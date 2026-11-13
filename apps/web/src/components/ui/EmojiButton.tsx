@@ -1,6 +1,6 @@
 "use client";
 import dynamic from "next/dynamic";
-import { useId, useRef, useState } from "react";
+import { useId, useRef, useState, type ReactNode } from "react";
 import { Smile } from "lucide-react";
 import { TooltipIconButton } from "./TooltipIconButton";
 const Picker = dynamic(() => import("./EmojiPicker"), {
@@ -14,9 +14,11 @@ const Picker = dynamic(() => import("./EmojiPicker"), {
 export function EmojiButton({
   label,
   onSelect,
+  icon,
 }: {
   label: string;
   onSelect: (emoji: string) => void;
+  icon?: ReactNode;
 }) {
   const id = useId();
   const popup = useRef<HTMLDivElement>(null);
@@ -45,7 +47,7 @@ export function EmojiButton({
           });
         }}
       >
-        <Smile size={20} />
+        {icon || <Smile size={23} />}
       </TooltipIconButton>
       <div
         id={id}

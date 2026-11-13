@@ -12,7 +12,7 @@ Dùng Next dev với cache riêng `.next-mobile-polish` và API giả lập tạ
 | Desktop 1440px | Cột giữa và bài viết cùng rộng 805px; max-width none; margin trái 0; nội dung 16px/29.6px; padding header bài 19px 20px 12px như trước aaf3f80 |
 | Profile tại 320/402px | Không tràn ngang; tên 21px |
 | Thẻ tạo khoảnh khắc | Thẻ 116×184px, nhãn nằm trong thẻ |
-| Modal ngày tại 320/402/768/1440px | Không còn `.day-sequence-summary`, `.day-nav-index`, `.day-moment-position`, `.day-timeline-end`; giữ ngày, giờ, ảnh và thao tác |
+| Modal ngày tại 320/402/768/1440px | Modal chồng ảnh một người/một ngày, nền trong suốt; lật ảnh, nhắn tin, cảm xúc, nhạc, sửa/xóa và đóng bằng vùng trống/Escape. Lưới Hôm nay hai thẻ mỗi hàng, cuộn dọc. |
 | Cảm xúc bài viết | Trạng thái và số đếm đổi ngay; sau lỗi giả lập, tự về trạng thái/số đếm trước đó |
 | Cảm xúc khoảnh khắc | Phản hồi ngay cả khi timeline vừa mở từ placeholder cache và còn đang lấy bản mới |
 | Nhập tin nhắn | Counter render của history giữ 2→2 trong lượt gõ “Một lời chào hôm nay” (hai render ban đầu do Strict Mode); counter được gỡ sau thử |

@@ -1,0 +1,21 @@
+/* Loading artwork supplied by the owner. No artificial delay is added. */
+.sleeping-cat { display: grid; place-items: center; width: min(300px, 80vw); padding-top: 28px; }
+.sleeping-cat-scene { display: flex; flex-direction: column; align-items: center; width: 100%; }
+.sleeping-cat-animal { position: relative; width: 100%; display: flex; justify-content: center; align-items: center; }
+.sleeping-cat-body { width: 80px; height: auto; }
+.sleeping-cat-tail { position: absolute; top: 50%; width: 17px; height: auto; transform-origin: top; animation: sleeping-cat-tail .5s ease-in infinite alternate-reverse; }
+.sleeping-cat-wall { display: block; width: 100%; height: auto; }
+.sleeping-cat-text { position: absolute; display: flex; flex-direction: column; width: 50px; margin: 0 0 100px 120px; color: #212121; font-weight: 800; }
+.sleeping-cat-text > span { font-size: 15px; animation: sleeping-cat-zzz 2s linear infinite; }
+.sleeping-cat-text > span:first-child { font-size: 25px; margin-left: 10px; animation-duration: 2.3s; }
+/* All route/query fallbacks share viewport coordinates, even while the shell mounts. */
+.loading-state.route-cat-loading { position: fixed; inset: 0; z-index: 90; width: 100vw; height: 100dvh; min-height: 0; margin: 0; padding: 0; background: var(--canvas); color: var(--ink); pointer-events: auto; }
+.route-cat-loading > .sleeping-cat { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -60%); }
+.route-cat-loading > :is(span, p) { position: absolute; top: calc(50% + 100px); left: 50%; transform: translateX(-50%); margin: 0; width: min(320px, 85vw); text-align: center; }
+.route-cat-loading > .button-wrap { position: absolute; top: calc(50% + 155px); left: 50%; transform: translateX(-50%); pointer-events: auto; }
+.story-stack-dialog .route-cat-loading { background: transparent; pointer-events: none; }
+
+@keyframes sleeping-cat-tail { 0% { transform: rotate(60deg); } 50% { transform: rotate(0); } 100% { transform: rotate(-20deg); } }
+@keyframes sleeping-cat-zzz { 0%,100% { opacity: 0; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .sleeping-cat-tail, .sleeping-cat-text > span { animation: none; } }
+.reduce-motion .sleeping-cat-tail, .reduce-motion .sleeping-cat-text > span { animation: none; }

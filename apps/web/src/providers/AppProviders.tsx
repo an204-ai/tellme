@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { enableInterfaceSoundGestures } from "@/lib/interface-sounds";
 import { WeatherProvider } from "./WeatherProvider";
 import { InstallProvider } from "./InstallProvider";
-export function AppProviders({ children }: { children: React.ReactNode }) {
+import { ThemeProvider, type Theme } from "./ThemeProvider";
+export function AppProviders({ children, initialTheme }: { children: React.ReactNode; initialTheme: Theme }) {
   useEffect(enableInterfaceSoundGestures, []);
   const [client] = useState(
     () =>
@@ -18,7 +19,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
   );
   return (
     <QueryClientProvider client={client}>
-      <InstallProvider><WeatherProvider>{children}</WeatherProvider></InstallProvider>
+      <ThemeProvider initialTheme={initialTheme}><InstallProvider><WeatherProvider>{children}</WeatherProvider></InstallProvider></ThemeProvider>
     </QueryClientProvider>
   );
 }

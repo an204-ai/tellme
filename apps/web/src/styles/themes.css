@@ -1,0 +1,168 @@
+/* Blue daylight and a quiet navy night share the same semantic surfaces. */
+:root {
+  color-scheme: light;
+  --canvas: #dceafa;
+  --paper: #fff;
+  --paper-soft: #edf4fd;
+  --ink: #000;
+  --muted: #000;
+  --close-muted: #000;
+  --line: #c7d7eb;
+  --primary-tint: #e5eefb;
+  --action-ink: #fff;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --canvas: #102238;
+  --paper: #1b324c;
+  --paper-soft: #223d59;
+  --ink: #e9f2ff;
+  --muted: #b0c5df;
+  --close-muted: #b0c5df;
+  --line: #37516e;
+  --primary: #a5ccff;
+  --primary-hover: #bddbff;
+  --primary-tint: #294764;
+  --action-ink: #102238;
+}
+body { background: var(--canvas); color: var(--ink); }
+.auth-page, .account-access-page { background: var(--canvas); color: var(--ink); }
+[data-theme="dark"] .uiv-form .container.auth-card { background: var(--paper); border-color: var(--line); box-shadow: none; }
+[data-theme="dark"] :is(.auth-description, .auth-visual-copy p, .auth-field > svg, .auth-switch, .auth-safety-note, .auth-terms, .account-access-form, .settings-layout label, .settings-layout strong) { color: var(--ink); }
+[data-theme="dark"] .uiv-form .form .input { background: var(--paper-soft); color: var(--ink); border-color: var(--line); box-shadow: none; }
+[data-theme="dark"] .auth-submit { color: var(--action-ink); }
+html { scrollbar-color: var(--line) var(--canvas); }
+.brand-wordmark-pair { display: inline-flex; vertical-align: middle; }
+.brand-wordmark-pair .brand-on-dark { display: none; }
+[data-theme="dark"] .brand-wordmark-pair .brand-on-light { display: none; }
+[data-theme="dark"] .brand-wordmark-pair .brand-on-dark { display: block; }
+.tellme-intro-curtain { background: var(--canvas); }
+.tellme-intro-edge { fill: var(--canvas); }
+[data-theme="dark"] :is(.tellme-intro, .tellme-intro-words) { color: var(--ink); }
+.close-app :is(.button-primary, .close-primary, .close-id-field button, .now-shutter > span) { color: var(--action-ink); }
+.close-app :is(.close-profile, .menu-panel, .close-more-panel, .close-primary-navigation, .close-more-navigation, .now-respond-bar, .now-own-response .moment-reaction-people, .now-pagination-retry, .close-lookup-result, .close-profile-link, .settings-section) { background: var(--paper); color: var(--ink); }
+.close-app .close-primary-navigation .nav-liquid-glider { background: var(--primary-tint); }
+.close-app .close-primary-navigation > a { color: var(--muted); }
+.close-app .close-primary-navigation > a.active, .close-app .close-primary-navigation > a[data-selected="true"] { color: var(--primary); }
+.close-app .close-more-navigation { color: var(--primary); }
+.close-app .close-more-navigation.is-open { background: var(--primary-tint); }
+.close-app :is(.profile-info, .profile-journey, .journey-month-page, .journey-future) { background: var(--paper); color: var(--ink); }
+.close-app .profile-journey { border-color: var(--line); }
+.close-app .profile-bio { color: var(--ink); }
+.close-app .journal-composer { background: var(--paper-soft); }
+.close-app .profile-owner-menu > summary { width: 36px; height: 36px; border-color: #ffffff80; color: #fff; }
+.close-app .profile-owner-menu > summary svg { width: 20px; height: 20px; }
+.close-app .profile-owner-menu { top: 10px; right: 10px; }
+/* Keep a 44px touch target around the smaller visual button. */
+.close-app .profile-owner-menu > summary { position: relative; }
+.close-app .profile-owner-menu > summary::after { content: ""; position: absolute; inset: -4px; }
+.close-app .now-photo-stack::before, .close-app .now-empty-photo { background: var(--primary-tint); }
+.close-app :is(.now-reactions-row > .icon-button, .now-reaction-strip > button[aria-pressed="true"], .close-request) { background: var(--primary-tint); }
+.close-app :is(.close-id-field input, .now-image-retry) { background: var(--paper); color: var(--ink); border-color: var(--line); }
+.close-app :is(.now-turn-hint, .now-image-retry) { background: var(--paper); color: var(--ink); }
+.close-app .reaction-avatar-stack .avatar { border-color: var(--paper); }
+.close-messages :is(.conversation-list, .chat-workspace, .chat-content, .chat-header, .chat-messages, .chat-composer, .chat-tools) { background: var(--paper); color: var(--ink); border-color: var(--line); }
+.close-messages .conversation-row.selected { background: var(--primary-tint); }
+.close-messages .conversation-row.own .message-bubble { color: var(--action-ink); }
+.close-messages .message-row.own .message-bubble { background: var(--primary); color: var(--action-ink); }
+.close-messages .chat-input-line { background: var(--paper-soft); }
+.close-messages .chat-input-line input { color: var(--ink); }
+.close-messages .chat-send-button { color: var(--action-ink); }
+.close-messages .conversation-list .cir-search { background: var(--paper-soft); }
+.close-messages .chat-details-toggle { background: var(--paper-soft); }
+[data-theme="dark"] :is(.app-dialog > .dialog-content, .tellme-sticker-picker, .emoji-popover, .notification-panel, .notification-dropdown) { background: var(--paper); color: var(--ink); border-color: var(--line); }
+[data-theme="dark"] :is(.app-dialog .dialog-header, .app-dialog .dialog-body, .standard-textarea, .input, .input-wrap, .select-control, .select-trigger, .tellme-sticker-search) { color: var(--ink); border-color: var(--line); }
+[data-theme="dark"] :is(.standard-textarea, .input, .select-control, .select-trigger, .tellme-sticker-search, .tellme-sticker-tabs > button) { background: var(--paper-soft); color: var(--ink); }
+[data-theme="dark"] :is(.app-dialog h2, .app-dialog h3, .app-dialog .icon-button, .tellme-sticker-picker header strong, .tellme-sticker-search input, .tellme-sticker-grid button, .tellme-sticker-tabs > button) { color: var(--ink); }
+[data-theme="dark"] .tellme-sticker-tabs > button[aria-selected="true"] { background: var(--primary-tint); border-color: var(--primary); }
+[data-theme="dark"] .tellme-sticker-grid button:hover { background: var(--paper-soft); }
+[data-theme="dark"] .emoji-picker-host em-emoji-picker { --rgb-background: 27, 50, 76; --rgb-color: 233, 242, 255; --rgb-accent: 165, 204, 255; }
+[data-theme="dark"] :is(.journey-month-meta, .journey-future p) { color: var(--muted); }
+[data-theme="dark"] :is(.journey-brand, .journey-navigation button:hover:not(:disabled)) { background: var(--primary-tint); }
+[data-theme="dark"] .journey-navigation button { color: var(--primary); }
+[data-theme="dark"] .journey-month-page { background: var(--paper); }
+[data-theme="dark"] .journey-corner svg { fill: #294764; }
+[data-theme="dark"] :is(.settings-section h2, .settings-section p, .setting-toggle-row, .setting-toggle-copy, .settings-panel) { color: var(--ink); }
+[data-theme="dark"] .menu-panel :is(a, button):hover { background: var(--paper-soft); }
+[data-theme="dark"] .button-primary { background: var(--primary); color: var(--action-ink); }
+[data-theme="dark"] .button-secondary { background: var(--primary-tint); color: var(--primary); }
+[data-theme="dark"] .button-ghost { color: var(--primary); }
+[data-theme="dark"] .toast { background: var(--paper); color: var(--ink); }
+/* Mobile content sits directly on the canvas; only actual controls retain a surface. */
+@media (max-width: 640px) {
+  .close-app > .close-main { padding-inline: 16px; }
+  .close-app.close-home > .close-main { padding-inline: 0; }
+  .close-app > .close-main .close-profile { background: transparent; border-radius: 0; overflow: visible; }
+  .close-app .close-profile :is(.profile-info, .profile-journey, .journey-month-page, .journey-future) { background: transparent; border: 0; box-shadow: none; }
+  .close-app .close-profile .profile-info { padding-inline: 6px; }
+  .close-app .close-profile .profile-journey { padding-inline: 0; }
+  .close-app .close-profile .journal-composer { width: 100%; margin-inline: 0; padding-inline: 12px; }
+  .close-app.messages-frame > .close-messages { padding-inline: 12px; }
+  .close-messages :is(.conversation-list, .chat-workspace, .chat-content, .chat-header, .chat-messages, .chat-composer) { background: transparent; border: 0; border-radius: 0; box-shadow: none; }
+  .close-messages .conversation-list { padding: 0; }
+  .close-messages .conversation-list > header { padding-inline: 4px; }
+  .close-messages .conversation-row { padding-inline: 8px; }
+  .close-messages .chat-header { padding-inline: 4px; }
+  .close-messages .chat-messages { padding-inline: 4px; }
+  .close-messages .chat-composer { padding-inline: 0; }
+  .close-app .settings-section { background: transparent; border: 0; box-shadow: none; }
+  .close-app.messages-frame[data-keyboard-open="true"] > .close-messages { padding-inline: 12px; }
+}
+.close-app .uiv-input .cir-search input { color: var(--ink); }
+.close-app .uiv-input .cir-search input::placeholder { color: var(--muted); opacity: 1; }
+.close-messages .conversation-list .cir-search input { color: var(--ink); }
+.close-messages .conversation-list .cir-search input::placeholder { color: var(--muted); opacity: 1; }
+[data-theme="dark"] .sleeping-cat-body path, .story-stack-dialog .sleeping-cat-body path { fill: #fff; }
+[data-theme="dark"] .sleeping-cat-tail path, .story-stack-dialog .sleeping-cat-tail path { fill: #fff; }
+[data-theme="dark"] .sleeping-cat-text, .story-stack-dialog .sleeping-cat-text { color: #fff; }
+[data-theme="dark"] .sleeping-cat-wall, .story-stack-dialog .sleeping-cat-wall { stroke: #fff; }
+.close-app .content-menu:not(.profile-owner-menu) > summary { color: var(--primary); }
+.close-app .now-photo .daily-story-menu > summary { background: var(--paper); color: var(--primary); }
+.close-app .profile-account-menu:not(.profile-owner-menu) > summary { background: var(--paper); color: var(--primary); border-color: var(--line); }
+
+/* Plain black reading text in daylight; white reading text is retained at night. */
+.close-app :is(.chat-tools-identity, .chat-tool-actions > a, .chat-tool-actions > button, .settings-section h2, .settings-section h3) { color: var(--ink); }
+.close-app .chat-tool-actions :is(a, button) > svg { color: var(--primary); }
+.close-app .chat-tool-actions :is(.danger, .danger-text) { color: #b12642; }
+.auth-visual-copy h1, .uiv-form .heading { color: var(--ink); }
+.close-profile .journey-heading h2 { color: var(--ink); }
+.close-profile .journey-navigation > span { color: var(--ink); }
+.close-profile .journey-navigation small { color: var(--muted); }
+[data-theme="dark"] .close-profile .journey-stop-image { position: relative; border: 0; border-radius: 0; background: transparent; box-shadow: none; filter: drop-shadow(0 3px 5px #0004); }
+[data-theme="dark"] .close-profile .journey-stop-image::before { content: ""; position: absolute; inset: -2px; background: url('/images/journey-star-yellow.svg') center / 100% 100% no-repeat; }
+[data-theme="dark"] .close-profile .journey-stop-photo { position: absolute; inset: 4px; width: auto; height: auto; border-radius: 0; background: var(--canvas); mask: url('/images/journey-star-mask.svg') center / 100% 100% no-repeat; -webkit-mask: url('/images/journey-star-mask.svg') center / 100% 100% no-repeat; }
+[data-theme="dark"] .close-profile .journey-stop-photo img { border-radius: 0; }
+[data-theme="dark"] .close-profile .journey-stop.is-empty .journey-stop-photo { display: none; }
+[data-theme="dark"] .close-profile .journey-stop time { background: #d4b366; color: #17130a; border-color: #a7853c; box-shadow: 0 2px 4px #0003; }
+[data-theme="dark"] .close-profile .journey-stop.is-latest time { background: #f3ce6e; }
+[data-theme="dark"] .route-cat-loading, .story-stack-dialog .route-cat-loading { color: #fff; }
+[data-theme="dark"] .uiv-loading .pl__ring { stroke: #fff; }
+
+
+/* Popovers use the same foreground and surfaces as the rest of the active theme. */
+.close-app .notifications-popover { background: var(--paper); color: var(--ink); border: 0; border-radius: 22px; padding: 18px; }
+.close-app .notifications-popover h2 { margin: 0; color: var(--ink); font-size: 20px; font-weight: 900; }
+.close-app .notifications-popover > header > button { min-width: 44px; min-height: 44px; align-items: center; justify-content: center; border-radius: 12px; color: var(--primary); }
+.close-app .notifications-popover > header > button:disabled { opacity: .45; }
+.close-app .popover-notice { color: var(--ink); }
+.close-app .popover-notice:is(:hover, .unread) { background: var(--primary-tint); }
+.close-app .popover-notice time { color: var(--muted); }
+.close-app .notifications-popover .notification-older-button, .close-app .notifications-popover .notification-feed-more, .close-app .notifications-popover .notification-feed-retry { color: var(--primary); }
+
+.close-app .uiv-input .cir-search { background: var(--paper-soft); color: var(--ink); border-color: var(--line); }
+.close-app .uiv-input .cir-search__icon { color: var(--muted); }
+.close-app .music-track[data-selected="true"] .music-select, .close-app :is(.music-play, .music-select, .music-edit):is(:hover, :focus-visible) { background: var(--primary-tint); color: var(--primary); }
+
+/* Native popovers and fields must inherit their theme even inside modal top layers. */
+:root .app-dialog .uiv-input .cir-search { background: var(--paper-soft); color: var(--ink); border-color: var(--line); }
+:root .app-dialog .uiv-input input { background: transparent; color: var(--ink); }
+:root .app-dialog .uiv-input input::placeholder { color: var(--muted); opacity: 1; }
+:root .account-block-popover { background: var(--paper); color: var(--ink); border-color: var(--line); }
+:root .account-block-search { background: var(--paper-soft); border-color: var(--line); }
+:root .account-block-search input, :root .account-block-person > span { color: var(--ink); }
+:root .account-block-search input::placeholder { color: var(--muted); opacity: 1; }
+:root .account-block-results li > button { background: transparent; color: var(--ink); }
+:root .account-block-results li > button:is(:hover, :focus-visible) { background: var(--primary-tint); }
+:root .select-control { background: var(--paper-soft); color: var(--ink); border-color: var(--line); }
+:root .account-password-form label { color: var(--ink); }
+:root .story-stack-dialog .moment-reaction-people { background: #ffffff14; color: #f1f6ff; box-shadow: none; }

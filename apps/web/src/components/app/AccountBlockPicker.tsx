@@ -1,15 +1,12 @@
 "use client";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { ChevronDown, Search } from "lucide-react";
 import { Avatar } from "@/components/ui/Primitives";
-import { request } from "@/lib/api-repository";
-import type { Person } from "@/lib/types";
+import { useCommunity } from "@/hooks/use-community";
 
-export function AccountBlockPicker({ blocked, friends, viewer, onBlock }: {
+export function AccountBlockPicker({ blocked, friends, onBlock }: {
   blocked: string[];
   friends: string[];
-  viewer?: string;
   onBlock: (id: string) => Promise<void>;
 }) {
   const id = useId();
@@ -18,22 +15,11 @@ export function AccountBlockPicker({ blocked, friends, viewer, onBlock }: {
   const input = useRef<HTMLInputElement>(null);
   const [expanded, setExpanded] = useState(false);
   const [search, setSearch] = useState("");
-  const [query, setQuery] = useState("");
   const [busy, setBusy] = useState(false);
-  useEffect(() => {
-    const timer = setTimeout(() => setQuery(search.trim().replace(/^@/, "")), 250);
-    return () => clearTimeout(timer);
-  }, [search]);
-  const results = useQuery({
-    queryKey: ["tellme", "block-friend-search", viewer, friends, query],
-    queryFn: ({ signal }) => request<{ people: Person[] }>(`/search?scope=people&relationship=friends&q=${encodeURIComponent(query)}`, { signal }),
-    enabled: expanded,
-    staleTime: 0,
-    gcTime: 0,
-    retry: 1,
-  });
-  const searching = search.trim().replace(/^@/, "") !== query || results.isFetching;
-  const people = results.data?.people.filter((person) => friends.includes(person.id) && !blocked.includes(person.id)) || [];
+  const { data } = useCommunity();
+  const query = search.trim().replace(/^@/, "").toLocaleLowerCase("vi");
+  const people = data?.people.filter((person) => friends.includes(person.id) && !blocked.includes(person.id)
+    && `${person.name} ${person.username}`.toLocaleLowerCase("vi").includes(query)) || [];
   const close = () => { popup.current?.hidePopover(); trigger.current?.focus(); };
   const position = useCallback(() => {
     const rect = trigger.current?.getBoundingClientRect();
@@ -94,8 +80,8 @@ export function AccountBlockPicker({ blocked, friends, viewer, onBlock }: {
         <Search size={18} aria-hidden="true" />
         <input ref={input} type="search" aria-label="Tìm bạn bè bằng tên hoặc Tellme ID" placeholder="Tên hoặc @Tellme ID của bạn bè…" autoComplete="off" maxLength={200} value={search} onChange={(event) => setSearch(event.target.value)} aria-controls={`${id}-results`} />
       </div>
-      <div id={`${id}-results`} className="account-block-results" aria-busy={searching || busy}>
-        {searching ? <p role="status">Đang tìm tài khoản…</p> : results.isError ? <div className="account-block-error"><p role="alert">Chưa tải được danh sách. Bạn thử lại nhé.</p><button type="button" onClick={() => void results.refetch()}>Thử lại</button></div> : people.length ? <ul>
+      <div id={`${id}-results`} className="account-block-results" aria-busy={busy}>
+        {people.length ? <ul>
           {people.map((person) => <li key={person.id}><button type="button" disabled={busy} aria-label={`Chặn ${person.name}, Tellme ID ${person.username}`} onClick={async () => {
             setBusy(true);
             try { await onBlock(person.id); close(); }

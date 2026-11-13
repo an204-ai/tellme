@@ -66,7 +66,15 @@ export function PullToRefresh({ children, onRefresh }: { children: ReactNode; on
     let settleDone: (() => void) | undefined;
     let heldScrollTop: number | null = null;
     const atTop = () => scroller.scrollTop <= 2;
-    const blocked = (target: EventTarget | null) => target instanceof Element && !!target.closest('input, textarea, select, [contenteditable="true"], dialog, [popover]');
+    const blocked = (target: EventTarget | null) => {
+      if (!(target instanceof Element)) return false;
+      if (target.closest('input, textarea, select, [contenteditable="true"], dialog, [popover]')) return true;
+      // A nested gallery must scroll back to its own top before a downward pull can refresh.
+      for (let node: Element | null = target; node && node !== scroller; node = node.parentElement) {
+        if (node.scrollTop > 2 && node.scrollHeight > node.clientHeight + 1) return true;
+      }
+      return false;
+    };
     const overlayOpen = () => !!document.querySelector('dialog[open], [popover]:popover-open');
     const changePhase = (next: Phase) => {
       if (currentPhase === next) return;
@@ -187,12 +195,12 @@ export function PullToRefresh({ children, onRefresh }: { children: ReactNode; on
       <div className="pull-refresh-spinner-container"><div className="pull-refresh-rotor"><div className="pull-refresh-spinner" /></div>
         <div className="pull-refresh-caption">
           <span className="pull-refresh-hint">{label}</span>
-          <div className="pull-refresh-loader"><span>Đang làm mới</span><div className="pull-refresh-words">{["câu chuyện", "khoảnh khắc", "bảng tin", "ngày đi làm", "câu chuyện"].map((word, index) => <span className="pull-refresh-word" key={index}>{word}</span>)}</div></div>
+          <div className="pull-refresh-loader"><span>Đang làm mới</span><div className="pull-refresh-words">{["câu chuyện", "khoảnh khắc", "ngày hôm nay", "ngày đi làm", "câu chuyện"].map((word, index) => <span className="pull-refresh-word" key={index}>{word}</span>)}</div></div>
         </div>
       </div>
     </div>
     <span className="sr-only" role="status" aria-live="polite">{phase === "idle" || phase === "settling" ? "" : label}</span>
-    <div ref={viewport} className="pull-refresh-viewport" tabIndex={0} role="region" aria-label="Nội dung bảng tin và khoảnh khắc">
+    <div ref={viewport} className="pull-refresh-viewport" tabIndex={0} role="region" aria-label="Nội dung Tell me now">
       <div ref={content} className="pull-refresh-content">
         {error && <div className="pull-refresh-error" role="alert">{error}<button onClick={() => void run()}>Thử lại</button></div>}
         {children}

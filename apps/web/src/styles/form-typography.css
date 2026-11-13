@@ -3,7 +3,6 @@
 .field-label,
 .account-input-label,
 .account-password-form > label,
-.moment-edit-dialog .moment-edit-panel > label,
 .uiv-radio > legend {
   font-size: var(--form-label-size);
   font-weight: 500;
@@ -15,7 +14,6 @@
 .select-control,
 .select-options > button,
 .account-block-search input,
-.moment-edit-dialog .moment-edit-panel > textarea,
 .uiv-form .form .input:not(.recovery-code-input) { font-size: var(--form-text-size); }
 input::placeholder, textarea::placeholder { font-size: inherit; font-weight: 400; }
 @media (max-width: 640px) {

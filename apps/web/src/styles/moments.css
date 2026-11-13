@@ -211,230 +211,6 @@
   outline-offset: 3px;
 }
 /* The complete day remains visible in chronological order, rather than a slideshow. */
-.day-timeline-dialog {
-  width: 1080px;
-  max-width: 100vw;
-  padding: 24px;
-  overflow: hidden;
-}
-.day-timeline-dialog > .dialog-content {
-  display: flex;
-  flex-direction: column;
-  height: min(820px, 90dvh);
-}
-.day-timeline-dialog .dialog-header {
-  flex-shrink: 0;
-  padding: 18px 24px;
-}
-.day-timeline-dialog .dialog-header h2 {
-  font-size: 18px;
-  line-height: 1.5;
-}
-.day-timeline-layout {
-  display: grid;
-  grid-template-columns: 224px minmax(0, 1fr);
-  min-height: 0;
-  flex: 1;
-}
-.day-timeline-aside {
-  padding: 26px 18px 20px;
-  border-right: 1px solid var(--line);
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  overflow: auto;
-}
-.day-person {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 12px;
-  padding: 0 5px 22px;
-}
-.day-person > strong {
-  font-size: 16px;
-  line-height: 1.6;
-  font-weight: 500;
-}
-.day-person > span:not(.avatar) {
-  font-size: 12px;
-  line-height: 1.8;
-}
-.day-photo-count {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  color: var(--primary);
-}
-.day-timeline-nav {
-  display: flex;
-  flex-direction: column;
-  margin: 2px 0 22px;
-}
-.day-timeline-nav > button {
-  display: grid;
-  grid-template-columns: 12px 1fr 42px;
-  align-items: center;
-  column-gap: 8px;
-  row-gap: 5px;
-  position: relative;
-  flex-shrink: 0;
-  border: 0;
-  background: none;
-  text-align: left;
-  padding: 13px 7px;
-  color: #000;
-  border-radius: 8px;
-}
-.day-timeline-nav > button::after {
-  content: "";
-  position: absolute;
-  left: 12px;
-  top: 29px;
-  bottom: -14px;
-  width: 1px;
-  background: #dfe4ec;
-}
-.day-timeline-nav > button:last-child::after {
-  display: none;
-}
-.day-nav-dot {
-  width: 7px;
-  height: 7px;
-  border: 1px solid var(--primary);
-  border-radius: 50%;
-  background: white;
-  z-index: 1;
-  justify-self: center;
-}
-.day-timeline-nav > button[aria-current="true"] {
-  background: #f1f4f9;
-  color: var(--primary);
-}
-.day-timeline-nav > button[aria-current="true"] .day-nav-dot {
-  background: var(--primary);
-}
-.day-timeline-nav > button > time {
-  font-size: 14px;
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-}
-.day-timeline-nav > button > img {
-  width: 42px;
-  aspect-ratio: 4/3;
-  object-fit: cover;
-  border-radius: 5px;
-  grid-row: 1/3;
-  grid-column: 3;
-}
-.day-nav-caption {
-  grid-column: 2;
-  font-size: 11px;
-  line-height: 1.6;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.day-timeline-aside > .button-wrap {
-  margin-top: auto;
-}
-.day-timeline-aside > .button-wrap .button {
-  font-size: 12px;
-  padding: 9px 12px;
-}
-.day-timeline-scroll {
-  position: relative;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  min-height: 0;
-  padding: 24px 26px 22px 18px;
-  scrollbar-gutter: stable;
-}
-.day-timeline-scroll:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: -3px;
-}
-.day-timeline-intro {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0 0 25px 64px;
-  font-size: 12px;
-  line-height: 1.8;
-}
-.day-timeline-intro > svg {
-  flex-shrink: 0;
-  color: var(--primary);
-}
-.day-moment {
-  display: grid;
-  grid-template-columns: 64px minmax(0, 1fr);
-  position: relative;
-  scroll-margin-top: 24px;
-}
-.day-moment-time {
-  position: relative;
-  display: flex;
-  align-items: center;
-  flex-direction: column;
-  gap: 12px;
-  padding-top: 10px;
-}
-.day-moment-time::after {
-  content: "";
-  position: absolute;
-  top: 45px;
-  bottom: 0;
-  left: 50%;
-  width: 1px;
-  background: #dfe4ec;
-}
-.day-moment-time > time {
-  font-size: 12px;
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-}
-.day-moment-time > span {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  border: 2px solid var(--primary);
-  background: white;
-  z-index: 1;
-}
-.day-moment.is-current .day-moment-time > span {
-  background: var(--primary);
-}
-.day-moment-content {
-  padding-bottom: 30px;
-  min-width: 0;
-}
-.day-moment-photo {
-  display: block;
-  width: 100%;
-  height: auto;
-  aspect-ratio: 4/3;
-  object-fit: cover;
-  border-radius: inherit;
-  background: #f5f5f5;
-}
-.day-timeline-end {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 12px;
-  line-height: 1.7;
-  margin: 0 0 0 28px;
-  padding: 0 0 15px;
-}
-.day-timeline-end > span {
-  width: 8px;
-  height: 8px;
-  flex-shrink: 0;
-  border: 1px solid #b6c2d7;
-  border-radius: 50%;
-}
 @media (max-width: 1190px) and (min-width: 851px) {
   .daily-entry-body {
     padding-left: 0;
@@ -444,86 +220,6 @@
   }
   .daily-photo-fan.photos-1 {
     min-height: 250px;
-  }
-}
-@media (max-width: 700px) {
-  .day-timeline-dialog {
-    padding: 12px;
-    width: 100vw;
-  }
-  .day-timeline-dialog > .dialog-content {
-    height: 92dvh;
-  }
-  .day-timeline-dialog .dialog-header {
-    padding: 15px 17px;
-  }
-  .day-timeline-dialog .dialog-header h2 {
-    font-size: 15px;
-  }
-  .day-timeline-layout {
-    display: flex;
-    flex-direction: column;
-  }
-  .day-timeline-aside {
-    padding: 10px 17px 0;
-    border-right: 0;
-    border-bottom: 1px solid var(--line);
-    overflow: visible;
-    flex-shrink: 0;
-    display: block;
-  }
-  .day-person {
-    display: none;
-  }
-  .day-timeline-nav {
-    flex-direction: row;
-    overflow-x: auto;
-    gap: 8px;
-    margin: 0;
-    padding: 0 0 10px;
-    scrollbar-width: thin;
-  }
-  .day-timeline-nav > button {
-    display: flex;
-    gap: 7px;
-    padding: 8px 10px;
-    border-radius: 7px;
-  }
-  .day-timeline-nav > button::after,
-  .day-nav-caption {
-    display: none;
-  }
-  .day-timeline-nav > button > time {
-    font-size: 12px;
-  }
-  .day-timeline-nav > button > img {
-    width: 35px;
-    border-radius: 4px;
-  }
-  .day-timeline-aside > .button-wrap {
-    display: none;
-  }
-  .day-timeline-scroll {
-    padding: 17px 15px 15px 3px;
-  }
-  .day-timeline-intro {
-    margin: 0 0 20px 48px;
-    font-size: 11px;
-    align-items: flex-start;
-  }
-  .day-moment {
-    grid-template-columns: 47px minmax(0, 1fr);
-  }
-  .day-moment-time > time {
-    font-size: 10px;
-  }
-  .day-moment-content {
-    padding-bottom: 25px;
-  }
-  .day-timeline-end {
-    font-size: 11px;
-    margin-left: 19px;
-    gap: 9px;
   }
 }
 @media (max-width: 640px) {
@@ -611,9 +307,6 @@
     line-height: 1.7;
     margin: 0 0 8px;
   }
-  .day-timeline-intro {
-    display: none;
-  }
 }
 
 /* The new leading story shelf keeps friends' current-day moments ahead of the open community stream. */
@@ -635,17 +328,6 @@
   font-size: 16px;
   font-weight: 600;
   line-height: 1.5;
-}
-.today-friends-strip {
-  display: flex;
-  gap: 12px;
-  overflow-x: auto;
-  padding: 2px 2px 8px;
-  scrollbar-width: none;
-  overscroll-behavior-x: contain;
-}
-.today-friends-strip::-webkit-scrollbar {
-  display: none;
 }
 .drag-scroll {
   touch-action: pan-x pan-y pinch-zoom;
@@ -781,14 +463,6 @@
   flex: 0 0 auto;
   margin-left: auto;
 }
-.today-friends-empty {
-  padding: 13px 15px;
-  border-radius: 10px;
-  background: #f6f8fb;
-  color: #18243a;
-  font-size: 12px;
-  line-height: 1.7;
-}
 .today-community-heading {
   margin: 20px 0 0;
 }
@@ -817,60 +491,6 @@
   font-size: 10px;
   line-height: 1.6;
 }
-.day-timeline-aside > .button-wrap {
-  order: 3;
-}
-.day-moment-media {
-  position: relative;
-  overflow: hidden;
-  isolation: isolate;
-  border-radius: 12px;
-  background: #16263c;
-}
-.day-moment-media::after {
-  position: absolute;
-  z-index: 1;
-  inset: 34% 0 0;
-  content: "";
-  background: linear-gradient(180deg, transparent 0%, #0613261c 24%, #061326d9 100%);
-  pointer-events: none;
-}
-.day-moment-overlay {
-  position: absolute;
-  z-index: 3;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 7px;
-  padding: clamp(12px, 2vw, 20px);
-  color: white;
-  pointer-events: none;
-}
-.day-moment-overlay > * { pointer-events: auto; }
-.day-moment-caption {
-  display: -webkit-box;
-  max-width: 62ch;
-  max-height: 5.8em;
-  margin: 0;
-  overflow: hidden;
-  color: white;
-  font-size: clamp(13px, 1.2vw, 16px);
-  font-weight: 500;
-  line-height: 1.45;
-  text-shadow: 0 1px 5px #0009;
-  white-space: pre-wrap;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 4;
-}
-.day-moment-reaction-anchor {
-  position: relative;
-  align-self: flex-start;
-  z-index: 4;
-}
-.day-moment-reaction-anchor .tellme-reaction-control,
 .moment-reaction-people {
   color: white;
   border: 1px solid #ffffff80;
@@ -880,11 +500,8 @@
   -webkit-backdrop-filter: blur(10px);
   box-shadow: 0 2px 10px #06132622;
 }
-.day-moment-reaction-anchor .tellme-reaction-control.selected { color: white; }
-.day-moment-reaction-anchor .tellme-reaction-main { color: white; }
 .moment-reaction-people { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 4px 12px; font-size: 13px; cursor: pointer; }
 .moment-reaction-people:hover { background: #ffffff30; }
-.day-moment-reaction-anchor .tellme-reaction-control button:hover { background: #ffffff30; }
 .moment-reaction-floaters {
   --float-size: clamp(44px, 6vw, 56px);
   --float-rise: clamp(125px, 27vw, 235px);
@@ -920,105 +537,6 @@
   .today-friend-story > .today-friend-preview-enter { animation: none; }
 }
 .reduce-motion .moment-reaction-floaters { display: none; }
-.day-moment-audience {
-  z-index: 5;
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  max-width: calc(100% - 76px);
-  padding: 6px 9px;
-  border-radius: 8px;
-  background: #fff;
-  color: var(--primary);
-  font-size: 11px;
-  font-weight: 500;
-  line-height: 1.5;
-  pointer-events: auto;
-}
-.day-moment-audience > svg {
-  flex: 0 0 auto;
-}
-.day-moment-menu-anchor {
-  position: absolute;
-  top: 11px;
-  right: 11px;
-  z-index: 5;
-}
-.day-moment-menu-trigger {
-  display: grid;
-  width: 36px;
-  height: 36px;
-  place-items: center;
-  border: 1px solid #e5eaf2;
-  border-radius: 50%;
-  background: #fff;
-  color: var(--primary);
-  box-shadow: 0 4px 13px #0a1e3b24;
-}
-.day-moment-menu {
-  position: absolute;
-  top: 42px;
-  right: 0;
-  display: grid;
-  width: 228px;
-  padding: 5px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: white;
-  box-shadow: 0 8px 26px #18223b21;
-}
-.day-moment-menu > button {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  min-height: 39px;
-  padding: 8px 10px;
-  border: 0;
-  border-radius: 7px;
-  background: white;
-  color: #000;
-  text-align: left;
-  font-size: 12px;
-}
-.day-moment-menu > button:hover {
-  background: #f3f6fa;
-}
-.day-moment-menu > button.danger,
-.story-delete-confirm .danger {
-  color: #a02c3b;
-}
-.story-delete-confirm {
-  position: absolute;
-  right: 12px;
-  bottom: 12px;
-  left: 12px;
-  z-index: 4;
-  display: grid;
-  gap: 4px;
-  padding: 13px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: #fff;
-  color: #000;
-  box-shadow: 0 8px 24px #10294d29;
-}
-.story-delete-confirm > strong {
-  font-size: 13px;
-}
-.story-delete-confirm > span {
-  font-size: 11px;
-  line-height: 1.6;
-}
-.story-delete-confirm > div {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 6px;
-}
-.story-delete-confirm button,
 .moment-edit-actions button {
   display: inline-flex;
   align-items: center;
@@ -1033,40 +551,8 @@
   font-size: 11px;
   font-weight: 500;
 }
-.story-delete-confirm button:disabled,
 .moment-edit-actions button:disabled {
   opacity: 0.55;
-}
-.moment-edit-panel {
-  display: grid;
-  width: 100%;
-  gap: 8px;
-  padding: 14px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: #f8f9fc;
-}
-.moment-edit-panel > label {
-  margin-top: 3px;
-  font-size: 11px;
-  font-weight: 500;
-}
-.moment-edit-panel > textarea {
-  min-height: 72px;
-  padding: 10px 11px;
-  border: 1px solid #dce3ed;
-  border-radius: 8px;
-  background: #fff;
-  color: #000;
-  resize: vertical;
-  font: inherit;
-  font-size: 12px;
-  line-height: 1.7;
-}
-.moment-edit-panel > p {
-  margin: 0;
-  font-size: 10px;
-  line-height: 1.6;
 }
 .moment-edit-actions {
   display: flex;
@@ -1179,10 +665,8 @@
     grid-column: 2;
     grid-row: 1 / span 2;
   }
-  .day-moment-menu-trigger { width: 34px; height: 34px; }
   .today-friends { padding: 16px 0 18px; }
   .today-friend-story { flex-basis: 172px; width: 172px; height: 236px; }
-  .today-friends-strip { gap: 9px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .today-friend-story,
@@ -1198,7 +682,6 @@
 .daily-story-menu { flex: 0 0 auto; margin-left: auto; align-self: flex-start; }
 .daily-story-menu .menu-panel { z-index: 20; width: min(260px, calc(100vw - 48px)); }
 .today-friends { padding-top: 4px; padding-bottom: 24px; }
-.today-friends-strip { gap: 16px; scroll-snap-type: x proximity; }
 .today-friend-story { scroll-snap-align: start; border: 0; border-radius: 16px; }
 .today-friend-progress { position: absolute; top: 14px; left: 14px; right: 14px; display: flex; gap: 4px; }
 .today-friend-progress > i { flex: 1; height: 3px; border-radius: 4px; background: #ffffff66; box-shadow: 0 1px 4px #0005; }
@@ -1208,15 +691,8 @@
 .today-friend-person strong { white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-height: 1.4; }
 .today-friend-person small { color: #fff; }
 .today-friend-shade { background: linear-gradient(180deg, #06182c66, transparent 35%, #06182cf2); }
-.day-moment-menu-anchor { z-index: 8; }
-.day-moment-menu { max-width: calc(100vw - 64px); }
-.day-moment-menu-trigger:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
 .moment-edit-dialog { width: 560px; }
 .moment-edit-preview { display: block; width: calc(100% - 48px); max-height: 220px; object-fit: contain; margin: 20px 24px 0; border-radius: 12px; background: #f5f7fa; }
-.moment-edit-dialog .moment-edit-panel { border: 0; border-radius: 0; background: white; padding: 24px; gap: 12px; }
-.moment-edit-dialog .moment-edit-panel > label { font-size: 13px; }
-.moment-edit-dialog .moment-edit-panel > textarea { font-size: 14px; }
-.moment-edit-dialog .moment-edit-panel > p { font-size: 12px; }
 .moment-edit-dialog .moment-edit-actions button { min-height: 40px; font-size: 13px; }
 .story-settings-form { display: grid; gap: 20px; }
 .story-settings-form > p { font-size: 13px; line-height: 1.7; }
@@ -1226,32 +702,13 @@
 .saved-moment-preview > img { width: 100px; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 12px; }
 .saved-moment-preview > span { display: grid; gap: 6px; overflow-wrap: anywhere; }
 .saved-moment-preview small { font-size: 12px; }
-@media (max-width: 700px) {
-  .day-moment-overlay { gap: 4px; padding: 8px; }
-  .day-moment-overlay:has(.story-reply) {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: end;
-    column-gap: 6px;
-  }
-  .day-moment-overlay:has(.story-reply) > .day-moment-caption { grid-column: 1 / -1; }
-  .day-moment-caption { font-size: 13px; line-height: 1.4; }
-  .day-moment-reaction-anchor .tellme-reaction-control.compact { padding-inline: 0; }
-  .day-moment-reaction-anchor .tellme-reaction-main { width: 44px; min-height: 38px; padding: 0; }
-  .day-moment-reaction-anchor .tellme-reaction-main > span { display: none; }
-  .day-moment-reaction-anchor .tellme-reaction-main > img { width: 22px; height: 22px; }
-  .day-moment-reaction-anchor .tellme-reaction-main > svg { width: 18px; height: 18px; }
-  .day-moment-reaction-anchor .moment-reaction-people { min-height: 34px; padding: 3px 8px; font-size: 12px; }
-  .day-moment-reaction-anchor .reaction-summary-icons > img { width: 18px; height: 18px; }
-  .day-moment-media .moment-reaction-floaters { --float-size: 34px; --float-rise: 110px; }
-}
 @media (max-width: 600px) {
   .today-friends > header { align-items: flex-start; }
   .today-friend-person { left: 12px; right: 12px; bottom: 14px; gap: 8px; }
   .today-friend-person > svg { display: none; }
   .today-friend-person strong { font-size: 12px; }
   .today-friend-person small { font-size: 10px; }
-  .daily-person .post-menu > summary { min-width: 36px; }
+  .daily-person .content-menu > summary { min-width: 36px; }
 }
 
 /* Keep the friend shelf visual, with one clear invitation to add a photo. */

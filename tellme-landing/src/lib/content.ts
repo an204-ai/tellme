@@ -10,7 +10,7 @@ export const moments = [
 export const faqSchema = z.array(z.object({ question: z.string(), answer: z.string() }));
 export const faqs = faqSchema.parse([
   { question: 'Chưa có app thì dùng Tellme thế nào?', answer: 'Bạn có thể dùng ngay trên trình duyệt tại tellme.my, bằng điện thoại hoặc máy tính. Bản ứng dụng iOS và Android đang được chuẩn bị.' },
-  { question: 'Tell me now có chọn ảnh từ thư viện không?', answer: 'Tell me now ghi lại ảnh vừa chụp bằng camera điện thoại hoặc webcam. Bạn xem lại, chụp lại và thêm lời kể trước khi đăng. Muốn chia sẻ ảnh có sẵn, bạn có thể tạo bài viết ở Khám phá.' },
-  { question: 'Ai xem được khoảnh khắc của mình?', answer: 'Bạn chọn Công khai, Bạn bè hoặc Chỉ mình tôi cho chuỗi ngày. Từng ảnh cũng có thể được giới hạn riêng trong phạm vi người xem của chuỗi.' },
-  { question: 'Có thể nhắn tin với bất kỳ ai không?', answer: 'Hai người trở thành bạn bè khi follow nhau. Tin nhắn riêng dành cho bạn bè; khi tạo nhóm, bạn chọn từ những người bạn của mình.' },
+  { question: 'Tell me now có chọn ảnh từ thư viện không?', answer: 'Tell me now ghi lại ảnh vừa chụp bằng camera điện thoại hoặc webcam. Bạn xem lại, chụp lại và thêm lời kể trước khi đăng. Mỗi ngày, bạn có thể chụp thêm ảnh để nối tiếp câu chuyện của mình.' },
+  { question: 'Ai xem được khoảnh khắc của mình?', answer: 'Ảnh chỉ hiển thị giữa những người đã chấp nhận kết bạn với nhau. Bạn tìm đúng Tellme ID và gửi lời mời để kết nối.' },
+  { question: 'Có thể nhắn tin với bất kỳ ai không?', answer: 'Bạn tìm đúng Tellme ID, gửi lời mời và chờ người kia chấp nhận. Khi đã kết nối, hai bạn xem ảnh và nhắn tin riêng cho nhau; nhóm trò chuyện cũng được tạo từ bạn bè.' },
 ]);

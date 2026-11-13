@@ -16,7 +16,7 @@ Hướng dẫn deploy production lên Coolify với `tellme.my`, `about.tellme.m
 - **`packages/shared`**: Types, Zod validators, hằng số, tiện ích dùng chung FE & BE
 - **`packages/ui`**: Design tokens dùng chung và component DOM cho Web/Admin; Mobile dùng component React Native riêng
 - **`packages/config`**: Cấu hình TypeScript, ESLint dùng chung
-- **`workers/`**: Background workers (Xử lý media, tính toán bảng tin, gửi push notification)
+- **`workers/`**: Background workers (Xử lý media, gửi push notification)
 - **`infra/dev/`**: Redis local; **`infra/deploy/`**: production Coolify; **`infra/docker/`**: Dockerfile API/worker dùng chung; **`infra/scripts/`**: công cụ dev
 - **`docs/`**: Mô tả sản phẩm, quy ước cấu trúc, nhận diện và tài liệu kỹ thuật
 
@@ -27,11 +27,11 @@ Hướng dẫn deploy production lên Coolify với `tellme.my`, `about.tellme.m
 3. [STRUCTURE.md](docs/STRUCTURE.md): vai trò thư mục và các đường dẫn sau khi sắp xếp.
 4. [DESIGN.md](docs/DESIGN.md): nhận diện từ ảnh tham chiếu.
 
-Web dùng `src/app/auth/`, `src/app/community/` và `src/app/post/`. Ví dụ: `/auth/login`, `/community/feed`, `/post/123`. Thư mục `apps/web/public/` dành cho tài sản tĩnh.
+Web dùng `src/app/auth/` và `src/app/community/`. Ví dụ: `/auth/login`, `/community/today`, `/community/messages`. Thư mục `apps/web/public/` dành cho tài sản tĩnh.
 
 ## Chạy web và backend
 
-Web đã kết nối API Hono + MongoDB Atlas, upload Cloudinary và Giphy proxy. Đăng nhập bằng tài khoản thật; dữ liệu prototype trong trình duyệt không được dùng làm tài khoản thật.
+Web đã kết nối API Hono + MongoDB Atlas, upload Cloudinary và sticker Tellme. Đăng nhập bằng tài khoản thật; dữ liệu prototype trong trình duyệt không được dùng làm tài khoản thật.
 
 ```sh
 pnpm install
@@ -40,7 +40,7 @@ pnpm --filter @tellme/api dev
 pnpm --filter @tellme/web dev
 ```
 
-Mở [Tạo tài khoản Tellme](http://127.0.0.1:3000/auth/register). Cấu hình và kiểm tra vận hành xem [BACKEND.md](docs/BACKEND.md); hướng dẫn giao diện xem [FRONTEND.md](docs/FRONTEND.md). Admin và ba worker đã kết nối backend; mobile chưa triển khai thêm. Chạy toàn bộ môi trường phát triển bằng `pnpm dev` tại gốc (Redis local cần Docker Desktop).
+Mở [Tạo tài khoản Tellme](http://127.0.0.1:3000/auth/register). Cấu hình và kiểm tra vận hành xem [BACKEND.md](docs/BACKEND.md); hướng dẫn giao diện xem [FRONTEND.md](docs/FRONTEND.md). Admin và hai worker đã kết nối backend; mobile chưa triển khai thêm. Chạy toàn bộ môi trường phát triển bằng `pnpm dev` tại gốc (Redis local cần Docker Desktop).
 
 Khóa thật chỉ đặt trong file môi trường bị Git bỏ qua. Stack runtime hiện tại là MongoDB + Cloudinary; PostgreSQL/Drizzle/R2 trong bản định hướng cũ không được API sử dụng.
 

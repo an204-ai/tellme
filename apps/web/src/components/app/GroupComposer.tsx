@@ -79,7 +79,7 @@ export function GroupComposer({ data, onCreated, editGroup }: { data: AppData; o
         <Avatar person={person} size="sm" /><span className="group-member-name"><strong title={person.name}>{person.name}</strong><small title={`@${person.username}`}>@{person.username}</small></span>
       </label>)}
     </div>
-    {!friends.length && <p>Chưa có bạn bè để tạo nhóm. Khi cùng follow nhau, các bạn có thể trò chuyện tại đây.</p>}
+    {!friends.length && <p>Chưa có bạn bè để tạo nhóm. Khi lời mời kết bạn được chấp nhận, các bạn có thể trò chuyện tại đây.</p>}
     {!!friends.length && !friends.some((person) => `${person.name} ${person.username}`.toLocaleLowerCase("vi").includes(query)) && <p>Chưa tìm thấy người bạn này.</p>}
     </>}
     {error && <p className="field-error" role="alert">{error}</p>}

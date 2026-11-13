@@ -2,14 +2,14 @@
 
 Để build trên GitHub Actions và chỉ kéo image về VPS, làm theo [hướng dẫn triển khai từ Docker Hub](REGISTRY.md). Phần bên dưới áp dụng cho Compose build từ source.
 
-This production stack runs the main app, landing page, admin, API, three workers and Redis in one Coolify Docker Compose resource. MongoDB remains the existing MongoDB Atlas cluster: the API and workers receive its current `MONGODB_URI`, and this stack neither creates a MongoDB container nor changes or migrates database records. Public traffic enters three Nginx edge services; API and Redis have no published host ports. The app continues using MongoDB transactions against Atlas.
+This production stack runs the main app, landing page, admin, API, two workers and Redis in one Coolify Docker Compose resource. MongoDB remains the existing MongoDB Atlas cluster: the API and workers receive its current `MONGODB_URI`, and this stack neither creates a MongoDB container nor changes or migrates database records. Public traffic enters three Nginx edge services; API and Redis have no published host ports. The app continues using MongoDB transactions against Atlas.
 
 ## Before you start
 
 - A VPS with Docker managed by Coolify. For a 5 GB RAM VPS, follow the sequential build settings below. Actual headroom depends on traffic, Coolify, Docker and other workloads.
 - A Git repository containing these deployment files, pushed to the branch you will select in Coolify.
 - DNS control for `tellme.my` and its subdomains.
-- Cloudinary and Giphy credentials, plus a working SMTP sender. SMTP and `AUTH_CODE_SECRET` are required because account creation requires an emailed verification code.
+- Cloudinary credentials, plus a working SMTP sender. SMTP and `AUTH_CODE_SECRET` are required because account creation requires an emailed verification code.
 - The public outbound IP address used by this VPS to reach Atlas.
 - An existing MongoDB Atlas database user and the current working Atlas connection URI. Preserve the existing database name (`tellme`) and permissions.
 - A backup/restore policy configured for the existing Atlas cluster. This deployment does not alter Atlas backup settings.
@@ -33,11 +33,11 @@ Tellme uses multi-document transactions. MongoDB supports them on replica sets a
 
 1. Push this branch to the Git host and make sure the VPS can clone the repository.
 2. In Coolify, create a Project and Production Environment, then add a **Docker Compose** resource from the Git repository. Keep the normal Coolify Compose deployment mode; do not select Raw Compose.
-3. Set **Base Directory** to `/` (repository root) and **Docker Compose Location** to `infra/deploy/compose.yaml`. Coolify passes the repository root as `--project-directory`. All eight `build.context` values are `.` relative to that root; Dockerfile paths are also relative to the repository root. Local Compose commands must use `--project-directory .` from the repository root to match Coolify. Coolify should show `web-edge`, `landing`, `admin-edge`, `api`, `redis`, the three workers and `web-app`; there are no MongoDB containers or MongoDB volumes in this resource.
+3. Set **Base Directory** to `/` (repository root) and **Docker Compose Location** to `infra/deploy/compose.yaml`. Coolify passes the repository root as `--project-directory`. All seven `build.context` values are `.` relative to that root; Dockerfile paths are also relative to the repository root. Local Compose commands must use `--project-directory .` from the repository root to match Coolify. Coolify should show `web-edge`, `landing`, `admin-edge`, `api`, `redis`, the two workers and `web-app`; there are no MongoDB containers or MongoDB volumes in this resource.
 4. Add the variables listed in `coolify-env.example` in the resource's Environment Variables screen. Mark secret values as secret/locked. Keep secrets runtime-only unless a value is explicitly used as a build argument. Never add credentials to the Compose file, Dockerfile, Git repository or build arguments.
    In **Advanced → Build → Build arguments**, select **Managed manually in Dockerfile**. All required public build arguments are already declared in the service Dockerfiles; keep database/provider credentials runtime-only. This avoids Coolify adding application secrets and `NODE_ENV` declarations to every build stage.
 5. Generate separate random secrets locally. For `REDIS_PASSWORD` and `AUTH_CODE_SECRET`, use `openssl rand -hex 32`. Copy each result directly into its matching Coolify secret field.
-6. Keep the current `MONGODB_URI` secret unchanged, set `MONGODB_DB=tellme`, then set `CLOUDINARY_URL`, `GIPHY_API_KEY`, `SMTP_URL` and `EMAIL_FROM` to working production values. URL-encode special characters in URI credentials (especially `@`, `:`, `/`, `%` and `$`). Use the sender address approved by your mail provider. Fill both VAPID keys if you want web push. Do not enable the Epidemic Sound prototype key as a production music provider; the app intentionally disables that provider in production.
+6. Keep the current `MONGODB_URI` secret unchanged, set `MONGODB_DB=tellme`, then set `CLOUDINARY_URL`, `SMTP_URL` and `EMAIL_FROM` to working production values. URL-encode special characters in URI credentials (especially `@`, `:`, `/`, `%` and `$`). Use the sender address approved by your mail provider. Fill both VAPID keys if you want web push. Do not enable the Epidemic Sound prototype key as a production music provider; the app intentionally disables that provider in production.
 7. Keep the domain/origin values exactly as in the example unless you change the public domain names. Set `ADMIN_EMAILS` to the real, verified Tellme account email(s) that should administer this installation. There is no default administrator; an unset or empty list blocks Compose deployment.
 
 Coolify parses the Compose variables and validates required values. `${NAME:?…}` entries block deployment while required values are missing.
@@ -62,7 +62,7 @@ Use `https://` in each Coolify domain entry so its proxy requests TLS certificat
 4. Use an existing verified account named in `ADMIN_EMAILS`, or register that real address through the main app and verify it from its mailbox. No administrator account or password is created automatically.
 5. Sign in at `https://admin.tellme.my`. Check **Hạ tầng**: MongoDB, Redis and Cloudinary connection indicators should be healthy. Unconfigured optional integrations should remain clearly marked as unavailable.
 
-The database is the existing Atlas database, so current users, posts and sessions stay there. No data migration or database reset is part of deployment. Admin access requires the allowlisted account's email to be verified.
+The database is the existing Atlas database, so current users, stories and sessions stay there. Retired discovery data has already been removed; deployment does not reset or trim the database. Admin access requires the allowlisted account's email to be verified.
 
 ## Backups and updates
 
@@ -117,3 +117,7 @@ A Git-only admin build formerly failed with `TS2307` for two logo PNG imports: t
 - [Coolify server firewall ports](https://coolify.io/docs/core/infrastructure/servers/firewall)
 - [MongoDB Atlas Network Access IP list](https://www.mongodb.com/docs/atlas/security/ip-access-list/)
 - [MongoDB transaction requirements](https://www.mongodb.com/docs/manual/core/transactions-production-consideration/)
+
+## Removing the retired discovery worker
+
+The stack now has only media and notification workers. If upgrading an existing deployment, stop/remove the old discovery feed worker service if Coolify retains orphan services. Do not flush Redis or delete MongoDB content. The dispatcher completes outbox entries from retired queue families without recreating those queues.

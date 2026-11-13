@@ -3,7 +3,7 @@ import { v2 as cloudinary } from "cloudinary";
 import sharp from "sharp";
 import { encode } from "blurhash";
 import { config } from "./config.js";
-import { media, mongo, posts, stories, users, conversations } from "./database.js";
+import { media, mongo, stories, users, conversations } from "./database.js";
 import type { User } from "./models.js";
 import { enqueue } from "./queue.js";
 
@@ -11,6 +11,8 @@ const cloud = new URL(config.CLOUDINARY_URL);
 cloudinary.config({ cloud_name: cloud.hostname, api_key: decodeURIComponent(cloud.username), api_secret: decodeURIComponent(cloud.password), secure: true });
 export { cloudinary };
 export class MediaUnavailable extends Error {}
+export const protectedMediaUrl = (id: string, variant?: "thumbnail" | "feed") =>
+  `/api/media/images/${Buffer.from(id).toString("base64url")}${variant ? `?size=${variant}` : ""}`;
 export async function withMediaChange<T>(me: User, urls: string[], write: (session: ClientSession) => Promise<T>): Promise<T> {
   const session = mongo.startSession();
   try {
@@ -39,14 +41,14 @@ export async function cleanMedia(ownerId: string, url: string) {
       canDelete = false;
       const record = await media.findOne({ _id: item._id, ownerId }, { session });
       if (!record) return;
-      const referenced = (await conversations.findOne({ avatar: url }, { session })) || (await posts.findOne({ image: url }, { session })) || (await stories.findOne({ "items.image": url }, { session })) || (await users.findOne({ $or: [{ avatar: url }, { cover: url }] }, { session }));
+      const referenced = (await conversations.findOne({ avatar: url }, { session })) || (await stories.findOne({ "items.image": url }, { session })) || (await users.findOne({ $or: [{ avatar: url }, { cover: url }] }, { session }));
       if (referenced) return;
       await media.updateOne({ _id: item._id }, { $set: { state: "deleting" } }, { session });
       canDelete = true;
     });
   } finally { await session.endSession(); }
   if (!canDelete) return;
-  const result = await cloudinary.uploader.destroy(item._id, { invalidate: true, resource_type: "image" });
+  const result = await cloudinary.uploader.destroy(item._id, { invalidate: true, resource_type: "image", type: item.deliveryType || "upload" });
   if (result.result !== "ok" && result.result !== "not found") throw new Error("Cloudinary cleanup not acknowledged");
   await media.deleteOne({ _id: item._id, ownerId, state: "deleting" });
 }
@@ -57,13 +59,14 @@ export async function sweepMedia() {
 export async function processMedia(id: string) {
   const item = await media.findOne({ _id: id, state: { $ne: "deleting" } });
   if (!item) return;
-  const thumb = cloudinary.url(id, { secure: true, transformation: [{ width: 400, height: 400, crop: "limit", fetch_format: "auto", quality: "auto" }] });
-  const feed = cloudinary.url(id, { secure: true, transformation: [{ width: 1280, crop: "limit", fetch_format: "auto", quality: "auto" }] });
-  const small = cloudinary.url(id, { secure: true, format: "png", transformation: [{ width: 32, height: 32, crop: "limit" }] });
+  const delivery = { type: item.deliveryType || "upload", sign_url: item.deliveryType === "authenticated" };
+  const thumb = cloudinary.url(id, { ...delivery, secure: true, transformation: [{ width: 400, height: 400, crop: "limit", fetch_format: "auto", quality: "auto" }] });
+  const feed = cloudinary.url(id, { ...delivery, secure: true, transformation: [{ width: 1280, crop: "limit", fetch_format: "auto", quality: "auto" }] });
+  const small = cloudinary.url(id, { ...delivery, secure: true, format: "png", transformation: [{ width: 32, height: 32, crop: "limit" }] });
   const response = await fetch(small, { signal: AbortSignal.timeout(30000) });
   if (!response.ok) throw new Error("Cannot build image preview");
   const buffer = Buffer.from(await response.arrayBuffer());
   const { data, info } = await sharp(buffer).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-  const original = await cloudinary.api.resource(id);
-  await media.updateOne({ _id: id, state: { $ne: "deleting" } }, { $set: { variants: { thumbnail: thumb, feed, blurhash: encode(new Uint8ClampedArray(data), info.width, info.height, 4, 3), width: Number(original.width), height: Number(original.height) } } });
+  const original = await cloudinary.api.resource(id, { type: item.deliveryType || "upload" });
+  await media.updateOne({ _id: id, state: { $ne: "deleting" } }, { $set: { variants: { thumbnail: item.deliveryType === "authenticated" ? protectedMediaUrl(id, "thumbnail") : thumb, feed: item.deliveryType === "authenticated" ? protectedMediaUrl(id, "feed") : feed, blurhash: encode(new Uint8ClampedArray(data), info.width, info.height, 4, 3), width: Number(original.width), height: Number(original.height) } } });
 }

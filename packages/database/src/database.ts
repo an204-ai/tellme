@@ -4,7 +4,6 @@ import type {
   AuthToken,
   User,
   Session,
-  Post,
   Story,
   Conversation,
   Message,
@@ -13,6 +12,7 @@ import type {
   Report,
   BackgroundJob,
   PushSubscriptionRecord,
+  FriendRequest,
 } from "./models.js";
 export const mongo = new MongoClient(config.MONGODB_URI, {
   serverSelectionTimeoutMS: 10000,
@@ -21,8 +21,8 @@ export const mongo = new MongoClient(config.MONGODB_URI, {
 const db = mongo.db(config.MONGODB_DB);
 export const authTokens = db.collection<AuthToken>("auth_tokens");
 export const users = db.collection<User>("users");
+export const friendRequests = db.collection<FriendRequest>("friend_requests");
 export const sessions = db.collection<Session>("sessions");
-export const posts = db.collection<Post>("posts");
 export const stories = db.collection<Story>("stories");
 export const conversations = db.collection<Conversation>("conversations");
 export const messages = db.collection<Message>("messages");
@@ -38,13 +38,11 @@ export async function connectDatabase() {
     authTokens.createIndex({ tokenHash: 1 }, { unique: true }),
     users.createIndex({ email: 1 }, { unique: true }),
     users.createIndex({ username: 1 }, { unique: true }),
+    friendRequests.createIndex({ toId: 1, at: -1 }),
+    friendRequests.createIndex({ fromId: 1, at: -1 }),
     sessions.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }),
     sessions.createIndex({ userId: 1 }),
     reports.createIndex({ at: -1 }),
-    posts.createIndex({ createdAt: -1, _id: -1 }),
-    posts.createIndex({ authorId: 1, createdAt: -1 }),
-    posts.createIndex({ savedBy: 1, createdAt: -1 }),
-    posts.createIndex({ "comments.createdAt": -1 }),
     stories.createIndex({ day: -1 }),
     stories.createIndex({ userId: 1, day: 1 }, { unique: true }),
     stories.createIndex({ updatedAt: -1 }),
@@ -59,7 +57,7 @@ export async function connectDatabase() {
     messages.createIndex({ conversationId: 1, at: -1, _id: -1 }),
     notices.createIndex({ recipientId: 1, at: -1 }),
     media.createIndex({ ownerId: 1, url: 1 }),
-    reports.createIndex({ userId: 1, postId: 1 }, { unique: true }),
+    reports.createIndex({ userId: 1, targetType: 1, targetId: 1 }, { unique: true }),
     outbox.createIndex({ status: 1, availableAt: 1 }),
     outbox.createIndex({ finishedAt: 1 }, { expireAfterSeconds: 60 * 60 * 24 * 30 }),
     pushSubscriptions.createIndex({ userId: 1 }),

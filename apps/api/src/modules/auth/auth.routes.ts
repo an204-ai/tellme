@@ -40,10 +40,9 @@ authRouter.post("/register", async (c) => {
     avatar: "/images/avatar-default.svg",
     cover: "/images/cover-default.svg",
     bio: "",
-    location: "",
     following: [],
     blocked: [],
-    hiddenPosts: [],
+
     settings: { ...defaults },
     createdAt: now(),
   };

@@ -158,7 +158,7 @@ function MonthMap({ month, personId, onBounds }: {
   </div>;
 }
 
-export function ProfileJourney({ personId, isMe }: { personId: string; isMe: boolean }) {
+export function ProfileJourney({ personId }: { personId: string }) {
   const thisMonth = localDay().slice(0, 7);
   const [month, setMonth] = useState(thisMonth);
   const [firstMonth, setFirstMonth] = useState<string | null>(null);
@@ -187,11 +187,10 @@ export function ProfileJourney({ personId, isMe }: { personId: string; isMe: boo
   const navigate = (direction: number) => swipe.current?.navigate(direction);
   return <section ref={frame} className="profile-journey" aria-label="Hành trình Tell me now">
     <header className="journey-heading">
-      <span className="journey-brand" aria-hidden="true"><img src="/brand/logos/tellme-symbol-on-light.png" alt="" width="44" height="44" /></span>
-      <div><h2>{isMe ? "Hành trình của tôi" : "Hành trình Tell me now"}</h2></div>
+      <h2 className="sr-only">Hành trình theo tháng</h2>
       <div className="journey-navigation">
         <button type="button" disabled={!previousAllowed} aria-label="Xem tháng trước" onClick={() => navigate(-1)}><ChevronLeft size={19} /></button>
-        <span aria-live="polite">{monthLabel(month)}</span>
+        <span aria-live="polite" aria-label={monthLabel(month)}><strong>Tháng {Number(month.slice(5, 7))}</strong><small>{month.slice(0, 4)}</small></span>
         <button type="button" disabled={!nextAllowed} aria-label="Xem tháng tiếp theo" onClick={() => navigate(1)}><ChevronRight size={19} /></button>
       </div>
     </header>

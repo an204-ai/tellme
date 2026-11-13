@@ -11,8 +11,8 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: "/community/today",
     scope: "/",
     display: "standalone",
-    background_color: "#ffffff",
-    theme_color: "#07327f",
+    background_color: "#dceafa",
+    theme_color: "#dceafa",
     icons: [
       { src: "/brand/app-icons/tellme-192.png", sizes: "192x192", type: "image/png" },
       { src: "/brand/app-icons/tellme-512.png", sizes: "512x512", type: "image/png" },

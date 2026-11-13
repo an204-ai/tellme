@@ -38,6 +38,11 @@ export async function dispatchOutbox() {
       { sort: { availableAt: 1 }, returnDocument: "after" },
     );
     if (!job) break;
+    // Finish entries from retired queue families without creating their queues again.
+    if (!["media", "notification"].includes(job.kind.split(".")[0]!)) {
+      await outbox.updateOne({ _id: job._id }, { $set: { status: "completed", finishedAt: new Date() } });
+      continue;
+    }
     try {
       const queue = queueFor(job.kind);
       const existing = await queue.getJob(job._id);
@@ -74,7 +79,7 @@ export function startDispatcher() {
   timer.unref();
   return () => clearInterval(timer);
 }
-export function createWorker(name: "media" | "feed" | "notification", handler: (kind: JobKind, data: Record<string, unknown>, id: string) => Promise<unknown>) {
+export function createWorker(name: "media" | "notification", handler: (kind: JobKind, data: Record<string, unknown>, id: string) => Promise<unknown>) {
   const worker = new Worker(name, async (job: Job) => {
     if (job.name === "notification.system") { await handler(job.name, job.data as Record<string, unknown>, job.id!); return; }
     await outbox.updateOne({ _id: job.id! }, { $inc: { attempts: 1 } });

@@ -17,7 +17,7 @@ export function registerMusicRoutes(api: Hono<Env>) {
     const provider = musicProviderSchema.default("epidemic-sound").parse(c.req.query("provider"));
     const startSeconds = musicStartSchema.parse(Number(c.req.query("startSeconds") || 0));
     const stream = await getMusicStream(trackIdSchema.parse(c.req.param("id")), c.get("user")._id, provider);
-    return c.json(withMusicStart({ ...stream, durationSeconds: "durationSeconds" in stream ? stream.durationSeconds : undefined }, startSeconds));
+    return c.json(withMusicStart({ ...stream, durationSeconds: undefined }, startSeconds));
   });
   api.put("/stories/:id/music", rateLimit(20, 60000, "music-write"), async (c) => {
     const me = c.get("user"), id = c.req.param("id");
@@ -35,10 +35,7 @@ export function registerMusicRoutes(api: Hono<Env>) {
     if (!visible.items.length || !story.music) fail(404, "Chuỗi này chưa có nhạc hoặc không còn khả dụng.");
     c.header("Cache-Control", "private, no-store");
     const stream = await getMusicStream(story.music.trackId, me._id, story.music.provider);
-    if (stream.provider === "youtube" && stream.metadataUpdatedAt) {
-      await stories.updateOne({ _id: story._id, "music.provider": "youtube", "music.trackId": stream.videoId }, { $set: { "music.title": stream.title, "music.artists": stream.artists, "music.cover": stream.cover, "music.durationSeconds": stream.durationSeconds, "music.metadataUpdatedAt": new Date().toISOString() } });
-    }
-    const duration = "durationSeconds" in stream ? stream.durationSeconds : undefined;
+    const duration = undefined;
     const startSeconds = Math.min(story.music.startSeconds || 0, duration ? Math.max(0, duration - 1) : 86400);
     return c.json({ ...stream, startSeconds });
   });

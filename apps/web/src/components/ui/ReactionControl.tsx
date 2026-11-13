@@ -7,6 +7,7 @@ import type { Reaction } from "@/lib/types";
 import { reactionOptions } from "@/lib/social-assets";
 
 export function ReactionIcon({ value, size = 28 }: { value: Reaction; size?: number }) {
+  if (value.startsWith("emoji:")) return <span className="tellme-native-reaction" aria-hidden="true" style={{ fontSize: size, width: size, height: size }}>{value.slice(6)}</span>;
   const option = reactionOptions.find((entry) => entry.value === value) || reactionOptions[0]!;
   return <Image className="tellme-reaction-image" src={option.image} width={size} height={size} sizes={`${size}px`} alt="" aria-hidden="true" draggable={false} />;
 }
@@ -37,12 +38,12 @@ export function ReactionControl({ selected, onChange, disabled = false, compact 
   const closeRef = useRef<() => void>(() => {});
   const [open, setOpen] = useState(false);
   const [dragReaction, setDragReaction] = useState<Reaction | null>(null);
-  const choice = reactionOptions.find((option) => option.value === selected);
+  const choice = reactionOptions.find((option) => option.value === selected) || (selected?.startsWith("emoji:") ? { label: selected.slice(6) } : undefined);
   const cancelClose = () => clearTimeout(timer.current);
   const close = () => popup.current?.hidePopover();
   const choose = (value: Reaction | null, source: HTMLButtonElement) => {
     // Measure the chosen tray icon before closing the popover. The count target
-    // is local to this post, so other posts and responsive layouts cannot steal it.
+    // is local to this story, so other content and responsive layouts cannot steal it.
     const sourceRect = source.querySelector("img")?.getBoundingClientRect();
     const targetRect = flightTarget?.current?.getBoundingClientRect();
     const restoreFocus = popup.current?.contains(document.activeElement);
@@ -66,7 +67,7 @@ export function ReactionControl({ selected, onChange, disabled = false, compact 
   closeRef.current = close;
   useLayoutEffect(() => {
     if (!burst) return;
-    // The top layer also clears clipped post images and the story timeline dialog.
+    // The top layer also clears clipped images and the story timeline dialog.
     const layer = burstLayer.current;
     layer?.showPopover();
     const cleanup = setTimeout(() => setBurst(null), 720);

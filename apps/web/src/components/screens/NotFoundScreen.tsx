@@ -7,7 +7,7 @@ import { Brand, Button } from "@/components/ui/Primitives";
 export function NotFoundScreen() {
   return (
     <main className="not-found-page">
-      <Link href="/community/feed">
+      <Link href="/community/today">
         <Brand />
       </Link>
       <div className="not-found-content">
@@ -23,9 +23,9 @@ export function NotFoundScreen() {
             <br />
             Nhưng những câu chuyện khác vẫn đang chờ bạn.
           </p>
-          <Link href="/community/feed" className="not-found-home">
+          <Link href="/community/today" className="not-found-home">
             <Home size={18} />
-            Về Khám phá
+            Về Tell me now
           </Link>
           <button
             type="button"

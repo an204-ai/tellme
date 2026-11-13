@@ -1,216 +1,29 @@
 "use client";
-import { playInterfaceSound } from "@/lib/interface-sounds";
 import { MomentComposer } from "./MomentComposer";
 import { SupportModal } from "./TellmeSupport";
 import { MusicOverlays } from "@/components/music/StoryMusic";
-import { EmojiButton } from "@/components/ui/EmojiButton";
-import { EditPersonalInfo } from "./EditPersonalInfo";
-import { workplaceCopy } from "@/lib/brand";
-import { useWeather } from "@/providers/WeatherProvider";
-import { weatherVoice } from "@/lib/weather";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Camera, Check, ImagePlus, X } from "lucide-react";
+import { Camera, Check, X } from "lucide-react";
 import { useAppStore } from "@/stores/app.store";
 import { useCommunity } from "@/hooks/use-community";
-import { newId, readImage } from "@/lib/api-repository";
+import { readImage } from "@/lib/api-repository";
 import {
-  postSchema,
-  profileIdentitySchema,
+  profileSchema,
 } from "@/lib/validation";
-import type { PostInput } from "@/lib/validation";
 import {
-  AudiencePicker,
   Avatar,
   Button,
-  IconButton,
   ImageUploadStatus,
   Input,
-  Switch,
 } from "@/components/ui/Primitives";
-import { StoryTimeline } from "./StoryTimeline";
+import { StoryMomentViewer } from "./StoryMomentViewer";
 import { Modal } from "@/components/ui/Modal";
 import { ImageCropper } from "@/components/ui/ImageCropper";
-import { PostPhoto } from "@/components/ui/PostPhoto";
 import { IMAGE_ACCEPT, validateImage } from "@/lib/images";
 
-function Composer() {
-  const { fresh: weather } = useWeather();
-  const { data, update, saving } = useCommunity();
-  const open = useAppStore((state) => state.open);
-  const notify = useAppStore((state) => state.notify);
-  const [uploadError, setUploadError] = useState("");
-  const [uploading, setUploading] = useState(false);
-  const form = useForm<PostInput>({
-    resolver: zodResolver(postSchema),
-    defaultValues: {
-      content: "",
-      image: "",
-      topic: "",
-      privacy: data?.settings.audience || "public",
-      anonymous: false,
-    },
-  });
-  const contentInput = useRef<HTMLTextAreaElement | null>(null);
-  const contentField = form.register("content");
-  const image = form.watch("image");
-  const privacy = form.watch("privacy");
-  const content = form.watch("content");
-  const onSubmit = form.handleSubmit(async (input) => {
-    try {
-      await update((draft) => {
-        draft.posts.unshift({
-          id: newId(),
-          authorId: "me",
-          ...input,
-          createdAt: new Date().toISOString(),
-          likes: 0,
-          reaction: null,
-          comments: [],
-          saved: false,
-          shares: 0,
-        });
-      });
-      open(null);
-      playInterfaceSound("success");
-      notify("Đã đăng bài viết.");
-    } catch {
-      /* mutation error is announced globally */
-    }
-  });
-  return (
-    <Modal title="Kể chuyện đi làm" onClose={() => open(null)}>
-      <form className="dialog-body composer-form" onSubmit={onSubmit}>
-        <div className="flex items-center gap-3">
-          <Avatar person={data?.people.find((person) => person.id === "me")} />
-          <div>
-            <strong className="person-name">
-              {data?.people.find((person) => person.id === "me")?.name}
-            </strong>
-            <p className="muted text-xs mt-1">
-              Một chuyện nhỏ trong ca làm cũng được.
-            </p>
-          </div>
-        </div>
-        <textarea
-          className="composer-textarea"
-          aria-label="Nội dung bài viết"
-          placeholder={weather ? weatherVoice(weather).feed : workplaceCopy.postPlaceholder}
-          autoFocus
-          {...contentField}
-          ref={(node) => { contentField.ref(node); contentInput.current = node; }}
-          maxLength={5000}
-          rows={5}
-        />
-        <div className="composer-caption-tools">
-          <EmojiButton label="Thêm emoji vào bài viết" onSelect={(emoji) => {
-            const start = contentInput.current?.selectionStart ?? content.length;
-            const end = contentInput.current?.selectionEnd ?? content.length;
-            const next = content.slice(0, start) + emoji + content.slice(end);
-            if (next.length > 5000) return;
-            form.setValue("content", next, { shouldDirty: true, shouldValidate: true });
-            requestAnimationFrame(() => { contentInput.current?.focus(); contentInput.current?.setSelectionRange(start + emoji.length, start + emoji.length); });
-          }} />
-          <span className="field-error" role="alert">
-            {form.formState.errors.content?.message}
-          </span>
-          <span className="muted text-xs shrink-0">{content.length}/5.000</span>
-        </div>
-        {image && (
-          <div className="upload-preview">
-            <PostPhoto src={image} alt="Ảnh sẽ đính kèm bài viết" preview />
-            <IconButton
-              label="Bỏ ảnh đính kèm"
-              onClick={() => form.setValue("image", "")}
-            >
-              <X size={18} />
-            </IconButton>
-          </div>
-        )}
-        <div className="composer-tools">
-          <label className="upload-label">
-            <ImagePlus size={20} />
-            <span>Thêm ảnh</span>
-            <input
-              type="file"
-              accept={IMAGE_ACCEPT}
-              disabled={uploading || saving}
-              className="sr-only"
-              onChange={async (event) => {
-                const file = event.target.files?.[0];
-                if (!file) return;
-                setUploading(true);
-                try {
-                  form.setValue("image", await readImage(file));
-                  setUploadError("");
-                } catch (error) {
-                  setUploadError((error as Error).message);
-                } finally {
-                  setUploading(false);
-                }
-                event.target.value = "";
-              }}
-            />
-          </label>
-          {uploading ? (
-            <ImageUploadStatus compact />
-          ) : (
-            <span className="muted text-xs">Ảnh tối đa 50 MB · Có hỗ trợ HEIC</span>
-          )}
-        </div>
-        {uploadError && (
-          <p className="field-error" role="alert">
-            {uploadError}
-          </p>
-        )}
-        <label className="field-label" htmlFor="post-topic">
-          Chủ đề <span className="muted font-normal">· Không bắt buộc</span>
-        </label>
-        <Input
-          id="post-topic"
-          placeholder="Ví dụ: Chuyện đầu ca"
-          {...form.register("topic")}
-        />
-        <div className="topic-suggestions">
-          {workplaceCopy.topicSuggestions.map(
-            (topic) => (
-              <button
-                type="button"
-                key={topic}
-                onClick={() => form.setValue("topic", topic)}
-              >
-                #{topic}
-              </button>
-            ),
-          )}
-        </div>
-        {form.formState.errors.topic && (
-          <p className="field-error">{form.formState.errors.topic.message}</p>
-        )}
-        <AudiencePicker
-          value={privacy}
-          onChange={(value) => form.setValue("privacy", value)}
-        />
-        <div className="setting-toggle-row">
-          <div>
-            <span className="field-label">Đăng ẩn danh</span>
-            <p className="muted text-xs">Ẩn tên hiển thị trên bài viết.</p>
-          </div>
-          <Switch
-            checked={form.watch("anonymous")}
-            onChange={(checked) => form.setValue("anonymous", checked)}
-            label="Đăng ẩn danh"
-          />
-        </div>
-        <Button type="submit" className="full-width" disabled={saving || uploading}>
-          {saving ? "Đang chia sẻ…" : "Đăng bài"}
-        </Button>
-      </form>
-    </Modal>
-  );
-}
 function EditProfile() {
   const { data, update, saving } = useCommunity();
   const open = useAppStore((state) => state.open);
@@ -236,7 +49,7 @@ function EditProfile() {
     }
   };
   const form = useForm({
-    resolver: zodResolver(profileIdentitySchema),
+    resolver: zodResolver(profileSchema),
     defaultValues: {
       username: person?.username || "",
       name: person?.name || "",
@@ -268,7 +81,7 @@ function EditProfile() {
       >
         <div className="profile-media-editor">
           <div className="profile-cover-preview">
-            <img src={cover} alt="Xem trước ảnh bìa" />
+            {cover && <img src={cover} alt="Xem trước ảnh bìa" />}
             <label className="profile-image-upload">
               <Camera size={17} />
               <span>Đổi ảnh bìa</span>
@@ -383,7 +196,7 @@ export function GlobalOverlays() {
   const { data } = useCommunity();
   const router = useRouter();
   const pathname = usePathname();
-  const { overlay, toast, clearToast, viewedStory, viewedStoryIndex, viewedStoryMomentId } =
+  const { overlay, toast, clearToast, viewedStory, viewedStoryIndex, viewedStoryMomentId, viewedStoryOrigin } =
     useAppStore();
   useEffect(() => {
     if (!toast) return;
@@ -398,17 +211,16 @@ export function GlobalOverlays() {
   }, [overlay, data?.authenticated, pathname, router]);
   return (
     <>
-      {overlay === "composer" && <Composer />}
       {overlay === "moment" && <MomentComposer />}
       {overlay === "support" && <SupportModal />}
       {overlay === "edit-profile" && <EditProfile />}
-      {overlay === "edit-personal" && <EditPersonalInfo />}
       {viewedStory && (
-        <StoryTimeline
+        <StoryMomentViewer
           key={`${viewedStory}-${viewedStoryIndex}-${viewedStoryMomentId || ""}`}
           storyId={viewedStory}
           initialIndex={viewedStoryIndex}
           initialMomentId={viewedStoryMomentId}
+          allowMusic={viewedStoryOrigin === "today"}
         />
       )}
       <MusicOverlays />

@@ -14,7 +14,7 @@ export async function deliverNotification(data: Record<string, unknown>, id: str
   const [recipient, actor] = await Promise.all([users.findOne({ _id: recipientId }), users.findOne({ _id: userId })]);
   if (!recipient || !actor || recipientId === userId || recipient.blocked.includes(userId) || actor.blocked.includes(recipientId)) return;
   if (!(data.kind === "message" ? recipient.settings.notifyMessages : recipient.settings.notifyLikes)) return;
-  await notices.updateOne({ _id: id }, { $setOnInsert: { recipientId, userId, text: String(data.text), read: false, at: String(data.at), kind: data.kind === "message" ? "message" : "like", ...(data.postId ? { postId: String(data.postId) } : {}), ...(data.storyId ? { storyId: String(data.storyId) } : {}), ...(data.momentId ? { momentId: String(data.momentId) } : {}), ...(data.conversationId ? { conversationId: String(data.conversationId) } : {}) } }, { upsert: true });
+  await notices.updateOne({ _id: id }, { $setOnInsert: { recipientId, userId, text: String(data.text), read: false, at: String(data.at), kind: data.kind === "message" ? "message" : "like", ...(data.storyId ? { storyId: String(data.storyId) } : {}), ...(data.momentId ? { momentId: String(data.momentId) } : {}), ...(data.conversationId ? { conversationId: String(data.conversationId) } : {}) } }, { upsert: true });
   await publishUpdate([recipientId], "notifications", { noticeId: id });
   if (config.VAPID_PRIVATE_KEY && config.VAPID_PUBLIC_KEY && await pushSubscriptions.findOne({ userId: recipientId }, { projection: { _id: 1 } }))
     await enqueue("notification.push", { recipientId, noticeId: id }, { id: `push-${id}` });
@@ -30,7 +30,7 @@ export async function sendPush(data: Record<string, unknown>) {
   if (!actor || recipient.blocked.includes(actor._id) || actor.blocked.includes(recipient._id)) return;
   const url = notice.conversationId
     ? `/community/messages/${encodeURIComponent(notice.conversationId)}`
-    : notice.postId ? `/post/${encodeURIComponent(notice.postId)}` : "/community/today";
+    : "/community/today";
   const tagContext = notice.kind === "message" ? notice.conversationId || actor._id : actor._id;
   await pushToUser(recipient._id, {
     title: actor.name,

@@ -2,7 +2,7 @@
 
 import { useEffect, type RefObject } from "react";
 
-/** Keep chat inside the visible area when iOS pans/resizes for its keyboard. */
+/** Keep the community shell inside the visible area when iOS opens its keyboard. */
 export function useChatViewport(frame: RefObject<HTMLDivElement | null>, enabled: boolean) {
   useEffect(() => {
     const element = frame.current;
@@ -19,12 +19,17 @@ export function useChatViewport(frame: RefObject<HTMLDivElement | null>, enabled
     const measure = () => {
       cancelAnimationFrame(paint);
       paint = requestAnimationFrame(() => {
-        const editable = document.activeElement instanceof HTMLElement &&
-          document.activeElement.matches('input, textarea, [contenteditable="true"]');
+        const focused = document.activeElement;
+        // Switches, sliders, file pickers and readonly fields never open a typing keyboard.
+        const editable = focused instanceof HTMLInputElement
+          ? ["text", "search", "email", "password", "tel", "url", "number"].includes(focused.type) && !focused.readOnly && !focused.disabled
+          : focused instanceof HTMLTextAreaElement
+            ? !focused.readOnly && !focused.disabled
+            : focused instanceof HTMLElement && focused.isContentEditable;
         const height = viewport?.height ?? window.innerHeight;
         // Browser chrome and pinch zoom are not a keyboard. Keep native zoom available.
         const unzoomed = !viewport || Math.abs(viewport.scale - 1) < .05;
-        if (!editable && height > fullHeight) fullHeight = height;
+        if (!editable) fullHeight = Math.max(window.innerHeight, height);
         const keyboard = window.innerWidth <= 640 && unzoomed && editable &&
           Math.max(fullHeight, window.innerHeight) - height > 120;
         element.dataset.keyboardOpen = String(keyboard);

@@ -1,0 +1,51 @@
+/* Settings group compact controls by task; account management spans the section. */
+.settings-layout.settings-sections { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; width: 100%; max-width: none; }
+.settings-column { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+.close-app .settings-layout .settings-section { min-width: 0; border: 0; border-radius: 22px; padding: 22px; background: var(--paper); }
+.settings-layout .settings-section h2 { margin: 0 0 18px; display: flex; align-items: center; gap: 10px; font-size: 18px; line-height: 1.4; }
+.settings-layout .settings-section > p { font-size: 14px; line-height: 1.7; }
+.settings-layout .setting-toggle-row { gap: 16px; padding-block: 14px; }
+.settings-layout .setting-toggle-row > div { min-width: 0; }
+.settings-layout .setting-toggle-row strong { font-weight: 800; font-size: 15px; line-height: 1.4; }
+.settings-layout .setting-toggle-row p { max-width: 52ch; }
+.settings-layout .setting-toggle-row > .button-wrap { flex-shrink: 0; }
+.settings-layout .account-email-status + .setting-toggle-row { border-top: 0; }
+.settings-layout .settings-blocking { grid-column: 1 / -1; border-bottom: 0; }
+.settings-blocked-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 24px; }
+.settings-blocked-list .blocked-person { min-width: 0; gap: 12px; padding-block: 12px; border-bottom: 1px solid var(--line); }
+.settings-blocked-list .avatar { flex-shrink: 0; }
+.blocked-person-name { display: grid; gap: 4px; min-width: 0; }
+.blocked-person-name > * { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.blocked-person-name strong { font-size: 14px; font-weight: 600; }
+.blocked-person-name small { font-size: 13px; }
+.settings-layout .account-block-picker { width: 100%; max-width: none; margin-top: 20px; }
+@media (min-width: 1100px) {
+  .close-app .settings-layout.settings-sections { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 32px; }
+  .settings-blocked-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  .close-app .settings-layout.settings-sections { display: grid; gap: 24px; }
+  .close-app .settings-layout .settings-section { padding: 18px 16px; }
+  .settings-layout .radio-inputs { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .settings-layout .radio-tile { min-height: 44px; }
+  .settings-layout .radio-icon { display: flex; }
+}
+
+.close-app .settings-layout .setting-toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 16px; border-color: var(--line); }
+.close-app .settings-layout .setting-toggle-row p { margin: 6px 0 0; font-size: 13px; line-height: 1.6; }
+.close-app .settings-layout .setting-toggle-row:last-child { padding-bottom: 0; }
+.settings-layout .account-email-status { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; padding: 0 0 16px; }
+.settings-layout .account-email-status > div { flex: 1 1 220px; min-width: 0; }
+.settings-layout .account-email-status strong { display: block; font-size: 15px; line-height: 1.5; overflow-wrap: anywhere; }
+.settings-layout .account-email-status p { margin: 4px 0 0; font-size: 13px; line-height: 1.6; }
+.settings-layout .account-email-status > a { font-size: 13px; line-height: 1.5; padding-block: 8px; }
+.settings-layout .account-password-row { flex-wrap: wrap; }
+.settings-layout .account-password-row > div { flex: 1 1 150px; }
+.settings-layout .account-password-row > .button-wrap { flex: 0 0 auto; }
+.settings-layout .account-password-row .button { min-height: 44px; padding: 10px 14px; font-size: 14px; }
+.settings-layout .setting-toggle-row > .uiv-switch { flex-shrink: 0; }
+@media (max-width: 640px) {
+ .close-app .settings-layout.settings-sections, .settings-column { gap: 16px; }
+ .close-app .settings-layout .settings-section h2 { margin-bottom: 16px; font-size: 17px; }
+ .settings-layout .account-email-status > a { padding-top: 0; }
+}

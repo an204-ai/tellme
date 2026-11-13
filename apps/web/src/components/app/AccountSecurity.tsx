@@ -20,7 +20,7 @@ export function AccountSecurity() {
   const close = () => { setEditing(false); setCurrentPassword(""); setPassword(""); setConfirm(""); setError(""); };
   return <section className="settings-section"><h2><LockKeyhole size={21} /> Bảo mật tài khoản</h2>
     {account.data ? <div className="account-email-status"><div><strong>{account.data.email}</strong><p>{account.data.emailVerified ? "Email đã xác thực" : "Email chưa xác thực"}</p></div>{!account.data.emailVerified && <Link className="text-link" href="/auth/verify-email">Xác thực email</Link>}</div> : <p>{account.isError ? "Chưa tải được thông tin email." : "Đang tải thông tin email…"}</p>}
-    <div className="setting-toggle-row"><div><strong>Mật khẩu</strong><p>Đổi mật khẩu sẽ đăng xuất các phiên khác.</p></div><Button variant="secondary" onClick={() => setEditing(true)}>Đổi mật khẩu</Button></div>
+    <div className="setting-toggle-row account-password-row"><div><strong>Mật khẩu</strong><p>Đổi mật khẩu sẽ đăng xuất các phiên khác.</p></div><Button variant="secondary" onClick={() => setEditing(true)}>Đổi mật khẩu</Button></div>
     {editing && <Modal title="Đổi mật khẩu" onClose={close}><form className="dialog-body account-password-form" onSubmit={async (event) => {
       event.preventDefault(); setError(""); if (password !== confirm) { setError("Hai mật khẩu mới chưa khớp."); return; } setBusy(true);
       try { await request("/auth/change-password", { method: "POST", body: JSON.stringify({ currentPassword, password }) }); close(); notify("Đã đổi mật khẩu và đăng xuất các phiên khác."); } catch (failure) { setError((failure as Error).message); } finally { setBusy(false); }

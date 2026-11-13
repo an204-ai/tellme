@@ -187,10 +187,6 @@ export function AuthScreen({ register = false }: { register?: boolean }) {
                 {register ? "Đăng nhập" : "Tạo tài khoản"}
               </Link>
             </p>
-            <Link href="/community/today" className="auth-browse-link">
-              <span>Khám phá Tellme</span>
-              <ArrowRight size={15} aria-hidden="true" />
-            </Link>
           </div>
         </div>
       </section>

@@ -76,9 +76,7 @@ export function NotificationList({ active, onNavigate, fullPage = false }: { act
     <div className="notifications-popover-list notification-feed-list" ref={listRef}>
       {query.isPending ? <p className="notification-feed-state">Đang tải thông báo…</p> : query.isError ? <button type="button" className="notification-feed-state notification-feed-retry" onClick={() => void query.refetch()}>Chưa tải được. Chạm để thử lại.</button> : notices.length ? notices.map((notice) => {
         const person = community?.people.find((entry) => entry.id === notice.userId);
-        const destination = notice.kind === "system" ? notice.url || "/community/today" : notice.postId
-          ? `/post/${notice.postId}`
-          : notice.conversationId ? `/community/messages/${encodeURIComponent(notice.conversationId)}`
+        const destination = notice.kind === "system" ? notice.url || "/community/today" : notice.conversationId ? `/community/messages/${encodeURIComponent(notice.conversationId)}`
           : notice.storyId ? "/community/today"
           : person?.username ? `/community/profile/${person.username}` : "/community/notifications";
         const unreadCount = notice.unreadCount ?? Number(!notice.read);

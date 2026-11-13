@@ -5,13 +5,8 @@ import { useId, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
 import { TELLME_STICKERS, TELLME_STICKER_PACKS, getTellmeSticker, normalizeStickerText, suggestTellmeStickers } from "@tellme/shared/stickers";
 import { IconButton } from "./Primitives";
-import type { CommentMedia } from "@/lib/types";
 
 export type TellmeSticker = (typeof TELLME_STICKERS)[number];
-export function stickerMedia(sticker: TellmeSticker): CommentMedia {
-  return { id: sticker.id, kind: "sticker", url: sticker.src, alt: sticker.label, width: sticker.width, height: sticker.height };
-}
-
 export function TellmeStickerButton({ label, onSelect, disabled = false, showLabels = true }: {
   label: string; onSelect: (sticker: TellmeSticker) => void; disabled?: boolean; showLabels?: boolean;
 }) {

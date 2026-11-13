@@ -1,0 +1,72 @@
+/* Today's shelf is a vertical gallery: exactly two cards in each row. */
+ .close-home .now-space.now-today-view { width: min(100%, 640px); height: 100%; grid-template-rows: 44px minmax(0, 1fr); gap: 10px; padding-top: 0; }
+.now-today-toolbar { display: flex; justify-content: flex-end; align-items: center; }
+.now-today-toolbar > button { display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 50%; background: var(--paper-soft); color: var(--ink); cursor: pointer; }
+.now-today-view > .now-today { grid-row: 2; min-height: 0; height: 100%; overflow-y: auto; }
+.now-end > img { object-fit: contain; }
+.now-end .button { margin-top: 8px; }
+
+.now-today { touch-action: pan-y; overscroll-behavior: contain; scrollbar-width: none; padding-inline: 2px; }
+.now-today::-webkit-scrollbar { display: none; }
+.now-today .today-friends-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 16px; padding: 4px 0 24px; }
+.now-today .today-friend-story { width: 100%; min-width: 0; height: auto; aspect-ratio: 3 / 4; border-radius: 24px; }
+.now-today .today-create-story { background: var(--paper); grid-template-rows: minmax(0, 1fr) 78px; }
+.now-today .today-create-cover { height: 100%; }
+.now-today .today-create-label { height: 78px; padding: 25px 6px 8px; }
+.now-today .today-create-plus { width: 40px; height: 40px; bottom: -18px; }
+.now-today .today-create-label small { font-size: 12px; }
+.now-today .today-friend-person { padding: 12px; gap: 8px; }
+.now-today .today-friend-person strong { font-size: 16px; }
+.now-today .today-friend-person .avatar { width: 34px; height: 34px; flex: 0 0 34px; }
+.now-today .today-friend-time { top: 24px; left: 12px; }
+.now-today .today-friends h2 { color: var(--ink); }
+@media (max-width: 360px) {
+  .now-today .today-friends-grid { gap: 12px; }
+  .now-today .today-friend-person { padding: 9px; gap: 6px; }
+  .now-today .today-friend-person strong { font-size: 14px; }
+  .now-today .today-friend-person .avatar { width: 28px; height: 28px; flex-basis: 28px; }
+  .now-today .today-create-label { font-size: 14px; }
+  .now-today .today-create-label small { font-size: 10px; }
+}
+/* The modal itself is transparent. Its scrim, not an extra panel, separates a single day's stack. */
+.app-dialog.story-stack-dialog { position: fixed; inset: 0; top: var(--messages-offset, 0px); width: 100vw; max-width: none; height: var(--messages-height, 100dvh); max-height: none; margin: 0; padding: max(14px, env(safe-area-inset-top)) 20px max(14px, env(safe-area-inset-bottom)); border: 0; border-radius: 0; background: transparent; color: #f1f6ff; overflow: hidden; }
+.app-dialog.story-stack-dialog::backdrop { background: #07162bce; backdrop-filter: blur(6px); }
+.app-dialog.story-stack-dialog > .dialog-content { display: flex; flex-direction: column; width: min(100%, 500px); max-width: none; height: 100%; max-height: none; margin: 0 auto; padding: 0; border: 0; border-radius: 0; background: transparent; color: #f1f6ff; box-shadow: none; overflow: visible; }
+.story-stack-dialog > .dialog-content > .dialog-header { flex: 0 0 auto; display: flex; align-items: flex-start; gap: 12px; padding: 0 0 10px; border: 0; background: transparent; color: #f1f6ff; }
+.story-stack-dialog .dialog-header h2 { color: #f1f6ff; font: 900 18px/1.4 "Nunito", sans-serif; margin: 0; }
+.story-stack-dialog .dialog-heading { min-width: 0; flex: 1; }
+.story-stack-dialog .dialog-subtitle { margin-top: 3px; font-size: 13px; color: #c0d1e8; }
+.story-stack-dialog .dialog-header > .icon-button { flex: 0 0 44px; width: 44px; height: 44px; border-radius: 50%; background: #ffffff18; color: #f1f6ff; }
+.story-stack-dialog .story-music, .story-stack-dialog .story-music-add { margin-top: 8px; color: #f1f6ff; }
+.story-stack-dialog .story-stack-stage { flex: 0 1 auto; margin-block: auto; min-height: 0; display: grid; grid-template-rows: auto auto 54px 78px; gap: 14px; width: 100%; padding: 0 8px; }
+.story-stack-dialog .now-photo-stack { width: min(100%, 420px, calc(var(--messages-height, 100dvh) - 380px)); min-width: min(130px, 100%); margin-bottom: 0; }
+.story-stack-dialog .now-photo-surface:disabled { cursor: default; }
+.story-stack-dialog .now-identity-slot { min-height: 76px; height: auto; padding: 0; display: flex; flex-direction: column; justify-content: center; gap: 14px; }
+.story-stack-dialog .now-byline { color: #f1f6ff; }
+.story-stack-dialog .now-timestamp { color: #c0d1e8; font-size: 13px; }
+.story-stack-dialog .now-caption-button { padding-top: 0; color: #f1f6ff; }
+.story-stack-dialog .now-caption { font-size: 22px; }
+.story-stack-dialog .now-caption-button.is-expanded .now-caption { display: block; max-height: 55px; overflow-y: auto; -webkit-line-clamp: unset; }
+.story-stack-dialog .now-response-slot { color: var(--ink); }
+.story-stack-dialog .now-respond-bar { background: var(--paper); }
+.story-stack-dialog .story-stack-dock { grid-template-columns: 1fr 70px 1fr; padding: 4px 0; }
+.story-stack-dialog .story-stack-dock > .now-shutter { grid-column: 2; width: 70px; height: 70px; border-color: #c4ddff; }
+.story-stack-dialog .story-stack-dock .now-shutter > span { background: #c4ddff; color: #102745; }
+.story-stack-empty { flex: 1; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 16px; text-align: center; padding: 24px; }
+.story-stack-empty .loading-state { color: #f1f6ff; }
+@media (max-height: 680px) {
+  .story-stack-dialog .story-stack-stage { grid-template-rows: auto auto 48px 64px; gap: 10px; }
+  .story-stack-dialog .now-photo-stack { width: min(100%, 360px, calc(var(--messages-height, 100dvh) - 350px)); min-width: min(100px, 100%); margin-bottom: 0; }
+  .story-stack-dialog .story-stack-dock > .now-shutter { width: 60px; height: 60px; }
+  .story-stack-dialog .now-caption { font-size: 19px; }
+}
+@media (max-width: 640px) {
+  .close-app[data-keyboard-open="true"] .story-stack-dialog .now-photo-stack { display: none; }
+  .close-app[data-keyboard-open="true"] .story-stack-dialog .story-stack-stage { grid-template-rows: minmax(0, 1fr) 90px 62px 70px; }
+  .close-app[data-keyboard-open="true"] .story-stack-dialog .dialog-header { display: none; }
+}
+
+.story-stack-dialog :is(.music-play, .music-edit) { color: #f1f6ff; }
+.story-stack-dialog :is(.music-play, .music-edit):hover { background: #ffffff18; }
+
+.now-today:focus-visible { outline: 2px solid var(--primary); outline-offset: 4px; border-radius: 8px; }

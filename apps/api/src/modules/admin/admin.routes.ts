@@ -1,9 +1,9 @@
 import { Hono } from "hono";
 import { z } from "zod";
-import { config, reports, posts, stories, users, enqueue, publishUpdate } from "@tellme/database";
+import { config, reports, stories, users, publishUpdate } from "@tellme/database";
 import { fail, type Env, rateLimit } from "../../backend/security.js";
 import { pageSchema } from "../../backend/validation.js";
-import { idSchema, isAdmin, moderateContent, reasonSchema, suspendAccount, transaction } from "./admin.service.js";
+import { idSchema, isAdmin, moderateStory, reasonSchema, suspendAccount, transaction } from "./admin.service.js";
 import { registerManagementRoutes } from "./management.routes.js";
 import { registerMonitoringRoutes } from "./monitoring.routes.js";
 
@@ -24,17 +24,17 @@ export function registerAdminRoutes(api: Hono<Env>) {
     return c.json({ name: me.name, email: me.email, verified: !!me.emailVerifiedAt, webUrl: config.APP_URL, environment: config.NODE_ENV });
   });
   api.get("/admin/status", async (c) => {
-    const [userCount, postCount, storyCount, pendingReports] = await Promise.all([
-      users.countDocuments(), posts.countDocuments(), stories.countDocuments(),
+    const [userCount, storyCount, pendingReports] = await Promise.all([
+      users.countDocuments(), stories.countDocuments(),
       reports.countDocuments({ resolution: { $exists: false } }),
     ]);
-    return c.json({ totals: { users: userCount, posts: postCount, stories: storyCount, pendingReports } });
+    return c.json({ totals: { users: userCount, stories: storyCount, pendingReports } });
   });
   api.get("/admin/reports", async (c) => {
     const { cursor, limit } = pageSchema.parse(c.req.query());
     const status = z.enum(["pending", "resolved", "all"]).parse(c.req.query("status") || "pending");
-    const type = z.enum(["post", "story", "user"]).optional().parse(c.req.query("type"));
-    const filter = { ...(status === "all" ? {} : { resolution: { $exists: status === "resolved" } }), ...(type ? type === "post" ? { targetType: { $nin: ["story", "user"] as const } } : { targetType: type } : {}) };
+    const type = z.enum(["story", "user"]).optional().parse(c.req.query("type"));
+    const filter = { ...(status === "all" ? {} : { resolution: { $exists: status === "resolved" } }), ...(type ? { targetType: type } : {}) };
     const [items, total] = await Promise.all([reports.find(filter).sort({ at: -1, _id: -1 }).skip(cursor).limit(limit).toArray(), reports.countDocuments(filter)]);
     const reporters = await users.find({ _id: { $in: items.map((item) => item.userId) } }, { projection: { name: 1 } }).toArray();
     return c.json({ items: items.map((item) => ({ ...item, reporter: reporters.find((person) => person._id === item.userId)?.name || "Tài khoản không còn tồn tại" })), total, nextCursor: cursor + items.length < total ? cursor + items.length : null });
@@ -44,20 +44,17 @@ export function registerAdminRoutes(api: Hono<Env>) {
     if (!report) fail(404, "Báo cáo không tồn tại.");
     let target: { title: string; text: string; images: string[]; href?: string; hidden?: boolean } | null = null;
     if (report.targetType === "user") {
-      const person = await users.findOne({ _id: report.targetId || report.postId.replace(/^user:/, "") });
+      const person = await users.findOne({ _id: report.targetId });
       if (person) target = { title: person.name, text: `@${person.username}\n${person.bio}`, images: person.avatar ? [person.avatar] : [], href: `${config.APP_URL}/community/profile/${person.username}` };
     } else if (report.targetType === "story") {
-      const story = await stories.findOne({ _id: report.targetId || report.postId });
+      const story = await stories.findOne({ _id: report.targetId });
       if (story) target = { title: `Chuỗi khoảnh khắc · ${story.day}`, text: story.items.map((item) => item.caption).filter(Boolean).join("\n"), images: story.items.map((item) => item.image).slice(0, 50), hidden: !!story.moderation?.hidden };
-    } else {
-      const post = await posts.findOne({ _id: report.targetId || report.postId });
-      if (post) target = { title: "Bài viết được báo cáo", text: post.content, images: post.image ? [post.image] : [], href: `${config.APP_URL}/post/${post._id}`, hidden: !!post.moderation?.hidden };
     }
     return c.json({ report, target: target ? { ...target, images: target.images.map((image) => image.startsWith("/") ? `${config.APP_URL}${image}` : image) } : null });
   });
   api.post("/admin/reports/:id/resolve", async (c) => {
-    const input = z.object({ action: z.enum(["dismiss", "remove-post", "hide-content", "suspend-user"]), reason: reasonSchema }).parse(await c.req.json());
-    const action = input.action === "remove-post" ? "hide-content" : input.action;
+    const input = z.object({ action: z.enum(["dismiss", "hide-content", "suspend-user"]), reason: reasonSchema }).parse(await c.req.json());
+    const action = input.action;
     let revoked: string | undefined;
     await transaction(async (session) => {
       const report = await reports.findOne({ _id: idSchema.parse(c.req.param("id")) }, { session });
@@ -66,15 +63,14 @@ export function registerAdminRoutes(api: Hono<Env>) {
       const actor = c.get("user")._id;
       if (action === "hide-content") {
         if (report.targetType === "user") fail(400, "Đây là báo cáo tài khoản.");
-        const type = report.targetType === "story" ? "story" : "post", collection = type === "story" ? stories : posts, targetId = report.targetId || report.postId;
-        const target = await collection.findOne({ _id: targetId }, { session });
+        const targetId = report.targetId;
+        const target = await stories.findOne({ _id: targetId }, { session });
         if (!target) fail(404, "Nội dung không còn tồn tại. Có thể bỏ qua báo cáo.");
-        if (!target.moderation?.hidden) await moderateContent(type, targetId, true, actor, input.reason, session);
-        await enqueue("feed.rebuild", {}, { session });
+        if (!target.moderation?.hidden) await moderateStory(targetId, true, actor, input.reason, session);
       }
       if (action === "suspend-user") {
         if (report.targetType !== "user") fail(400, "Chỉ tạm khóa từ báo cáo tài khoản.");
-        revoked = report.targetId || report.postId.replace(/^user:/, "");
+        revoked = report.targetId;
         await suspendAccount(revoked, actor, input.reason, undefined, session);
       }
       await reports.updateOne({ _id: report._id }, { $set: { resolution: { action, actorId: actor, at: new Date().toISOString(), reason: input.reason } } }, { session });

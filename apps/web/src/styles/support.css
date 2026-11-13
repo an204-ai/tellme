@@ -34,7 +34,6 @@
  .support-welcome-note { font-size: 12px; }
 }
 .support-entry { display: inline-flex; align-items: center; gap: 6px; padding: 0; border: 0; background: none; color: var(--primary); font: inherit; cursor: pointer; }
-.sidebar-tagline .support-entry { margin-top: 14px; min-height: 36px; font-size: 13px; }
 .donation-dialog.app-dialog { width: min(840px, calc(100vw - 40px)); max-height: calc(100dvh - 40px); overflow: clip; scrollbar-width: none; }
 .donation-dialog .dialog-content { display: flex; flex-direction: column; height: auto; max-height: calc(100dvh - 40px); aspect-ratio: 4 / 3; overflow: clip; }
 .donation-dialog .dialog-header { flex-shrink: 0; }

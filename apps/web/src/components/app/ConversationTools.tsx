@@ -12,7 +12,6 @@ import type { AppData, Conversation, Message } from "@/lib/types";
 import { Avatar, Button, IconButton, SearchInput } from "@/components/ui/Primitives";
 import { Modal } from "@/components/ui/Modal";
 import { GroupComposer } from "./GroupComposer";
-import { SharedPostPreview } from "./SharedPostPreview";
 import { StoryReplyPreview } from "./StoryReply";
 
 type Mode = "overview" | "search" | "shared" | "members" | "invite";
@@ -119,7 +118,7 @@ export function ConversationTools({ chat, data, open, panelId, onClose }: {
           {mode === "search" && !debounced ? <p className="chat-tools-empty">Tìm lại một câu nói, một lời hẹn trong cuộc trò chuyện.</p> : results.isPending ? <p className="chat-tools-empty" role="status">Đang tìm…</p> : results.isError ? <div className="chat-tools-empty"><p role="alert">Chưa tải được nội dung.</p><button className="text-link" onClick={() => void results.refetch()}>Thử lại</button></div> : <>
             <div className="chat-found-list">{results.data?.pages.flatMap((page) => page.items).map((message) => <article className="chat-found-item" key={message.id}>
               <div><strong>{message.own ? "Bạn" : data.people.find((entry) => entry.id === message.userId)?.name || "Thành viên"}</strong><time dateTime={message.at}>{timeAgo(message.at)}</time></div>
-              {message.postId ? <SharedPostPreview id={message.postId} /> : message.storyReply ? <><StoryReplyPreview reply={message.storyReply} /><p>{message.text}</p></> : <p>{message.text}</p>}
+              {message.storyReply ? <><StoryReplyPreview reply={message.storyReply} /><p>{message.text}</p></> : <p>{message.text}</p>}
             </article>)}</div>
             {!results.data?.pages[0]?.items.length && <p className="chat-tools-empty">{mode === "shared" ? "Chưa có bài viết hay khoảnh khắc được chia sẻ." : "Chưa tìm thấy tin nhắn phù hợp."}</p>}
             {results.hasNextPage && <Button variant="ghost" disabled={results.isFetchingNextPage} onClick={() => void results.fetchNextPage()}>{results.isFetchingNextPage ? "Đang tải…" : "Xem kết quả cũ hơn"}</Button>}

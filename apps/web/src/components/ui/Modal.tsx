@@ -13,6 +13,7 @@ export function Modal({
   className = "",
   subtitle,
   headerExtra,
+  dismissOnEmptySpace = false,
 }: {
   title: string;
   children: React.ReactNode;
@@ -20,6 +21,7 @@ export function Modal({
   className?: string;
   subtitle?: React.ReactNode;
   headerExtra?: React.ReactNode;
+  dismissOnEmptySpace?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -46,7 +48,10 @@ export function Modal({
         closeRef.current();
       }}
       onClick={(event) => {
-        if (event.target === event.currentTarget) closeRef.current();
+        const target = event.target instanceof Element ? event.target : (event.target as Node).parentElement;
+        if (!target) return;
+        if (event.target === event.currentTarget || dismissOnEmptySpace && target.closest("dialog") === event.currentTarget &&
+          !target.closest("button, a, input, textarea, select, summary, [popover], .menu-panel, .dialog-header, .now-identity-slot, .now-response-slot")) closeRef.current();
       }}
     >
       <section className="dialog-content">

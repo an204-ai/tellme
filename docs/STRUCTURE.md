@@ -1,6 +1,6 @@
 # Tellme — Quy ước cấu trúc project
 
-Monorepo giữ bốn ứng dụng, package dùng chung và ba worker. Runtime gồm web Next.js, admin React/Vite, API Hono/Node.js, ba worker BullMQ, MongoDB Atlas, Redis và Cloudinary. Landing là Next.js static export độc lập; mobile còn là scaffold. Xem [FRONTEND.md](FRONTEND.md), [BACKEND.md](BACKEND.md) và [kiến trúc chính](../ARCHITECTURE.md) cho phạm vi đang chạy.
+Monorepo giữ bốn ứng dụng, package dùng chung và hai worker. Runtime gồm web Next.js, admin React/Vite, API Hono/Node.js, hai worker BullMQ, MongoDB Atlas, Redis và Cloudinary. Landing là Next.js static export độc lập; mobile còn là scaffold. Xem [FRONTEND.md](FRONTEND.md), [BACKEND.md](BACKEND.md) và [kiến trúc chính](../ARCHITECTURE.md) cho phạm vi đang chạy.
 
 ## Vai trò các thư mục
 
@@ -10,8 +10,8 @@ Monorepo giữ bốn ứng dụng, package dùng chung và ba worker. Runtime g�
 | `apps/web/src/components/screens/` | Các màn tương tác web |
 | `apps/web/src/components/app/` | Shell, composer, dialog bài, timeline ngày ảnh |
 | `apps/web/src/components/ui/` | Primitive, emoji, media picker và infinite trigger |
-| `apps/web/src/hooks/` | `use-community.ts` cho metadata/mutation; `use-posts.ts` cho trang bài/hồ sơ/chi tiết |
-| `apps/web/src/lib/` | `api-repository.ts`, type/validation/quyền hiển thị, Giphy proxy client, brand |
+| `apps/web/src/hooks/` | `use-community.ts` cho metadata/mutation; `use-stories.ts` cho chuỗi ảnh và hồ sơ |
+| `apps/web/src/lib/` | `api-repository.ts`, type/validation/quyền hiển thị, brand |
 | `apps/web/src/stores/` | Zustand cho trạng thái UI |
 | `apps/web/src/styles/` | CSS nền, Uiverse, moments và refinements |
 | `apps/web/public/` | Brand, ảnh tĩnh và thông báo giấy phép |
@@ -25,7 +25,7 @@ Monorepo giữ bốn ứng dụng, package dùng chung và ba worker. Runtime g�
 | `packages/shared/` | Kiểu/validator/hằng số dùng chung, độc lập nền tảng |
 | `packages/ui/` | Token/component DOM dùng chung đã có; phần lớn UI web hiện ở app web |
 | `packages/config/` | Cấu hình công cụ dùng chung |
-| `workers/` | Media processor, feed builder, notification sender nối MongoDB outbox và Redis/BullMQ |
+| `workers/` | Media processor và notification sender nối MongoDB outbox và Redis/BullMQ |
 | `infra/dev/` | Compose Redis local, bind 127.0.0.1; project `docker` giữ volume Redis dev cũ |
 | `infra/docker/` | Hai Dockerfile dùng chung để build API và worker; production Compose tham chiếu trực tiếp |
 | `infra/deploy/` | Production Compose Coolify, image web/admin/landing, Nginx cho ba domain, mẫu env và hướng dẫn Atlas |
@@ -50,8 +50,6 @@ apps/web/src/app/
 ├── community/
 │   ├── layout.tsx
 │   ├── page.tsx                     # → /community/today
-│   ├── feed/page.tsx
-│   ├── explore/page.tsx
 │   ├── today/page.tsx
 │   ├── messages/
 │   │   ├── page.tsx
@@ -64,18 +62,17 @@ apps/web/src/app/
 │   ├── connections/page.tsx         # → /community/follow
 │   ├── notifications/page.tsx
 │   └── settings/page.tsx
-└── post/[id]/page.tsx
 ```
 
 `auth` và `community` là thư mục thường nên nằm trong URL. Các route cũ như `/feed` không có redirect tương ứng. Web đã chuyển các route group `(public)` và `(app)` sang cây này; mobile vẫn giữ `(auth)` và `(tabs)` do navigator tham chiếu trực tiếp. Ngoặc vuông `[id]`, `[username]` giữ vai trò tham số động. `apps/` là nhóm ứng dụng; `src/app/` là route của framework; `public/` là tài sản tĩnh.
 
-Xác thực được thực thi bởi API session, không suy ra từ tên thư mục route. Web gọi `/api/*` cùng origin, Next rewrite tới API nội bộ; không đặt bí mật dịch vụ ở `NEXT_PUBLIC_*`. `/post/:id` hiện cũng cần đăng nhập; quyền Công khai áp dụng giữa các tài khoản đăng nhập.
+Xác thực được thực thi bởi API session, không suy ra từ tên thư mục route. Web gọi `/api/*` cùng origin, Next rewrite tới API nội bộ; không đặt bí mật dịch vụ ở `NEXT_PUBLIC_*`.
 
 ## Ranh giới dữ liệu và phụ thuộc
 
 - Web gọi API, không import MongoDB hoặc worker. React Query giữ dữ liệu server; Zustand chỉ giữ UI.
 - API và worker dùng Mongo native driver từ `packages/database`; không có MongoDB container, seed hay migration database trong Compose.
-- Khóa MongoDB/Cloudinary/Giphy ở môi trường API riêng, bị Git bỏ qua. `.env.example` chỉ ghi tên biến và placeholder.
+- Khóa MongoDB/Cloudinary ở môi trường API riêng, bị Git bỏ qua. `.env.example` chỉ ghi tên biến và placeholder.
 - `packages/shared` giữ độc lập với DOM, React Native và kết nối database. Mobile dùng component native riêng; không nhập trực tiếp component DOM.
 - `assets/brand/` giữ bản gốc; runtime từng app chỉ nhận bản cần phục vụ.
 
@@ -84,10 +81,10 @@ Xác thực được thực thi bởi API session, không suy ra từ tên thư 
 ## Khái niệm sản phẩm
 
 - Tellme chia sẻ đời sống, không giới hạn vào công sở hoặc nghề nghiệp.
-- `story`, `stories`, `today` hiện chỉ chuỗi ảnh theo ngày, tên UI **Tell me · Tell you** / mobile **Tell me** từ `src/lib/brand.ts`; giữ lịch sử hồ sơ, không tự biến mất sau 24 giờ.
-- Chủ đề tùy chọn giúp tìm/khám phá. API tính thống kê chủ đề từ nội dung công khai có quyền xem.
-- Follow là quan hệ một chiều; Bạn bè (`connections`) trong runtime hiện được API tính từ follow hai chiều. Chặn loại quyền xem/tương tác liên quan.
-- Quyền áp dụng ở API cho feed, tìm bài, chi tiết, hồ sơ, chuỗi ngày, bình luận và chia sẻ. UI không phải ranh giới bảo vệ dữ liệu.
+- `story`, `stories`, `today` hiện chỉ chuỗi ảnh theo ngày, tên UI **Tell me now** từ `src/lib/brand.ts`; giữ lịch sử hồ sơ, không tự biến mất sau 24 giờ.
+- Chỉ tạo nội dung mới bằng Tell me now. Đã gỡ cả bài viết cũ và thẻ chia sẻ trong chat; không có bảng bài tổng hợp, tìm kiếm nội dung hoặc thống kê chủ đề.
+- Kết bạn bằng đúng Tellme ID và lời mời được chấp nhận. API duy trì hai cạnh trong trường `users.following` cũ để tương thích lưu trữ; cạnh một chiều cũ không cấp quyền xem. Chặn loại quyền xem/tương tác liên quan.
+- Quyền áp dụng ở API cho hồ sơ, chuỗi ngày và chat. UI không phải ranh giới bảo vệ dữ liệu.
 - Chuỗi ngày dùng múi giờ `Asia/Ho_Chi_Minh`. Chat và presence dùng WebSocket `/api/realtime`, polling dự phòng; thông báo push cần VAPID và quyền trình duyệt.
 
 ## Tài liệu và workspace

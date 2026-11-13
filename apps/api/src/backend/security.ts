@@ -11,21 +11,11 @@ import type { Context, MiddlewareHandler } from "hono";
 import { sessions, users } from "./database.js";
 import { config, origins } from "./config.js";
 import type { User } from "./models.js";
-import { defaults } from "./models.js";
 import { redis, prefix, eventChannel, stopWeatherWatch, isSuspended } from "@tellme/database";
 const scrypt = promisify(scryptCallback);
 // A disposable QA server on another localhost port must not replace a real session.
 export const cookieName = config.NODE_ENV === "test" ? "tellme_qa_session" : "tellme_session";
 export type Env = { Variables: { user: User; requestId: string } };
-export const guestUser: User = { _id: "guest", email: "", passwordHash: "", username: "", name: "Khách", avatar: "", cover: "", bio: "", location: "", following: [], blocked: [], hiddenPosts: [], settings: { ...defaults }, createdAt: "" };
-export const optionalAuthenticate: MiddlewareHandler<Env> = async (c, next) => {
-  const token = getCookie(c, cookieName);
-  const session = token ? await sessions.findOne({ _id: digest(token), expiresAt: { $gt: new Date() } }) : null;
-  const user = session ? await users.findOne({ _id: session.userId }) : null;
-  if (user && isSuspended(user)) throw new HTTPException(403, { message: "Tài khoản đang tạm khóa. Liên hệ quản trị Tellme để được hỗ trợ." });
-  c.set("user", user || guestUser);
-  await next();
-};
 const digest = (s: string) => createHash("sha256").update(s).digest("hex");
 export async function hashPassword(password: string) {
   const salt = randomBytes(16).toString("hex");

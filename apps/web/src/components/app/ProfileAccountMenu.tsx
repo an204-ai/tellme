@@ -27,7 +27,7 @@ export function ProfileAccountMenu({ person }: { person: Person }) {
     return !!data;
   };
   return <>
-    <details className="post-menu profile-account-menu">
+    <details className="content-menu profile-account-menu">
       <summary aria-label={`Tùy chọn tài khoản ${person.name}`}><MoreHorizontal size={20} /></summary>
       <div className="menu-panel" onClick={(event) => { const menu = event.currentTarget.closest("details"); if (menu) menu.open = false; }}>
         <button disabled={saving || busy} onClick={async () => {

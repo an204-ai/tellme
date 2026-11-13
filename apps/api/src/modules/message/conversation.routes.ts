@@ -108,7 +108,7 @@ export function registerConversationRoutes(api: Hono<Env>) {
     const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const list = await messages.find({ conversationId: chat._id,
       ...(q ? { text: { $regex: escaped, $options: "i" } } : {}),
-      ...(shared ? { $or: [{ postId: { $exists: true } }, { storyReply: { $exists: true } }] } : {}),
+      ...(shared ? { storyReply: { $exists: true } } : {}),
       ...(cursor ? { $and: [{ $or: [{ at: { $lt: cursor.at } }, { at: cursor.at, _id: { $lt: cursor.id } }] }] } : {}),
     }).sort({ at: -1, _id: -1 }).limit(21).toArray();
     const page = list.slice(0, 20), last = page.at(-1);

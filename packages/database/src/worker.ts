@@ -3,21 +3,18 @@ import { connectionFailure, waitForDatabase } from "./connection.js";
 import { config } from "./config.js";
 import { closeQueues, connectRedis, createWorker, enqueue, redis, startDispatcher, prefix } from "./queue.js";
 import { cleanMedia, processMedia, sweepMedia } from "./media.js";
-import { buildFeed } from "./feed.js";
 import { deliverNotification, sendEmail, sendPush } from "./notifications.js";
 import { sendAccountEmail } from "./account-email.js";
 import { users } from "./database.js";
 import { deliverSystemNotification, scheduleSystemNotifications } from "./system-notifications.js";
 import type { JobKind } from "./models.js";
-import { expireYouTubeMetadata } from "./story-music.js";
 import { logEvent } from "./observability.js";
 
 export async function handleJob(kind: JobKind, data: Record<string, unknown>, id: string) {
   switch (kind) {
     case "media.process": return processMedia(String(data.mediaId));
     case "media.cleanup": return cleanMedia(String(data.ownerId), String(data.url));
-    case "media.sweep": await expireYouTubeMetadata(); return sweepMedia();
-    case "feed.rebuild": return buildFeed();
+    case "media.sweep": return sweepMedia();
     case "notification.deliver": return deliverNotification(data, id);
     case "notification.email": return sendEmail(data, id);
     case "notification.system": return deliverSystemNotification(data);
@@ -29,7 +26,7 @@ export async function handleJob(kind: JobKind, data: Record<string, unknown>, id
     }
   }
 }
-export async function runWorker(name: "media" | "feed" | "notification") {
+export async function runWorker(name: "media" | "notification") {
   const startup = new AbortController();
   let worker: ReturnType<typeof createWorker> | undefined;
   let stopDispatcher = () => {};
@@ -68,10 +65,9 @@ export async function runWorker(name: "media" | "feed" | "notification") {
       }
       const hour = new Date().toISOString().slice(0, 13).replaceAll(":", "-");
       if (name === "media") void enqueue("media.sweep", {}, { id: `sweep-${hour}` }).catch(() => undefined);
-      if (name === "feed") void enqueue("feed.rebuild", {}, { id: `feed-${Math.floor(Date.now() / 30000)}` }).catch(() => undefined);
     };
     schedule();
-    timer = setInterval(schedule, name === "notification" ? 10000 : name === "feed" ? 30000 : 3600000);
+    timer = setInterval(schedule, name === "notification" ? 10000 : 3600000);
     console.log(`Tellme ${name} worker ready (${config.NODE_ENV}).`);
     logEvent({ service: name, level: "info", event: "process.ready" });
   } catch (error) {

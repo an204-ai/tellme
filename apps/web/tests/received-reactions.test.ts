@@ -1,0 +1,13 @@
+import assert from "node:assert/strict";
+import { newReceivedReactions, receivedReactionParticles } from "../src/lib/received-reactions.ts";
+const first = newReceivedReactions({}, ["like", "love", "emoji:🌻", "like"]);
+assert.deepEqual(first.added, ["like", "love", "emoji:🌻", "like"]);
+assert.deepEqual(newReceivedReactions(first.counts, ["like", "love", "emoji:🌻", "like"]).added, [], "Opening the same photo again must not replay its old reactions");
+assert.deepEqual(newReceivedReactions(first.counts, ["like", "love", "emoji:🌻", "like", "emoji:🐱"]).added, ["emoji:🐱"], "Only a newly received icon should replay");
+const removed = newReceivedReactions(first.counts, ["love"]);
+assert.deepEqual(removed.added, []);
+assert.deepEqual(newReceivedReactions(removed.counts, ["love", "like"]).added, ["like"]);
+assert.equal(receivedReactionParticles(["like"]).length, 24);
+assert.deepEqual(new Set(receivedReactionParticles(first.added)), new Set(first.added), "Every incoming icon must appear in the screen burst");
+assert.deepEqual(receivedReactionParticles([]), []);
+console.log("PASS: first view, repeat suppression, new reactions, removed/re-added reactions, native emoji, and bounded particle copies.");

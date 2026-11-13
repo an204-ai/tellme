@@ -13,7 +13,6 @@ import {
 import { useCommunity } from "@/hooks/use-community";
 import { useAppStore } from "@/stores/app.store";
 import {
-  AudiencePicker,
   Avatar,
   Button,
   Loader,
@@ -63,23 +62,7 @@ export function SettingsScreen() {
             <LockKeyhole size={21} />
             Quyền riêng tư
           </h2>
-          <p className="muted text-sm">
-            Đối tượng xem mặc định cho bài viết và chuỗi ảnh mới. Bạn vẫn có thể
-            đổi khi đăng.
-          </p>
-          <AudiencePicker
-            value={data.settings.audience}
-            onChange={async (audience) => {
-              try {
-                await update((draft) => {
-                  draft.settings.audience = audience;
-                });
-                notify("Đã lưu đối tượng xem mặc định.");
-              } catch {
-                /* The mutation error is announced by useCommunity. */
-              }
-            }}
-          />
+          <p className="muted text-sm">Ảnh chỉ được chia sẻ giữa những người đã chấp nhận kết bạn. Bạn có thể quản lý kết nối và tài khoản đã chặn bên dưới.</p>
         </section>
         </div>
         <div className="settings-column">
@@ -91,8 +74,8 @@ export function SettingsScreen() {
           {[
             {
               key: "notifyLikes" as const,
-              title: "Tương tác trên câu chuyện",
-              text: "Ghi nhớ tùy chọn về lượt thích và bình luận.",
+              title: "Cảm xúc khoảnh khắc",
+              text: "Thông báo khi bạn bè thả cảm xúc vào ảnh của bạn.",
             },
             {
               key: "notifySystem" as const,
@@ -174,7 +157,7 @@ export function SettingsScreen() {
                 <strong>Thông báo trên thiết bị</strong>
                 <p>{data.features?.pushPublicKey
                   ? "Trình duyệt hoặc thiết bị này chưa hỗ trợ Web Push. Trên iPhone, hãy mở bản Tellme đã cài từ Safari trên Màn hình chính."
-                  : "Máy chủ chưa cấu hình Web Push. Cần khai báo cặp khóa VAPID trong môi trường production để bật thông báo ngoài ứng dụng."}</p>
+                  : "Thông báo ngoài ứng dụng chưa sẵn sàng. Bạn vẫn xem được thông báo trong Tellme."}</p>
               </div>
             </div>
           )}
@@ -244,7 +227,6 @@ export function SettingsScreen() {
           <AccountBlockPicker
             blocked={data.blocked}
             friends={data.connections}
-            viewer={data.people.find((person) => person.id === "me")?.username}
             onBlock={async (id) => {
               await update((draft) => { if (!draft.blocked.includes(id)) draft.blocked.push(id); });
               playInterfaceSound("blocked");

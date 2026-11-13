@@ -5,16 +5,15 @@ import type Hls from "hls.js";
 import { request } from "@/lib/api-repository";
 import { MusicLoader } from "./MusicLoader";
 import { musicActiveEvent as activeEvent } from "./media-session";
-import { YouTubePlayButton } from "./YouTubePlayback";
 export { pauseMusic } from "./media-session";
 
 type PlayerProps = {
-  endpoint: string; title: string; provider?: "youtube" | "epidemic-sound";
+  endpoint: string; title: string; provider?: "epidemic-sound";
   onPlaybackChange?: (state: "idle" | "loading" | "playing") => void;
   onError?: (message: string) => void; playingIcon?: React.ReactNode;
 };
-export function MusicPlayer({ provider, ...props }: PlayerProps) {
-  return provider === "youtube" ? <YouTubePlayButton {...props} /> : <HlsMusicPlayer {...props} />;
+export function MusicPlayer(props: PlayerProps) {
+  return <HlsMusicPlayer {...props} />;
 }
 /** Fetch a signed HLS URL only after a play gesture; keep the API key server-side. */
 function HlsMusicPlayer({ endpoint, title, onPlaybackChange, onError, playingIcon }: PlayerProps) {

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { ClientSession } from "mongodb";
-import { config, mongo, posts, stories, users, sessions, isSuspended } from "@tellme/database";
+import { config, mongo, stories, users, sessions, isSuspended } from "@tellme/database";
 import type { User } from "@tellme/database";
 import { fail } from "../../backend/security.js";
 export const reasonSchema = z.string().trim().min(5, "Nhập lý do ít nhất 5 ký tự.").max(500);
@@ -20,17 +20,9 @@ export async function suspendAccount(id: string, actorId: string, reason: string
   await users.updateOne({ _id: id }, { $set: { suspension: { reason, actorId, at: new Date().toISOString(), ...(until ? { until } : {}) } } }, { session });
   await sessions.deleteMany({ userId: id }, { session });
 }
-export async function moderateContent(type: "post" | "story" | "comment", id: string, hidden: boolean, actorId: string, reason: string, session: ClientSession, postId?: string) {
-  const moderation = hiddenState(hidden, actorId, reason);
-  if (type === "comment") {
-    if (!postId) fail(400, "Thiếu mã bài viết của bình luận.");
-    const result = await posts.updateOne({ _id: postId, comments: { $elemMatch: { id, "moderation.hidden": hidden ? { $ne: true } : true } } }, { $set: { "comments.$.moderation": moderation } }, { session });
-    if (!result.matchedCount) fail(409, "Bình luận không tồn tại hoặc trạng thái đã thay đổi.");
-  } else {
-    const collection = type === "post" ? posts : stories;
-    const existing = await collection.findOne({ _id: id }, { session });
-    if (!existing) fail(404, "Nội dung không tồn tại.");
-    if (!!existing.moderation?.hidden === hidden) fail(409, "Trạng thái nội dung đã thay đổi. Tải lại dữ liệu nhé.");
-    await collection.updateOne({ _id: id }, { $set: { moderation } }, { session });
-  }
+export async function moderateStory(id: string, hidden: boolean, actorId: string, reason: string, session: ClientSession) {
+  const existing = await stories.findOne({ _id: id }, { session });
+  if (!existing) fail(404, "Chuỗi khoảnh khắc không tồn tại.");
+  if (!!existing.moderation?.hidden === hidden) fail(409, "Trạng thái nội dung đã thay đổi. Tải lại dữ liệu nhé.");
+  await stories.updateOne({ _id: id }, { $set: { moderation: hiddenState(hidden, actorId, reason) } }, { session });
 }

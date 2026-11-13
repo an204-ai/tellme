@@ -1,549 +1,79 @@
 "use client";
-import { useChatViewport } from "@/hooks/use-chat-viewport";
+
 import Link from "next/link";
-import { WeatherWidget } from "@/components/weather/WeatherWidget";
 import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  ArrowUpRight,
-  Archive,
-  Camera,
-  ChevronDown,
-  ChevronRight,
-  Home,
-  HeartHandshake,
-  LogOut,
-  MessageCircle,
-  Search,
-  Settings,
-  UserRound,
-  Users,
-} from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
-import { apiRepository, ApiError, request } from "@/lib/api-repository";
+import { useEffect, useLayoutEffect, useRef } from "react";
+import { ApiError } from "@/lib/api-repository";
 import { useCommunity } from "@/hooks/use-community";
-import { useAppStore } from "@/stores/app.store";
-import { canView } from "@/lib/visibility";
-import { DAILY_TITLE, DAILY_SHORT, FEED_TITLE } from "@/lib/brand";
-import { localDay } from "@/lib/validation";
-import {
-  Avatar,
-  Brand,
-  SearchInput,
-  Loader,
-  Button,
-} from "@/components/ui/Primitives";
-import { GlobalOverlays } from "./GlobalOverlays";
-import { SupportInvitation } from "./TellmeSupport";
-import { LiquidNavigation } from "./LiquidNavigation";
-import { usePageNavigation } from "@/hooks/use-page-navigation";
-import { NotificationBell } from "./NotificationBell";
-import type { AppData } from "@/lib/types";
+import { useChatViewport } from "@/hooks/use-chat-viewport";
 import { useRealtime } from "@/hooks/use-realtime";
+import { useAppStore } from "@/stores/app.store";
+import { Avatar, Brand, Button, Loader } from "@/components/ui/Primitives";
+import { GlobalOverlays } from "./GlobalOverlays";
+import { NotificationBell } from "./NotificationBell";
+import { ThemeSwitch } from "@/components/ui/ThemeSwitch";
+import { FloatingNavigation } from "./FloatingNavigation";
 
-const nav = [
-  { href: "/community/today", label: DAILY_TITLE, icon: Camera },
-  { href: "/community/feed", label: FEED_TITLE, icon: Home },
-  { href: "/community/messages", label: "Tin nhắn", icon: MessageCircle },
-];
-export function SupportRail({ data }: { data: AppData }) {
-  const { update } = useCommunity();
-  const suggestionPath = "/community/friends#suggestions";
-  const suggestionsHref = data.authenticated === false ? `/auth/login?next=${encodeURIComponent(suggestionPath)}` : suggestionPath;
-  const viewStory = useAppStore((state) => state.viewStory);
-  const story = data.stories
-    .filter(
-      (entry) =>
-        entry.userId !== "me" &&
-        !(data.hiddenStories || []).includes(entry.id) &&
-        data.connections.includes(entry.userId) &&
-        entry.day === localDay() &&
-        canView(entry.userId, entry.privacy, data) &&
-        entry.items.length,
-    )
-    .sort((a, b) => b.items.at(-1)!.at.localeCompare(a.items.at(-1)!.at))[0];
-  const person = data.people.find((entry) => entry.id === story?.userId);
-  const suggestions = data.people
-    .filter((entry) => entry.id !== "me" && !data.blocked.includes(entry.id) && !data.connections.includes(entry.id) && !data.following.includes(entry.id))
-    .slice(0, 3);
-  return (
-    <aside className="support-rail" aria-label="Bạn bè và chủ đề">
-      <section className="rail-friend-story">
-        <div className="rail-title">
-          <h2>Bạn bè hôm nay</h2>
-          <Camera size={19} />
-        </div>
-        {story && person ? (
-          <button
-            className="rail-story-cover"
-            onClick={() => viewStory(story.id)}
-          >
-            <img
-              src={story.items[0]?.image}
-              alt={`${DAILY_TITLE} của ${person.name}`}
-            />
-            <span>
-              <Avatar person={person} size="sm" />
-              <span>
-                <strong>{person.name}</strong>
-                <small>{story.items.length} khoảnh khắc hôm nay</small>
-              </span>
-              <ArrowUpRight size={20} />
-            </span>
-          </button>
-        ) : (
-          <p className="rail-no-stories">
-            Bạn bè đăng ảnh mới, bạn sẽ thấy ở đây.
-          </p>
-        )}
-      </section>
-      <section className="rail-people">
-        <div className="rail-title">
-          <h2>Làm quen thêm</h2>
-          <Link href={suggestionsHref} className="rail-discovery-link" aria-label="Xem tất cả gợi ý bạn bè"><Users size={20} /></Link>
-        </div>
-        {!suggestions.length && <p className="rail-no-stories">Chưa có gợi ý mới. Ghé lại sau nhé.</p>}
-        {suggestions.map((user) => (
-          <div className="suggestion-row" key={user.id}>
-            <Link href={`/community/profile/${user.username}`}>
-              <Avatar person={user} />
-            </Link>
-            <Link
-              className="suggestion-name"
-              href={`/community/profile/${user.username}`}
-            >
-              <strong>{user.name}</strong>
-              <span>@{user.username}</span>
-            </Link>
-            <button
-              className={`follow-small ${data.following.includes(user.id) ? "following" : ""}`}
-              aria-label={`${data.following.includes(user.id) ? "Bỏ follow" : "Follow"} ${user.name}`}
-              onClick={() =>
-                void update((draft) => {
-                  draft.following = draft.following.includes(user.id)
-                    ? draft.following.filter((id) => id !== user.id)
-                    : [...draft.following, user.id];
-                }).catch(() => undefined)
-              }
-            >
-              {data.following.includes(user.id) ? "Đang follow" : "Follow"}
-            </button>
-          </div>
-        ))}
-      </section>
-      <section className="rail-topic-section">
-        <div className="rail-title">
-          <h2>Mọi người đang kể gì?</h2>
-        </div>
-        <div className="rail-topic-cloud">
-          {data.topicStats?.slice(0, 5).map((topic) => (
-            <Link
-              href={`/community/explore?topic=${encodeURIComponent(topic.name)}`}
-              key={topic.name}
-              aria-label={`${topic.name}, ${topic.count} bài viết`}
-            >
-              <span className="rail-topic-name">{topic.name}</span>
-              <span className="rail-topic-count">{topic.count} bài viết</span>
-              <ChevronRight size={14} aria-hidden="true" />
-            </Link>
-          ))}
-        </div>
-      </section>
-      <footer className="rail-footer">
-        <Link href="/community/settings">Quyền riêng tư</Link>
-        <a href="/licenses/uiverse.txt" target="_blank" rel="noreferrer">
-          Nguồn giao diện
-        </a>
-        <span>© {new Date().getFullYear()} Tellme</span>
-      </footer>
-    </aside>
-  );
-}
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const router = useRouter();
+  const pathname = usePathname(), router = useRouter();
   const { data, error, refetch } = useCommunity();
-  const queryClient = useQueryClient();
-  const [compactNavigation, setCompactNavigation] = useState(false);
-  const compactNavigationRef = useRef(false);
-  const navigationScrollTargetRef = useRef<EventTarget | null>(null);
-  const navigationScrollYRef = useRef(0);
-  const navigationInteractionAtRef = useRef(0);
-  useEffect(() => {
-    if (error instanceof ApiError && error.status === 401)
-      router.replace(`/auth/login?next=${encodeURIComponent(pathname)}`);
-  }, [error, pathname, router]);
-  const { search, setSearch } = useAppStore();
-  const searchRef = useRef<HTMLInputElement>(null);
-  const frameRef = useRef<HTMLDivElement>(null);
-  const setNavigationCompact = useCallback((compact: boolean) => {
-    if (compactNavigationRef.current === compact) return;
-    compactNavigationRef.current = compact;
-    setCompactNavigation(compact);
-  }, []);
-  const expandNavigation = useCallback(() => {
-    setNavigationCompact(false);
-    navigationScrollTargetRef.current = null;
-    navigationScrollYRef.current = 0;
-    navigationInteractionAtRef.current = performance.now();
-  }, [setNavigationCompact]);
-  const navigation = usePageNavigation(pathname);
-  const selectionPath = navigation.pendingHref?.split("?")[0] || pathname;
+  const frame = useRef<HTMLDivElement>(null);
+  const main = useRef<HTMLElement>(null);
+  useLayoutEffect(() => { main.current?.scrollTo({ top: 0, left: 0, behavior: "instant" }); }, [pathname]);
+  const home = pathname === "/community/today";
+  const messaging = pathname.startsWith("/community/messages");
   const me = data?.people.find((person) => person.id === "me");
+  const invitations = data?.friendRequests?.incoming.length || 0;
   useRealtime(data?.authenticated === true, data?.connections || []);
+  useChatViewport(frame, !!data);
   useEffect(() => {
-    const root = document.documentElement;
-    const pointer = () => { root.dataset.inputModality = "pointer"; };
-    const keyboard = (event: KeyboardEvent) => {
-      if (["Tab", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key))
-        root.dataset.inputModality = "keyboard";
-    };
-    document.addEventListener("pointerdown", pointer, true);
-    document.addEventListener("keydown", keyboard, true);
-    return () => {
-      document.removeEventListener("pointerdown", pointer, true);
-      document.removeEventListener("keydown", keyboard, true);
-      delete root.dataset.inputModality;
-    };
-  }, []);
-  const publicPage = /^\/community\/(today|feed|explore|profile\/(?!me$)[^/]+)$/.test(pathname) || pathname.startsWith("/post/");
-  const accountHref = (href: string) => data?.authenticated === false && !/^\/community\/(today|feed|explore)$/.test(href) ? `/auth/login?next=${encodeURIComponent(href)}` : href;
-  useEffect(() => {
-    if (data?.authenticated === false && !publicPage) router.replace(`/auth/login?next=${encodeURIComponent(pathname)}`);
-  }, [data?.authenticated, publicPage, pathname, router]);
-  const unreadMessages =
-    data?.conversations
-      .filter((entry) => !data.blocked.includes(entry.userId))
-      .reduce((sum, conversation) => sum + conversation.unread, 0) || 0;
-  const mobileNavigation = [
-    ...nav.map((item) => ({ ...item, label: item.label === DAILY_TITLE ? DAILY_SHORT : item.label })),
-    { href: `/community/profile/${me?.username || "me"}`, label: "Cá nhân", icon: UserRound },
-  ];
-  const mobileIndex = selectionPath.startsWith("/community/profile")
-    ? 3
-    : mobileNavigation.findIndex((item) => selectionPath.startsWith(item.href));
-  const fullSection =
-    pathname.includes("/messages") || pathname.includes("/settings") || pathname.includes("/archive");
-  const messagingPage = pathname.startsWith("/community/messages");
-  useChatViewport(frameRef, messagingPage && !!data);
-  useEffect(() => {
-    const handler = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key === "k") {
-        event.preventDefault();
-        if (window.innerWidth <= 640) router.push("/community/explore");
-        else searchRef.current?.focus();
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [router]);
-  useEffect(() => {
-    expandNavigation();
-    window.scrollTo({ top: 0, behavior: "instant" });
-  }, [pathname, expandNavigation]);
-  useEffect(() => {
-    const mobile = window.matchMedia("(max-width: 640px)");
-    const onScroll = (event: Event) => {
-      if (!mobile.matches) {
-        setNavigationCompact(false);
-        return;
-      }
-      const target = event.target;
-      let scroller: HTMLElement | null = null;
-      let y = 0;
-      if (target === window || target === document || target === document.documentElement || target === document.body) {
-        y = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop;
-        scroller = document.documentElement;
-      } else if (target instanceof HTMLElement) {
-        if (target.closest("dialog, [popover], .notifications-popover-list, .emoji-popover")) return;
-        scroller = target.matches(".pull-refresh-viewport, .chat-messages, .main-content")
-          ? target
-          : target.closest<HTMLElement>(".pull-refresh-viewport, .chat-messages, .main-content");
-        if (!scroller || scroller.scrollHeight <= scroller.clientHeight + 2) return;
-        y = scroller.scrollTop;
-      } else return;
-
-      // Ignore route-change scroll restoration immediately after selecting a tab.
-      if (performance.now() - navigationInteractionAtRef.current < 350) {
-        navigationScrollTargetRef.current = scroller;
-        navigationScrollYRef.current = y;
-        return;
-      }
-      if (scroller !== navigationScrollTargetRef.current) {
-        navigationScrollTargetRef.current = scroller;
-        navigationScrollYRef.current = y;
-        if (y > 36) setNavigationCompact(true);
-        return;
-      }
-      const delta = y - navigationScrollYRef.current;
-      navigationScrollYRef.current = y;
-      if (delta !== 0) {
-        setNavigationCompact(true);
-      }
-    };
-    const resetViewport = () => {
-      navigationScrollTargetRef.current = null;
-      navigationScrollYRef.current = 0;
-      setNavigationCompact(false);
-    };
-    document.addEventListener("scroll", onScroll, { passive: true, capture: true });
-    window.addEventListener("scroll", onScroll, { passive: true });
-    mobile.addEventListener("change", resetViewport);
-    return () => {
-      document.removeEventListener("scroll", onScroll, true);
-      window.removeEventListener("scroll", onScroll);
-      mobile.removeEventListener("change", resetViewport);
-    };
-  }, [setNavigationCompact]);
-  useEffect(() => {
-    const dismiss = (event: MouseEvent) => {
-      const target = event.target as Element;
-      document
-        .querySelectorAll<HTMLDetailsElement>("details[open]")
-        .forEach((detail) => {
-          if (
-            !detail.contains(target) ||
-            target.closest(".menu-panel button, .menu-panel a")
-          )
-            detail.open = false;
-        });
-    };
-    const escape = (event: KeyboardEvent) => {
-      if (event.key === "Escape")
-        document
-          .querySelectorAll<HTMLDetailsElement>("details[open]")
-          .forEach((detail) => {
-            detail.open = false;
-          });
-    };
-    document.addEventListener("click", dismiss);
-    document.addEventListener("keydown", escape);
-    return () => {
-      document.removeEventListener("click", dismiss);
-      document.removeEventListener("keydown", escape);
-    };
+    document.documentElement.classList.add("tellme-shell-active");
+    return () => document.documentElement.classList.remove("tellme-shell-active");
   }, []);
   useEffect(() => {
-    document.documentElement.classList.toggle(
-      "reduce-motion",
-      !!data?.settings.reducedMotion,
-    );
+    if (!me?.username || !data?.authenticated) return;
+    const profile = `/community/profile/${me.username}`;
+    // Warm the profile route before the first avatar tap.
+    if ("requestIdleCallback" in window) {
+      const idle = window.requestIdleCallback(() => router.prefetch(profile), { timeout: 2000 });
+      return () => window.cancelIdleCallback(idle);
+    }
+    const timer = setTimeout(() => router.prefetch(profile), 250);
+    return () => clearTimeout(timer);
+  }, [me?.username, data?.authenticated, router]);
+  useEffect(() => {
+    if (data?.authenticated === false || error instanceof ApiError && error.status === 401)
+      router.replace(`/auth/login?next=${encodeURIComponent(pathname)}`);
+  }, [data?.authenticated, error, pathname, router]);
+  useEffect(() => {
+    document.documentElement.classList.toggle("reduce-motion", !!data?.settings.reducedMotion);
   }, [data?.settings.reducedMotion]);
-  if (!data)
-    return error && !(error instanceof ApiError && error.status === 401) ? (
-      <div className="connection-error">
-        <p role="alert">{error.message}</p>
-        <Button onClick={() => void refetch()}>Thử lại</Button>
+  useEffect(() => {
+    const dismiss = (event: MouseEvent) => document.querySelectorAll<HTMLDetailsElement>("details[open]").forEach((menu) => {
+      const target = event.target as Element;
+      if (!menu.contains(target) || target.closest(".menu-panel a, .menu-panel button")) menu.open = false;
+    });
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") document.querySelectorAll<HTMLDetailsElement>("details[open]").forEach((menu) => { menu.open = false; });
+    };
+    document.addEventListener("click", dismiss); document.addEventListener("keydown", escape);
+    return () => { document.removeEventListener("click", dismiss); document.removeEventListener("keydown", escape); };
+  }, []);
+  if (!data || data.authenticated === false) return error && !(error instanceof ApiError && error.status === 401)
+    ? <div className="connection-error"><p role="alert">{error.message}</p><Button onClick={() => void refetch()}>Thử lại</Button></div>
+    : <Loader />;
+  return <div ref={frame} className={`app-frame close-app ${home ? "close-home" : ""} ${messaging ? "messages-frame" : ""}`}>
+    <a href="#main-content" className="skip-link">Đến nội dung chính</a>
+    <header className="close-header">
+      <Link href="/community/today" className="close-brand" onNavigate={() => useAppStore.getState().setMomentView("photos")} aria-label="Tellme — ảnh mới của bạn bè"><Brand /></Link>
+      <div className="close-header-end">
+        <ThemeSwitch />
+        <NotificationBell />
+        <Link href={`/community/profile/${me?.username || "me"}`} className="close-profile-link" aria-label="Trang cá nhân của bạn"><Avatar person={me} size="sm" /></Link>
       </div>
-    ) : (
-      <Loader label="Đang mở Tellme…" />
-    );
-  if (data.authenticated === false && !publicPage) return <Loader label="Đang mở trang đăng nhập…" />;
-  return (
-    <div ref={frameRef} className={`app-frame ${messagingPage ? "messages-frame" : ""}`}>
-      <a href="#main-content" className="skip-link">
-        Đến nội dung chính
-      </a>
-      <header className="global-header">
-        <div className="header-inner">
-          <Link href="/community/today" className="brand-link">
-            <Brand />
-          </Link>
-          <form
-            className="global-search"
-            role="search"
-            onSubmit={(event) => {
-              event.preventDefault();
-              router.push(`/community/explore?q=${encodeURIComponent(search)}`);
-            }}
-          >
-            <SearchInput
-              ref={searchRef}
-              aria-label="Tìm kiếm câu chuyện, chủ đề, mọi người"
-              placeholder="Tìm câu chuyện, chủ đề, mọi người…"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-            <kbd>⌘ K</kbd>
-            <button
-              type="submit"
-              className="search-submit"
-              aria-label="Tìm kiếm"
-            >
-              <Search size={20} />
-            </button>
-          </form>
-          <div className="header-actions">
-            <Link
-              href="/community/explore"
-              className="mobile-search-button icon-button"
-              aria-label="Tìm kiếm"
-            >
-              <Search size={23} />
-            </Link>
-            {data.authenticated === false ? (
-              <div className="guest-auth-actions">
-                <Link
-                  href={`/auth/login?next=${encodeURIComponent(pathname)}`}
-                  className="guest-join-button"
-                  aria-label="Tham gia cộng đồng Tellme"
-                >
-                  <span className="guest-join-full">Tham gia cộng đồng Tellme</span>
-                  <span className="guest-join-compact" aria-hidden="true">
-                    Tham gia
-                  </span>
-                </Link>
-              </div>
-            ) : <>
-            <NotificationBell />
-            <details className="profile-menu">
-              <summary aria-label="Menu tài khoản">
-                <Avatar person={me} size="sm" />
-                <ChevronDown size={15} />
-              </summary>
-              <div className="menu-panel">
-                <Link href={`/community/profile/${me?.username || "me"}`}>
-                  <UserRound size={18} />
-                  Trang cá nhân
-                </Link>
-                <Link href="/community/archive"><Archive size={18} />Kho lưu trữ</Link>
-                <Link href="/community/settings">
-                  <Settings size={18} />
-                  Cài đặt
-                </Link>
-                <button type="button" onClick={() => useAppStore.getState().open("support")}><HeartHandshake size={18} />Ủng hộ Tellme</button>
-                <button
-                  onClick={async () => {
-                    try {
-                      await request("/auth/logout", { method: "POST" });
-                      apiRepository.clear();
-                      queryClient.clear();
-                      router.replace("/auth/login");
-                    } catch (error) {
-                      useAppStore
-                        .getState()
-                        .notify(
-                          error instanceof Error
-                            ? error.message
-                            : "Chưa đăng xuất được.",
-                        );
-                    }
-                  }}
-                >
-                  <LogOut size={18} />
-                  Đăng xuất
-                </button>
-              </div>
-            </details>
-            </>}
-          </div>
-        </div>
-      </header>
-      <div
-        className={`app-shell ${fullSection ? "wide-content full-section" : "with-support"} ${messagingPage ? "messages-layout" : ""}`}
-      >
-        <aside className="left-rail">
-          <nav aria-label="Điều hướng chính">
-            <LiquidNavigation pathname={selectionPath} className="desktop-nav-track">
-            {nav.map(({ href, label, icon: Icon }) => (
-              <Link
-                href={accountHref(href)}
-                prefetch={true}
-                onNavigate={(event) => { event.preventDefault(); navigation.navigate(accountHref(href), label); }}
-                key={href}
-                className={`nav-item ${selectionPath.startsWith(href) ? "active" : ""}`}
-                aria-current={pathname.startsWith(href) ? "page" : undefined}
-              >
-                <Icon size={23} strokeWidth={1.8} />
-                <span>{label}</span>
-                {label === "Tin nhắn" && unreadMessages > 0 && (
-                  <span className="nav-badge notification-marker">{unreadMessages}</span>
-                )}
-              </Link>
-            ))}
-            <div className="nav-separator" />
-            <Link
-              href={accountHref(`/community/profile/${me?.username || "me"}`)}
-              prefetch={true}
-              onNavigate={(event) => { event.preventDefault(); navigation.navigate(accountHref(`/community/profile/${me?.username || "me"}`), "Trang cá nhân"); }}
-              className={`nav-item ${selectionPath.includes("/profile/") ? "active" : ""}`}
-            >
-              <UserRound size={23} />
-              <span>Trang cá nhân</span>
-            </Link>
-            <Link
-              href={accountHref("/community/friends")}
-              prefetch={true}
-              onNavigate={(event) => { event.preventDefault(); navigation.navigate(accountHref("/community/friends"), "Bạn bè"); }}
-              className={`nav-item ${selectionPath.includes("/friends") ? "active" : ""}`}
-            >
-              <Users size={23} />
-              <span>Bạn bè</span>
-            </Link>
-            <Link
-              href={accountHref("/community/archive")}
-              prefetch={true}
-              onNavigate={(event) => { event.preventDefault(); navigation.navigate(accountHref("/community/archive"), "Kho lưu trữ"); }}
-              className={`nav-item ${selectionPath.includes("/archive") ? "active" : ""}`}
-            >
-              <Archive size={23} />
-              <span>Kho lưu trữ</span>
-            </Link>
-            <Link
-              href={accountHref("/community/settings")}
-              prefetch={true}
-              onNavigate={(event) => { event.preventDefault(); navigation.navigate(accountHref("/community/settings"), "Cài đặt"); }}
-              className={`nav-item ${selectionPath.includes("/settings") ? "active" : ""}`}
-            >
-              <Settings size={23} />
-              <span>Cài đặt</span>
-            </Link>
-            </LiquidNavigation>
-          </nav>
-          <div className="sidebar-tagline">
-            <span className="tagline-line" />
-            <p>
-              Your day.
-              <br />
-              <strong>Your stories.</strong>
-            </p>
-            <button type="button" className="support-entry" onClick={() => useAppStore.getState().open("support")}><HeartHandshake size={15} />Ủng hộ Tellme</button>
-          </div>
-        </aside>
-        <main id="main-content" className="main-content" aria-busy={!!navigation.pendingHref}>
-          <div className="route-content">
-            {navigation.failed && <p role="status" className="section-note">Trang đang mở lâu hơn bình thường. <a href={navigation.failed.href}>Mở lại {navigation.failed.label}</a></p>}
-            {!data && error ? <div className="loading-state" role="alert">
-              <p>{error.message}</p><button type="button" onClick={() => void refetch()}>Thử lại</button>
-            </div> : children}
-          </div>
-        </main>
-        {!fullSection && data && <SupportRail data={data} />}
-      </div>
-      <nav className="mobile-nav" aria-label="Điều hướng di động" data-has-active={mobileIndex >= 0} data-compact={compactNavigation} onClickCapture={expandNavigation} onFocusCapture={expandNavigation}>
-        <LiquidNavigation pathname={selectionPath} className="mobile-nav-track">
-          {mobileNavigation.map((item, index) => (
-              <Link
-                href={accountHref(item.href)}
-                prefetch={true}
-                onNavigate={(event) => { event.preventDefault(); navigation.navigate(accountHref(item.href), item.label); }}
-                key={item.href}
-                className={mobileIndex === index ? "active" : ""}
-                aria-current={(pathname.startsWith(item.href) || index === 3 && pathname.startsWith("/community/profile")) ? "page" : undefined}
-                aria-label={index === 2 && unreadMessages > 0 ? `${item.label}, ${unreadMessages} tin chưa đọc` : undefined}
-              >
-                <span className="mobile-nav-icon">
-                  <item.icon size={23} strokeWidth={1.8} />
-                  {index === 2 && unreadMessages > 0 && <span className="mobile-nav-unread notification-marker" aria-hidden="true">{unreadMessages > 99 ? "99+" : unreadMessages}</span>}
-                </span>
-                <span className="mobile-nav-label">{item.label}</span>
-              </Link>
-          ))}
-        </LiquidNavigation>
-      </nav>
-      <GlobalOverlays />
-      <SupportInvitation eligible={pathname === "/community/today" || pathname === "/community/feed"} />
-      {(pathname === "/community/today" || pathname === "/community/feed") && <WeatherWidget />}
-    </div>
-  );
+    </header>
+    <main ref={main} id="main-content" className={`main-content close-main ${messaging ? "close-messages" : ""}`}>{children}</main>
+    <FloatingNavigation unread={data.conversations.reduce((sum, chat) => sum + chat.unread, 0)} invitations={invitations} />
+    <GlobalOverlays />
+  </div>;
 }

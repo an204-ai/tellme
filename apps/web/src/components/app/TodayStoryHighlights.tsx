@@ -5,7 +5,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { useBrandIntroFinished } from "./BrandIntro";
 import { MomentReactionBurst } from "./MomentReactionFloaters";
-import { DragScroll } from "@/components/ui/DragScroll";
 import { Avatar } from "@/components/ui/Primitives";
 import { apiRepository, timeAgo } from "@/lib/api-repository";
 import type { DayStory, MomentItem, Person } from "@/lib/types";
@@ -95,18 +94,18 @@ export function TodayStoryHighlights({ stories, people, me, reducedMotion }: {
   const open = useAppStore((state) => state.open);
   const viewStory = useAppStore((state) => state.viewStory);
   const introFinished = useBrandIntroFinished();
-  const overlayOpen = useAppStore((state) => !!(state.overlay || state.viewedStory || state.musicStoryId || state.musicInvitationStoryId));
+  const overlayOpen = useAppStore((state) => !!(state.overlay || state.viewedStory || state.musicStoryId));
   const candidates = stories
     .filter((story) => story.userId === "me" || story.items.length > 1)
     .map((story) => story.id).join(":");
 
   useEffect(() => {
-    const strip = sectionRef.current?.querySelector<HTMLElement>(".today-friends-strip");
+    const strip = sectionRef.current?.querySelector<HTMLElement>(".today-friends-grid");
     if (!strip || !candidates || reducedMotion || overlayOpen || !introFinished) {
       setFeatured(null);
       return;
     }
-    const scroller = strip.closest(".pull-refresh-viewport");
+    const scroller = strip.closest(".now-today") || strip.closest(".pull-refresh-viewport");
     const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
     let frame = 0;
     let current: string | null = null;
@@ -147,7 +146,7 @@ export function TodayStoryHighlights({ stories, people, me, reducedMotion }: {
     resize.observe(strip);
     const intersection = new IntersectionObserver(schedule, { threshold: [0, .5, .65, .85, 1] });
     intersection.observe(strip);
-    // Capture both the horizontal strip and its vertical scroll ancestors.
+    // Only the visible cards participate in the rotating preview.
     window.addEventListener("scroll", schedule, { capture: true, passive: true });
     window.addEventListener("resize", schedule);
     const visibility = () => {
@@ -172,14 +171,13 @@ export function TodayStoryHighlights({ stories, people, me, reducedMotion }: {
 
   return (
     <section ref={sectionRef} className="today-friends" aria-label="Chuỗi khoảnh khắc hôm nay của bạn và bạn bè">
-      <header><h2>Hôm nay, mình và bạn bè</h2></header>
-      <DragScroll className="today-friends-strip" label="Khoảnh khắc hôm nay — kéo ngang để xem thêm">
+      <div className="today-friends-grid">
         <button type="button" className="today-friend-story today-create-story" aria-label="Chụp khoảnh khắc hôm nay của bạn" onClick={() => open("moment")}>
           <span className="today-create-cover">
             <img src={me?.avatar || "/images/avatar-default.svg"} alt="" />
             <span className="today-create-plus"><Plus size={22} aria-hidden="true" /></span>
           </span>
-          <span className="today-create-label">Chụp khoảnh khắc</span>
+          <span className="today-create-label">Ngày của bạn<small>Thêm khoảnh khắc</small></span>
         </button>
         {stories.map((story) => {
           const mine = story.userId === "me";
@@ -189,7 +187,7 @@ export function TodayStoryHighlights({ stories, people, me, reducedMotion }: {
           return (
             <button type="button" className="today-friend-story" data-story-preview={mine || story.items.length > 1 ? story.id : undefined}
               aria-label={mine ? "Xem chuỗi khoảnh khắc hôm nay của bạn" : `Xem chuỗi khoảnh khắc của ${person?.name || "bạn bè"}`}
-              key={story.id} onClick={() => viewStory(story.id)}>
+              key={story.id} onClick={() => viewStory(story.id, 0, undefined, "today")}>
               <img src={latest.image} alt="" loading="lazy" />
               {active && story.items.length > 1
                 ? <StoryCarousel key={story.items.map((item) => item.id + item.image).join("|")} items={story.items} />
@@ -202,7 +200,7 @@ export function TodayStoryHighlights({ stories, people, me, reducedMotion }: {
             </button>
           );
         })}
-      </DragScroll>
+      </div>
     </section>
   );
 }

@@ -43,13 +43,9 @@ function providerConnections() {
     providers = {
       expires: Date.now() + 10 * 60000,
       value: Promise.all([
-        check("GIPHY", config.GIPHY_API_KEY,
-          `https://api.giphy.com/v1/gifs/trending?${new URLSearchParams({ api_key: config.GIPHY_API_KEY, limit: "1" })}`),
         check("OpenWeather", config.OPENWEATHER_API_KEY,
           `https://api.openweathermap.org/data/2.5/weather?${new URLSearchParams({ appid: config.OPENWEATHER_API_KEY, lat: "10.7769", lon: "106.7009" })}`),
-        check("YouTube", config.YOUTUBE_API_KEY,
-          "https://www.googleapis.com/youtube/v3/videos?part=id&chart=mostPopular&regionCode=VN&maxResults=1",
-          { "X-Goog-Api-Key": config.YOUTUBE_API_KEY }),
+
       ]),
     };
   }

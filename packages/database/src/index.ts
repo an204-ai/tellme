@@ -4,10 +4,8 @@ export * from "./observability.js";
 export * from "./moderation.js";
 export * from "./connection.js";
 export * from "./models.js";
-export * from "./story-music.js";
 export * from "./queue.js";
 export * from "./media.js";
-export * from "./feed.js";
 export * from "./notifications.js";
 export * from "./worker.js";
 

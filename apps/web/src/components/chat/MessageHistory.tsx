@@ -4,7 +4,6 @@ import { messageReaders } from "@/lib/chat-indicators";
 import { forwardRef, memo } from "react";
 import { getTellmeSticker } from "@tellme/shared/stickers";
 import { Avatar } from "@/components/ui/Primitives";
-import { SharedPostPreview } from "@/components/app/SharedPostPreview";
 import { StoryReplyPreview } from "@/components/app/StoryReply";
 import { timeOf } from "@/lib/api-repository";
 import type { AppData, Conversation, Person, Message } from "@/lib/types";
@@ -29,7 +28,7 @@ export const MessageHistory = memo(forwardRef<HTMLDivElement, HistoryProps>(func
           {message.replyTo && <span className="message-quote"><strong>{message.replyTo.userId === "me" ? "Bạn" : data.people.find((entry) => entry.id === message.replyTo?.userId)?.name || (conversation.kind !== "group" ? person.name : "Thành viên")}</strong><span>{message.replyTo.text || "Sticker"}</span></span>}
           {message.storyReply && <StoryReplyPreview reply={message.storyReply} />}
           {sticker && <img className="message-sticker" src={sticker.src} alt={`Sticker ${sticker.label}`} width={sticker.width} height={sticker.height} loading="lazy" />}
-          {message.postId ? <SharedPostPreview id={message.postId} /> : message.text ? <p className="message-bubble">{message.text}</p> : null}
+          {message.text ? <p className="message-bubble">{message.text}</p> : null}
           <span className="chat-message-meta"><time data-message-id={message.own ? undefined : message.id} data-message-at={message.at}>{timeOf(message.at)}</time>
           {message.own && <span className="chat-read-avatars" role="group" aria-label="Người đã xem tin nhắn">{(readers.get(message.id) || []).map((id) => {
             const reader = data.people.find((entry) => entry.id === id) || (conversation.kind !== "group" ? person : undefined);

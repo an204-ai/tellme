@@ -13,13 +13,13 @@ let seenThisSession = false;
 /** One dismissible invitation per browser. Opening the QR always requires a click. */
 export function SupportInvitation({ eligible }: { eligible: boolean }) {
   const introFinished = useBrandIntroFinished();
-  const { overlay, viewedStory, musicStoryId, musicInvitationStoryId, open } = useAppStore();
+  const { overlay, viewedStory, musicStoryId, open } = useAppStore();
   const [offer, setOffer] = useState(false);
   useEffect(() => {
     try { setOffer(!seenThisSession && !localStorage.getItem(tellmeSupport.invitationKey)); }
     catch { setOffer(!seenThisSession); }
   }, []);
-  const visible = introFinished && offer && eligible && !overlay && !viewedStory && !musicStoryId && !musicInvitationStoryId;
+  const visible = introFinished && offer && eligible && !overlay && !viewedStory && !musicStoryId;
   useEffect(() => {
     if (!visible) return;
     seenThisSession = true;

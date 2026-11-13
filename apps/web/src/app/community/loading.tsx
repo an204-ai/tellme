@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button, Loader } from "@/components/ui/Primitives";
+import { SleepingCat } from "@/components/ui/SleepingCat";
 
 // The URL can update before the route stream completes, so give the fallback
 // its own recovery even after the tab navigation has committed.
@@ -12,8 +13,9 @@ export default function Loading() {
     return () => window.clearTimeout(timer);
   }, []);
 
-  if (!slow) return <Loader label="Đang mở trang…" />;
-  return <div className="loading-state" role="status">
+  if (!slow) return <Loader />;
+  return <div className="loading-state route-cat-loading" role="status">
+    <SleepingCat />
     <p>Trang đang mở lâu hơn bình thường.</p>
     <Button onClick={() => window.location.reload()}>Tải lại trang này</Button>
   </div>;

@@ -1,14 +1,15 @@
 "use client";
 import Image from "next/image";
-import { forwardRef, useId } from "react";
+import { forwardRef } from "react";
 import type {
   ButtonHTMLAttributes,
   InputHTMLAttributes,
   ReactNode,
 } from "react";
-import { Check, Globe2, LockKeyhole, Search, Users, X } from "lucide-react";
-import type { Person, Privacy } from "@/lib/types";
+import { Check, Search, X } from "lucide-react";
+import type { Person } from "@/lib/types";
 import { LoaderArt } from "./SourceArt";
+import { SleepingCat } from "./SleepingCat";
 import { usePresenceStore } from "@/stores/presence.store";
 
 export function Button({
@@ -58,7 +59,7 @@ export function Avatar({
   const online = usePresenceStore((state) => !!person?.id && !!state.online[person.id]);
   return (
     <span className={`avatar avatar-${size} ${className}`}>
-      {person?.avatar.startsWith("/images/group-avatars/") ? <Image src={person.avatar} alt={person.name} width={120} height={120} sizes="120px" /> : <img
+      {person?.avatar ? (person.avatar.startsWith("/images/group-avatars/") ? <Image src={person.avatar} alt={person.name} width={120} height={120} sizes="120px" /> : <img
         src={person?.avatar}
         alt={person?.name || "Thành viên Tellme"}
         loading="lazy"
@@ -68,8 +69,7 @@ export function Avatar({
         onError={(event) => {
           event.currentTarget.style.opacity = "0";
         }}
-      />
-      }
+      />) : null}
       <span className="avatar-fallback" aria-hidden="true">
         {person?.name.charAt(0) || "T"}
       </span>
@@ -78,28 +78,21 @@ export function Avatar({
   );
 }
 export function Brand({ compact = false }: { compact?: boolean }) {
-  return (
-    <img
-      className={`brand-wordmark ${compact ? "compact" : ""}`}
-      src="/brand/logos/tellme-wordmark-on-light.png"
-      width={367}
-      height={115}
-      alt="Tellme — Your day. Your stories."
-    />
-  );
+  return <span className={`brand-wordmark-pair ${compact ? "compact" : ""}`}>
+    <img className={`brand-wordmark brand-on-light ${compact ? "compact" : ""}`} src="/brand/logos/tellme-wordmark-on-light.png" width={367} height={115} alt="Tellme — Your day. Your stories." />
+    <img className={`brand-wordmark brand-on-dark ${compact ? "compact" : ""}`} src="/brand/logos/tellme-wordmark-on-dark.png" width={367} height={115} alt="Tellme — Your day. Your stories." />
+  </span>;
 }
 export function Loader({
-  label = "Đang tải câu chuyện…",
+  label = "Đợi xíu nha…",
   small = false,
 }: {
   label?: string;
   small?: boolean;
 }) {
   return (
-    <div className={`loading-state ${small ? "small" : ""}`} role="status" data-route-loading={small ? undefined : "true"}>
-      <span className="uiv-loading">
-        <LoaderArt />
-      </span>
+    <div className={`loading-state ${small ? "small" : "route-cat-loading"}`} role="status" data-route-loading={small ? undefined : "true"}>
+      {small ? <span className="uiv-loading"><LoaderArt /></span> : <SleepingCat />}
       <span>{label}</span>
     </div>
   );
@@ -175,60 +168,6 @@ export const SearchInput = forwardRef<
     />
   );
 });
-export const privacyNames: Record<Privacy, string> = {
-  public: "Công khai",
-  connections: "Bạn bè",
-  private: "Chỉ mình tôi",
-};
-export function PrivacyIcon({
-  value,
-  size = 13,
-}: {
-  value: Privacy;
-  size?: number;
-}) {
-  return value === "public" ? (
-    <Globe2 size={size} />
-  ) : value === "connections" ? (
-    <Users size={size} />
-  ) : (
-    <LockKeyhole size={size} />
-  );
-}
-export function AudiencePicker({
-  value,
-  onChange,
-}: {
-  value: Privacy;
-  onChange: (value: Privacy) => void;
-}) {
-  const name = useId();
-  return (
-    <fieldset className="uiv-radio">
-      <legend className="field-label">Ai có thể xem?</legend>
-      <div className="radio-inputs">
-        {(["public", "connections", "private"] as const).map((choice) => (
-          <label key={choice}>
-            <input
-              type="radio"
-              name={name}
-              value={choice}
-              checked={value === choice}
-              onChange={() => onChange(choice)}
-              className="radio-input"
-            />
-            <span className="radio-tile">
-              <span className="radio-icon">
-                <PrivacyIcon value={choice} size={18} />
-              </span>
-              <span className="radio-label">{privacyNames[choice]}</span>
-            </span>
-          </label>
-        ))}
-      </div>
-    </fieldset>
-  );
-}
 export function Switch({
   checked,
   onChange,

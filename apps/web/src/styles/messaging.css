@@ -11,7 +11,6 @@
   overscroll-behavior: none;
   background: #fff;
 }
-.messages-frame > .global-header { flex: 0 0 auto; }
 .messages-frame .app-shell.messages-layout {
   flex: 1 1 0;
   display: grid;
@@ -23,7 +22,6 @@
   overflow: hidden;
 }
 /* Inherit the same fixed left rail geometry used by every other section. */
-.messages-layout > .left-rail { min-height: 0; }
 .messages-frame .messages-layout > .main-content { height: 100%; min-height: 0; min-width: 0; overflow: hidden; }
 .messages-frame .messages-layout > .main-content > .route-content { height: 100%; min-height: 0; }
 .messages-frame .messages-layout > .main-content::before { top: 0; bottom: 0; }
@@ -44,8 +42,6 @@
   .messages-frame .app-shell.messages-layout { grid-template-columns: minmax(0, 1fr); padding: 12px; }
   .messages-frame .app-shell.messages-layout { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
   .messages-frame[data-keyboard-open="true"] { --site-header-height: 0px; }
-  .messages-frame[data-keyboard-open="true"] > .global-header,
-  .messages-frame[data-keyboard-open="true"] > .mobile-nav { display: none; }
   .messages-frame[data-keyboard-open="true"] .app-shell.messages-layout { padding: 0; }
   .messages-frame[data-keyboard-open="true"] .messaging { border: 0; border-radius: 0; }
   .messages-frame[data-keyboard-open="true"] .chat-header { padding-block: 8px; }
@@ -55,30 +51,16 @@
 }
 
 /* Keep the profile form scrollable on short screens without drawing a scrollbar. */
-.edit-profile-dialog, .share-post-dialog { scrollbar-width: none; }
-.edit-profile-dialog::-webkit-scrollbar, .share-post-dialog::-webkit-scrollbar { display: none; width: 0; height: 0; }
+.edit-profile-dialog { scrollbar-width: none; }
+.edit-profile-dialog::-webkit-scrollbar { display: none; width: 0; height: 0; }
 .chat-unavailable { flex: 0 0 auto; padding: 16px 20px; border-top: 1px solid var(--line); font-size: 14px; line-height: 1.7; }
 .story-reply-unavailable { font-size: 13px; line-height: 1.7; margin-top: 12px; }
-@media (min-width: 1191px) {
-  .app-shell.with-support > .support-rail {
-    position: fixed;
-    top: 109px;
-    right: 42px;
-    bottom: 20px;
-    width: 278px;
-    overflow: clip;
-    overscroll-behavior: none;
-    scrollbar-width: none;
-  }
-  .app-shell.with-support > .support-rail::-webkit-scrollbar { display: none; }
-}
 
 /* Group identity uses the supplied Tellme artwork, with aligned member rows. */
 .message-create-actions { display: flex; align-items: center; gap: 2px; }
 .create-group-dialog { width: min(560px, calc(100vw - 24px)); scrollbar-width: none; }
 .create-group-dialog::-webkit-scrollbar { display: none; }
 .group-composer { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-.share-body > .group-composer { padding-block: 16px; border-block: 1px solid var(--line); }
 .group-identity { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 16px; }
 .group-identity .field-label { margin-top: 0; margin-bottom: 8px; }
 .group-identity .input-wrap { margin: 0; }

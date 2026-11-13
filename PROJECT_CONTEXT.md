@@ -1,31 +1,30 @@
 # PROJECT_CONTEXT — Tellme
 
-**Ngày chụp trạng thái:** 01/11/2026  
+**Ngày chụp trạng thái:** 14/11/2026
 **Workspace:** `/Users/mac/Documents/hk1-2026/mediatoday/tellme`  
 **Mục đích:** Bản bàn giao để tiếp tục công việc trong cuộc trò chuyện mới. Tài liệu này mô tả trạng thái theo tài liệu và mã nguồn đã được xem; hãy kiểm tra code hiện tại trước khi sửa vì workspace đang có nhiều thay đổi chưa commit.
 
 ## 1. Sản phẩm và hướng thiết kế
 
-Tellme là mạng xã hội để mọi người lưu và chia sẻ những câu chuyện, khoảnh khắc đời thường. Tinh thần thương hiệu: gần gũi, trẻ trung, khuyến khích lắng nghe và kết nối; màu navy đậm, nền trắng, kiểu chữ Poppins. Nội dung có thể lấy cảm hứng từ ngày đi làm nhưng sản phẩm không giới hạn cho người đi làm.
+Tellme là mạng xã hội để mọi người lưu và chia sẻ những câu chuyện, khoảnh khắc đời thường. Tinh thần thương hiệu: gần gũi, trẻ trung, khuyến khích lắng nghe và kết nối; màu navy, nền xanh rất nhạt và kiểu chữ Nunito bo tròn có tiếng Việt. Nội dung có thể lấy cảm hứng từ ngày đi làm nhưng sản phẩm không giới hạn cho người đi làm.
 
 Các khu vực chính trên web:
 
 - **Tell me now**: đăng ảnh khoảnh khắc bằng camera, xem chuỗi khoảnh khắc theo ngày.
-- **Khám phá**: bảng tin/bài viết và nội dung công khai.
+- **Tell me now là trọng tâm**: đã gỡ bảng bài viết, tìm kiếm nội dung và tạo bài mới ngày 13/11/2026; đã gỡ toàn bộ bài cũ, collection bài viết và thẻ chia sẻ trong chat theo yêu cầu bổ sung.
 - **Tin nhắn**: trò chuyện riêng và nhóm.
-- **Trang cá nhân**, **Bạn bè**, **Kho lưu trữ**, **Cài đặt**.
-- Khách chưa đăng nhập được xem nội dung công khai; hành động cần danh tính/tương tác yêu cầu đăng nhập.
+- **Trang cá nhân**, **Bạn bè**, **Cài đặt**.
+- Khách chưa đăng nhập chỉ xem trang giới thiệu/xác thực; API không trả ảnh hoặc hồ sơ cá nhân cho khách.
 
 Quyết định trải nghiệm đã thống nhất qua các lượt làm việc:
 
 - Web là phạm vi runtime hiện tại; mobile native chưa triển khai.
 - Tell me now là chụp ảnh trực tiếp bằng camera (điện thoại hoặc camera máy tính), không chọn ảnh từ thư viện trong luồng này. Cần xin quyền camera khi người dùng chủ động mở camera. Ảnh khoảnh khắc hiển thị tỷ lệ phù hợp, mở xem theo ảnh gốc.
 - Mỗi chuỗi trong ngày dùng một bài nhạc chung; có thể chọn/thay nhạc, đặt điểm bắt đầu phát. YouTube Data API v3 là nguồn ưu tiên; chỉ hiện video đã kiểm tra có thể nhúng/phát bên ngoài, ưu tiên khu vực Việt Nam. Epidemic Sound là nguồn dự phòng khi cấu hình YouTube không khả dụng; gói free chỉ dành cho thử nghiệm, không coi là quyền dùng thương mại production.
-- Cảm xúc dùng bộ ảnh/sticker Tellme đã có, thay nút tim/emoji cũ; giữ thao tác nhấn giữ trên mobile và hover trên desktop.
-- Bài ẩn danh dùng tên con vật thân thiện, không lộ mã số trong tên hiển thị; avatar lấy từ bộ con vật tương ứng, không ghép ảnh không đúng loài.
-- Follow là quan hệ một chiều; hai bên follow nhau thì thành bạn bè. Nhắn riêng và gửi nội dung trực tiếp chỉ dành cho bạn bè hai chiều, không bị chặn. Tạo nhóm chỉ yêu cầu người tạo là bạn với từng người được mời, không bắt các thành viên mời phải là bạn với nhau.
+- Cảm xúc giữ bộ ảnh/sticker Tellme trong thanh trả lời ngay dưới khoảnh khắc; nút vòng tròn dấu cộng mở bộ chọn một emoji Unicode. Tin trả lời được nhập và gửi tại đây, không chuyển trang.
+- Chỉ tìm bạn bằng đúng Tellme ID, gửi lời mời và chờ người nhận chấp nhận. Không còn follow một chiều; trường `following` cũ chỉ lưu hai cạnh của kết nối được chấp nhận. Nhắn riêng và gửi nội dung trực tiếp chỉ dành cho bạn bè hai chiều, không bị chặn. Tạo nhóm chỉ yêu cầu người tạo là bạn với từng người được mời, không bắt các thành viên mời phải là bạn với nhau.
 - Ảnh tải lên giới hạn 50 MB. Khi xóa/thay ảnh, cleanup phải kiểm tra tham chiếu còn được dùng trước khi xóa Cloudinary.
-- Hồ sơ có 6 trường “Một chút về mình”: nơi ở, sinh nhật, công việc, sở thích, món ăn trưa yêu thích, đồ uống quen thuộc.
+- Hồ sơ giữ bìa, avatar, tên, Tellme ID, giới thiệu và hành trình; đã gỡ Một chút về mình và số đếm. Điều hướng dưới chỉ dùng icon Bạn bè/Home/Tin nhắn (Home ở giữa); hồ sơ qua menu avatar. Góc Tellme chưa chứa chức năng. Đã gỡ trọn luồng kho lưu trữ cùng API lưu/ẩn chuỗi, giữ các ảnh gốc.
 
 ## 2. Cấu trúc và kiến trúc hiện tại
 
@@ -37,10 +36,9 @@ Monorepo pnpm + Turborepo; `pnpm-workspace.yaml` đưa `apps/*`, `packages/*`, `
 | `apps/api` | Hono/Node.js API, REST, xác thực cookie HttpOnly, WebSocket realtime. |
 | `apps/admin` | React/Vite dashboard quản trị: tổng quan, người dùng, báo cáo, tác vụ nền. Quyền API dựa trên email trong `ADMIN_EMAILS`. |
 | `apps/mobile` | Khung ứng dụng mobile, ngoài phạm vi runtime/triển khai hiện tại. |
-| `packages/database` | MongoDB, index/config, Cloudinary lifecycle, Redis/BullMQ, outbox, cache/feed. |
+| `packages/database` | MongoDB, index/config, Cloudinary lifecycle, Redis/BullMQ, outbox và thông báo. |
 | `packages/shared`, `packages/config`, `packages/ui` | Kiểu/schema dùng chung, config và UI dùng chung. |
 | `workers/media-processor` | Xử lý tác vụ media nền. |
-| `workers/feed-processor` | Feed/cache tác vụ nền. |
 | `workers/notification-processor` | Thông báo/tác vụ nền. |
 | `tellme-landing` | Landing page riêng, Next.js trên cổng 3002 ở môi trường dev. |
 
@@ -50,13 +48,13 @@ Luồng backend chính theo `ARCHITECTURE.md`, `docs/BACKEND.md` và phần code
 2. MongoDB là nguồn dữ liệu bền vững. Các thay đổi cần xử lý nền đi qua outbox MongoDB → dispatcher → Redis/BullMQ → worker; retry/backoff và kết quả job có thể quản lý từ admin.
 3. Redis dùng cho hàng đợi, cache/pubsub và presence. API khởi động worker/dispatcher hoặc cho phép worker chạy riêng theo scripts triển khai.
 4. `/api/realtime` dùng WebSocket cho chat và hiện diện; heartbeat chạy trên socket, không ghi MongoDB mỗi nhịp. Redis giữ lease kết nối (75 giây); chỉ phát sự kiện khi trạng thái đổi online/offline và giới hạn cho bạn bè. Polling là fallback nếu realtime/Redis không hoạt động; `/api/events` SSE được giữ cho client cũ.
-5. Cloudinary lưu media. Giphy được proxy qua API. Những endpoint công khai chỉ trả nội dung public sau khi kiểm tra lại quyền, kể cả khi dùng cache.
+5. Ảnh mới dùng Cloudinary authenticated và proxy kiểm tra phiên/quyền hiện tại. URL CDN công khai cũ cần bước chuyển riêng theo docs/PRIVATE-MEDIA-ROLLOUT.md; script chưa chạy trên production.
 
-Các vùng dữ liệu/khái niệm được tài liệu hiện hành nhắc đến gồm users, sessions, posts, stories, conversations, messages, notifications, media, reports, background jobs/outbox và push subscriptions. Cần xem models/indexes thực tế trước khi thêm migration hoặc kết luận collection nào tự dọn.
+Các vùng dữ liệu/khái niệm được tài liệu hiện hành nhắc đến gồm users, sessions, stories, conversations, messages, notifications, media, reports, background jobs/outbox và push subscriptions. Cần xem models/indexes thực tế trước khi thêm migration hoặc kết luận collection nào tự dọn.
 
 ## 3. Quyền riêng tư, bảo mật và lưu trữ
 
-- Guest đọc chỉ nội dung public; ghi/chia sẻ/tương tác yêu cầu đăng nhập.
+- Guest bootstrap rỗng; xem ảnh, hồ sơ, tìm ID và tương tác đều yêu cầu đăng nhập. Hồ sơ và khoảnh khắc chỉ cho chủ sở hữu/bạn bè đã chấp nhận, có kiểm tra block.
 - Quyền riêng tư, owner, block và relationship phải kiểm tra ở API, không dựa vào ẩn nút trên frontend.
 - Mật khẩu dùng scrypt; token phiên ngẫu nhiên được lưu dạng băm SHA-256 theo tài liệu backend.
 - Email chỉ phục vụ xác minh/khôi phục/đổi mật khẩu. Gmail SMTP đã được chọn; quy trình dùng OTP 6 số thay cho link, OTP có thời hạn, resend cooldown, lưu hash và giới hạn yêu cầu. Có email template chung.
@@ -77,7 +75,7 @@ Các biến quan trọng (tên có thể thay đổi theo code/config hiện t�
 - Email: `SMTP_URL`, `EMAIL_FROM`.
 - Push: VAPID public/private key và subject; `pnpm configure:vapid` tạo cặp khóa nếu chưa có.
 - Quản trị: `ADMIN_EMAILS`; không có mật khẩu admin mặc định riêng. Đăng nhập bằng tài khoản được liệt kê và đủ điều kiện xác thực.
-- Tích hợp: `GIPHY_API_KEY`, `OPENWEATHER_API_KEY`, `YOUTUBE_API_KEY`, `EPIDEMIC_SOUND_API_KEY`.
+- Tích hợp: `OPENWEATHER_API_KEY`, `YOUTUBE_API_KEY`, `EPIDEMIC_SOUND_API_KEY`.
 
 Không ghi các giá trị thật từ `.env` vào bản bàn giao. Các key/credential từng được chia sẻ trong hội thoại nên được xem là nhạy cảm; nếu nghi ngờ đã lộ thì chủ tài khoản nên rotate.
 
@@ -131,7 +129,7 @@ Project đã có ảnh moments ở `tellme-landing/public/moments/` (`after-work
 - `.github/workflows/deploy.yml` đang bị xóa trong working tree, còn CI workflow có sửa đổi. Kiểm tra lại hướng triển khai Render và service graph (web, API, admin, workers, Redis) trước khi push/deploy.
 - Người dùng từng yêu cầu dọn file test/không cần thiết; nhiều test/QA artefact bị xóa trong working tree. Không kết luận dọn xong khi chưa rà soát đủ; không chạy test nếu chưa được yêu cầu.
 - Đối chiếu `.env.example` để chắc không có secret; không đọc/chép giá trị `.env` vào chat.
-- Kiểm tra quy trình worker/media/feed/notification và Redis khi cần vận hành, nhưng phân biệt code có tích hợp với dịch vụ đang kết nối/đang chạy thật.
+- Kiểm tra quy trình worker/media/notification và Redis khi cần vận hành, nhưng phân biệt code có tích hợp với dịch vụ đang kết nối/đang chạy thật.
 - Rà soát responsive trên viewport phổ biến và thiết bị thật cho modal chụp Tell me now, chat, weather widget, story/timeline và các tab. Người dùng đã báo modal preview sau khi chụp bị tràn ngang trên iPhone 16; các sửa đổi trước đó cần xác minh trước khi kết luận đã ổn.
 - Rà soát giao diện admin với API, vai trò/quyền admin, trạng thái backend và dữ liệu thật trước deploy.
 
