@@ -20,6 +20,7 @@ export function Modal({
   fitViewport = false,
   closeDisabled = false,
   dismissOnEmptySpace = false,
+  motionKind = "modal",
 }: {
   title: string;
   children: React.ReactNode;
@@ -31,6 +32,7 @@ export function Modal({
   fitViewport?: boolean;
   closeDisabled?: boolean;
   dismissOnEmptySpace?: boolean;
+  motionKind?: "modal" | "panel";
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -46,7 +48,7 @@ export function Modal({
     if (!node) { closeRef.current(); return; }
     closing.current = true;
     node.dataset.modalState = "closing";
-    const animation = animateSurface(node, "leave", "modal", from.current);
+    const animation = animateSurface(node, "leave", motionKind, from.current);
     void animation.finished.catch(() => {}).then(() => { exited.current = true; closing.current = false; closeRef.current(); });
   };
   useLayoutEffect(() => {
@@ -59,11 +61,11 @@ export function Modal({
       dialog.dataset.backdropHandoff = String(backdropHandoff.current);
       dialog.showModal();
     }
-    const arrival = dialog && animateSurface(dialog, "arrive", "modal", from.current);
+    const arrival = dialog && animateSurface(dialog, "arrive", motionKind, from.current);
     if (openDialogs++ === 0) bodyOverflowBeforeDialogs = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
-      if (dialog && !exited.current) { lastExternalClose = Date.now(); lastRetiredDialog = dialog; retainSurfaceExit(dialog, "modal", from.current, true); }
+      if (dialog && !exited.current) { lastExternalClose = Date.now(); lastRetiredDialog = dialog; retainSurfaceExit(dialog, motionKind, from.current, true); }
       arrival?.cancel();
       dialog?.close();
       if (--openDialogs === 0) document.body.style.overflow = bodyOverflowBeforeDialogs;
@@ -73,13 +75,16 @@ export function Modal({
     const node = ref.current;
     if (!fitViewport || !node) return;
     const viewport = window.visualViewport;
+    let fullHeight = window.innerHeight;
     const measure = () => {
       const unzoomed = !viewport || Math.abs(viewport.scale - 1) < .05;
       const height = unzoomed && viewport ? viewport.height : window.innerHeight;
       const top = unzoomed && viewport ? viewport.offsetTop : 0;
+      if (!node.contains(document.activeElement)) fullHeight = Math.max(window.innerHeight, height);
       node.style.setProperty("--dialog-viewport-height", `${height}px`);
       node.style.setProperty("--dialog-viewport-top", `${top}px`);
       node.dataset.shortViewport = String(height < 400);
+      node.dataset.keyboardViewport = String(unzoomed && fullHeight - height > 120);
     };
     measure();
     window.addEventListener("resize", measure);
@@ -103,8 +108,9 @@ export function Modal({
       onClick={(event) => {
         const target = event.target instanceof Element ? event.target : (event.target as Node).parentElement;
         if (!target) return;
+        const interactive = target.closest("button, a, input, textarea, select, form, summary, [popover], .menu-panel, .dialog-header, .now-identity-slot, .now-response-slot");
         if (event.target === event.currentTarget || dismissOnEmptySpace && target.closest("dialog") === event.currentTarget &&
-          !target.closest("button, a, input, textarea, select, summary, [popover], .menu-panel, .dialog-header, .now-identity-slot, .now-response-slot")) dismiss();
+          !(interactive && event.currentTarget.contains(interactive))) dismiss();
       }}
     >
       <section className="dialog-content">

@@ -16,6 +16,11 @@ export function InstallProvider({ children }: { children: ReactNode }) {
   const [standalone, setStandalone] = useState(false);
 
   useEffect(() => {
+    // Asset caching works without enabling notifications or requesting a permission.
+    if ("serviceWorker" in navigator) void navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" }).catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
     const displayMode = window.matchMedia("(display-mode: standalone)");
     const syncDisplayMode = () => {
       const ios = navigator as Navigator & { standalone?: boolean };

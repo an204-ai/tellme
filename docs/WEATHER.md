@@ -1,3 +1,5 @@
+> **16/11/2026:** tắt cả lời nhắc theo giờ, không chỉ thời tiết. Chỉ giữ thông báo tương tác giữa người dùng; scheduler đã gỡ, inbox hệ thống trả rỗng và job cũ không gửi push. Phần mô tả lịch nhắc bên dưới chỉ là lịch sử.
+
 > **Tạm dừng từ 14/11/2026:** phần bên dưới là tài liệu lịch sử. Web không mount provider/widget thời tiết, không xin vị trí, không gọi API thời tiết hoặc dùng thời tiết gợi ý caption. API không đăng ký các route dữ liệu/watch; worker không lên lịch gọi OpenWeather, bỏ các job thời tiết đã xếp hàng và lọc thông báo cũ khỏi inbox/unread. Ví dụ cấu hình deploy không yêu cầu API key. Mã nguồn được giữ để cân nhắc ứng dụng sau này; không bật lại bằng cách chỉ điền key.
 
 # Thời tiết quanh bạn

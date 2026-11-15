@@ -1,5 +1,9 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useCommunity } from "@/hooks/use-community";
+import { canMessagePerson } from "@/lib/chat-policy";
+import { StoryReply } from "./StoryReply";
 import { Images } from "lucide-react";
 import { useGroupPhotos } from "@/hooks/use-photo-groups";
 import { useAppStore } from "@/stores/app.store";
@@ -13,6 +17,10 @@ import type { PhotoMoment } from "./MomentCard";
 
 export function GroupPhotoCard({ moment, active }: { moment: PhotoMoment & { group: PhotoGroup }; active: boolean }) {
   const group = moment.group, feed = useGroupPhotos(group.id, true);
+  const { data } = useCommunity();
+  const params = useSearchParams();
+  const linkedPhoto = params.get("group") === group.id ? params.get("moment") : null;
+  const resolvedLink = useRef<string | null>(null);
   const pending = useAppStore((s) => s.pendingUpload?.moment.group?.id === group.id ? s.pendingUpload : null);
   const [selectedId, setSelectedId] = useState(group.latest?.id || "");
   const [details, setDetails] = useState(false), [captionExpanded, setCaptionExpanded] = useState(false);
@@ -27,9 +35,14 @@ export function GroupPhotoCard({ moment, active }: { moment: PhotoMoment & { gro
   const index = Math.max(0, photos.findIndex((p) => p.id === selectedId)), photo = photos[index];
   const unavailable = feed.error instanceof ApiError && [403, 404].includes(feed.error.status);
   useEffect(() => {
+    if (!linkedPhoto || resolvedLink.current === linkedPhoto) return;
+    if (photos.some((entry) => entry.id === linkedPhoto)) { resolvedLink.current = linkedPhoto; setSelectedId(linkedPhoto); }
+    else if (feed.hasNextPage && !feed.isFetchingNextPage && !feed.isFetchNextPageError) void feed.fetchNextPage();
+  }, [linkedPhoto, photos, feed.hasNextPage, feed.isFetchingNextPage, feed.isFetchNextPageError, feed.fetchNextPage]);
+  useEffect(() => {
     if (active && feed.hasNextPage && !feed.isFetchingNextPage && !feed.isFetchNextPageError && index >= photos.length - 4) void feed.fetchNextPage();
   }, [active, index, photos.length, feed.hasNextPage, feed.isFetchingNextPage, feed.isFetchNextPageError, feed.fetchNextPage]);
-  useEffect(() => { if (group.latest) setSelectedId(group.latest.id); }, [group.latest?.id]);
+  useEffect(() => { if (group.latest && !linkedPhoto) setSelectedId(group.latest.id); }, [group.latest?.id, linkedPhoto]);
   useEffect(() => { if (pending) setSelectedId(pending.moment.item.id); }, [pending?.moment.item.id]);
   useEffect(() => { setCaptionExpanded(false); }, [photo?.id]);
   useSurfaceArrival(surface, photo?.id);
@@ -67,7 +80,8 @@ export function GroupPhotoCard({ moment, active }: { moment: PhotoMoment & { gro
       <div className="group-photo-author" aria-live="polite">{pending && photo.id === pending.moment.item.id ? <span className="moment-upload-status" data-state={pending.status}>{pending.status === "uploading" ? <><UploadHamster /><span>Đang đăng…</span></> : pending.status === "done" ? "Đã xong" : <button type="button" onClick={pending.retry}>Chưa đăng được · Thử lại</button>}</span> : <><span>({photo.userId === "me" ? "Bạn" : photo.person?.name || "Thành viên"})</span><time dateTime={photo.at}>{timeAgo(photo.at)}</time></>}</div>
       <button type="button" className="group-photo-identity" onClick={() => setDetails(true)}><Avatar person={{ name: group.title, avatar: group.avatar }} size="sm" /><strong>{group.title}</strong></button>
     </div>
-    <div className="now-response-slot group-photo-count" aria-live="polite"><span>{index + 1} / {group.count}</span>{feed.isFetchingNextPage && <small>Đang tải…</small>}</div>
+    <div className="group-photo-count" aria-live="polite"><span>{index + 1} / {group.count}</span>{feed.isFetchingNextPage && <small>Đang tải…</small>}</div>
+    <div className="now-response-slot">{active && data && canMessagePerson(photo.userId, data) && <div className="now-respond-bar group-photo-reply" key={photo.id}><StoryReply groupId={group.id} story={{ ...moment.story, userId: photo.userId }} item={photo} person={photo.person} /></div>}</div>
     {feed.isError && !unavailable && <div className="group-photo-load-error" role="alert"><span>Chưa tải đủ ảnh.</span><button type="button" onClick={() => void feed.refetch()}>Thử lại</button></div>}
     {details && <PhotoGroupsDialog initialGroup={group} onClose={() => setDetails(false)} />}
   </article>;

@@ -15,6 +15,12 @@ const nextConfig: NextConfig = {
       : {}),
     proxyTimeout: 180000,
   },
+  async headers() {
+    return [
+      ...["/images/:path*", "/brand/:path*"].map((source) => ({ source, headers: [{ key: "Cache-Control", value: "public, max-age=86400" }] })),
+      { source: "/sw.js", headers: [{ key: "Cache-Control", value: "no-cache" }] },
+    ];
+  },
   async rewrites() {
     return [
       {

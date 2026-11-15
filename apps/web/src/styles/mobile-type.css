@@ -28,7 +28,7 @@
     font-size: var(--mobile-heading);
   }
   /* These values were already large enough: soften weight without enlarging them. */
-  .story-reply-input > input, .chat-input-line > input, .uiv-input .cir-search__field, .select-control, .select-options > button {
+  .chat-input-line > input, .uiv-input .cir-search__field, .select-control, .select-options > button {
     font-size: var(--mobile-body);
   }
   .tellme-reaction-main { font-size: var(--mobile-control); }

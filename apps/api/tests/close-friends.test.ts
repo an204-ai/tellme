@@ -17,9 +17,13 @@ const { registerFriendRoutes } = await import("../src/modules/user/friend.routes
 const { registerUserRoutes } = await import("../src/modules/user/user.routes.js");
 const { registerStoryRoutes } = await import("../src/modules/story/story.routes.js");
 const { registerPhotoGroupRoutes } = await import("../src/modules/story/photo-group.routes.js");
+const { registerMessageRoutes } = await import("../src/modules/message/message.routes.js");
 const { registerMediaRoutes } = await import("../src/modules/media/media.routes.js");
 const { protectedMediaUrl, MediaUnavailable, cleanMedia } = await import("@tellme/database");
-const { canViewMoment, storyDTO, personDTO } = await import("../src/backend/domain.js");
+const { listSystemNotices, deliverSystemNotification } = await import("@tellme/database");
+assert.deepEqual(await listSystemNotices("old-reminder-recipient"), []);
+for (const systemIcon of ["morning", "weather"]) await assert.doesNotReject(() => deliverSystemNotification({ recipientId: "old-reminder-recipient", deliverBy: Date.now() + 3600000, notice: { id: "queued-old-reminder", kind: "system", systemIcon } }), "Previously queued reminders drain without delivery or a Redis dependency");
+const { canViewMoment, storyDTO, personDTO, messageDTO } = await import("../src/backend/domain.js");
 const { isMomentReaction } = await import("@tellme/shared/reactions");
 const { normalizeReaction } = await import("../src/backend/social-assets.js");
 const { profileSchema, momentSchema, momentCaptionSchema, settingsSchema, reaction: reactionSchema } = await import("../src/backend/validation.js");
@@ -42,6 +46,7 @@ let pending: Doc[] = [];
 const mediaRecords: Doc[] = [];
 const moments = ["public", "connections", "private"].map((privacy, i) => ({ id: `moment-${i}`, image: `image-${i}`, caption: privacy, at: "2026-11-13T00:00:00Z", privacy, reactions: {} }));
 let albums: Doc[] = [], albumPhotos: Doc[] = [];
+const chats: Doc[] = [], chatMessages: Doc[] = [];
 let stories: Doc[] = [{ _id: "bob-day", userId: ids[1], privacy: "public", day: "2026-11-13", items: moments, updatedAt: "2026-11-13T00:00:00Z" }, { _id: "bob-private", userId: ids[1], privacy: "private", day: "2026-11-12", items: [moments[0]], updatedAt: "2026-11-12T00:00:00Z" }];
 const field = (doc: any, path: string): any => path.split(".").reduce((value, part) => Array.isArray(value) && !/^\d+$/.test(part) ? value.map((entry) => entry?.[part]) : value?.[part], doc);
 const has = (value: any, expected: any) => Array.isArray(value) ? value.includes(expected) : value === expected;
@@ -96,7 +101,7 @@ function stub(collection: any, get: () => Doc[]) {
   };
 }
 stub(db.users, () => people); stub(db.friendRequests, () => pending); stub(db.stories, () => stories);
-stub(db.media, () => mediaRecords); stub(db.conversations, () => []);
+stub(db.media, () => mediaRecords); stub(db.conversations, () => chats); stub(db.messages, () => chatMessages);
 stub(db.photoGroups, () => albums); stub(db.groupPhotos, () => albumPhotos);
 (db.photoGroups as any).insertOne = async (doc: Doc) => {
   if (albums.some((group) => group._id === doc._id || group.activeMemberIds?.some((id: string) => doc.activeMemberIds?.includes(id)))) throw Object.assign(new Error("duplicate group reservation"), { code: 11000 });
@@ -149,7 +154,7 @@ function expression(value: any, doc: Doc, vars: Doc = {}): any {
 const api = new Hono<any>();
 api.use("*", async (c, next) => { c.set("user", people.find((person) => person._id === c.req.header("x-test-user"))!); await next(); });
 api.onError((error, c) => error instanceof HTTPException ? c.json({ error: error.message }, error.status) : error instanceof ZodError || error instanceof MediaUnavailable ? c.json({ error: error.message }, 400) : c.json({ error: error.message }, 500));
-registerFriendRoutes(api); registerUserRoutes(api); registerStoryRoutes(api); registerPhotoGroupRoutes(api); registerMediaRoutes(api);
+registerFriendRoutes(api); registerUserRoutes(api); registerStoryRoutes(api); registerPhotoGroupRoutes(api); registerMediaRoutes(api); registerMessageRoutes(api);
 api.notFound((c) => c.json({ error: "not found" }, 404));
 async function call(actor: number, path: string, method = "GET", body?: unknown, expected = 200) {
   const response = await api.request(path, { method, headers: { "x-test-user": ids[actor]!, "content-type": "application/json" }, ...(body ? { body: JSON.stringify(body) } : {}) });
@@ -260,13 +265,19 @@ globalThis.fetch = async (input) => {
   return new Response(new Uint8Array([1, 2, 3]), { headers: { "content-type": "image/webp" } });
 };
 try {
-  const requestImage = (actor: number, index: number) => api.request(mediaRecords[index]!.url.replace(/^\/api/, ""), { headers: { "x-test-user": ids[actor]! } });
+  const requestImage = (actor: number, index: number, etag?: string) => api.request(mediaRecords[index]!.url.replace(/^\/api/, ""), { headers: { "x-test-user": ids[actor]!, ...(etag ? { "if-none-match": etag } : {}) } });
   const shared = await requestImage(0, 0);
-  assert.equal(shared.status, 200); assert.equal(shared.headers.get("cache-control"), "private, no-store"); assert.equal(shared.headers.get("location"), null); await shared.arrayBuffer();
+  assert.equal(shared.status, 200); assert.equal(shared.headers.get("cache-control"), "private, no-cache, must-revalidate"); assert.equal(shared.headers.get("location"), null); await shared.arrayBuffer();
+  const etag = shared.headers.get("etag")!;
+  assert.match(etag, /^W\//); assert.equal(shared.headers.get("vary"), "Cookie, Accept");
+  const cached = await requestImage(0, 0, etag);
+  assert.equal(cached.status, 304); assert.equal((await cached.arrayBuffer()).byteLength, 0);
+  assert.equal(upstreamCalls, 1, "Authorized cache revalidation does not download image bytes again");
   assert.equal((await requestImage(0, 1)).status, 404, "A private photo remains private inside an otherwise shared day");
   const own = await requestImage(1, 1); assert.equal(own.status, 200); await own.arrayBuffer();
   await call(0, `/friends/${ids[1]}`, "DELETE");
   assert.equal((await requestImage(0, 0)).status, 404, "An old image link closes after unfriending");
+  assert.equal((await requestImage(0, 0, etag)).status, 404, "A matching cached ETag cannot bypass revoked access");
   assert.equal(upstreamCalls, 2, "Denied requests never fetch image bytes");
 } finally { globalThis.fetch = originalFetch; }
 
@@ -328,11 +339,11 @@ await call(0, "/photo-groups", "POST", groupInput, 201);
 await call(0, "/photo-groups", "POST", groupInput, 201);
 assert.equal(albums.length, 1, "Retrying group creation is idempotent");
 assert.deepEqual((await call(2, "/photo-groups")).items, []);
-assert.equal((await call(1, "/photo-groups")).items.length, 0, "An invitation does not expose group membership or history");
+assert.equal((await call(1, "/photo-groups")).items.length, 1, "Mutual friends can view a group before joining; invitation does not reserve membership");
 assert.equal((await call(1, "/photo-groups")).invitations.length, 1);
 assert.deepEqual(albums[0]!.memberIds, [ids[0]]);
 assert.deepEqual(albums[0]!.activeMemberIds, [ids[0]], "Pending invitations do not reserve the invitee");
-await call(1, `/photo-groups/${groupId}/photos`, "GET", undefined, 404);
+await call(1, `/photo-groups/${groupId}/photos`);
 await call(2, `/photo-groups/${groupId}/invitations/accept`, "POST", undefined, 404);
 await call(1, `/photo-groups/${groupId}/invitations/accept`, "POST");
 await call(1, `/photo-groups/${groupId}/invitations/accept`, "POST");
@@ -366,13 +377,29 @@ assert.equal(new Set([...groupPage1.items, ...groupPage2.items].map((p: Doc) => 
 const groupSummary = (await call(0, "/photo-groups")).items[0];
 assert.equal(groupSummary.latest.id, groupPage1.items[0].id); assert.equal(groupSummary.count, 25);
 assert.equal(groupSummary.members.length, 2);
-// Membership survives unfriending, but neither friendship alone nor a copied URL grants membership.
+// Accepted membership survives unfriending; mutual friends gain read access, never posting membership.
 people[0]!.following = []; people[1]!.following = [ids[2]]; people[2]!.following = [ids[1]];
 globalThis.fetch = async () => new Response(new Uint8Array([1]), { headers: { "content-type": "image/webp" } });
 try {
   const imageAs = (actor: number) => api.request(groupImage.replace(/^\/api/, ""), { headers: { "x-test-user": ids[actor]! } });
   assert.equal((await imageAs(0)).status, 200, "Current members can read photos after unfriending");
-  assert.equal((await imageAs(2)).status, 404, "Friends outside the group cannot read group-only bytes");
+  assert.equal((await imageAs(2)).status, 200, "Friends of a member can read the whole stack, including other authors");
+  assert.equal((await call(2, `/photo-groups/${groupId}/photos`)).items.length, 20);
+  await call(2, `/photo-groups/${groupId}/photos`, "POST", { ...photoInput, id: "20000000-0000-4000-8000-000000000099" }, 409);
+  people[2]!.following = [];
+  assert.equal((await imageAs(2)).status, 404, "Unfriending revokes a copied media URL");
+  await call(2, `/photo-groups/${groupId}/photos`, "GET", undefined, 404);
+  people[2]!.following = [ids[1]];
+  const otherAuthorImage = protectedMediaUrl(`tellme/${ids[0]}/other-member-photo`);
+  mediaRecords.push({ _id: `tellme/${ids[0]}/other-member-photo`, ownerId: ids[0], url: otherAuthorImage, deliveryType: "authenticated", state: "active" });
+  albumPhotos.push({ _id: "20000000-0000-4000-8000-000000000096", groupId, userId: ids[0], image: otherAuthorImage, caption: "Alice in the shared stack", at: new Date().toISOString() });
+  const friendView = await call(2, `/photo-groups/${groupId}/photos`);
+  assert.equal(friendView.items.some((photo: Doc) => photo.userId === ids[0]), true, "A friend of Bob sees Alice's photo despite not being her friend");
+  assert.equal((await api.request(otherAuthorImage.replace(/^\/api/, ""), { headers: { "x-test-user": ids[2]! } })).status, 200, "Other authors' protected bytes share the stack audience");
+  people[0]!.blocked.push(ids[2]);
+  assert.equal((await api.request(otherAuthorImage.replace(/^\/api/, ""), { headers: { "x-test-user": ids[2]! } })).status, 404, "A reverse block with any accepted member revokes friend-viewer media");
+  people[0]!.blocked = [];
+  albumPhotos.pop();
   albums[0]!.memberIds = [ids[1]];
   assert.equal((await imageAs(0)).status, 404, "Removing membership revokes copied image links");
   albums[0]!.memberIds = [ids[0], ids[1]];
@@ -383,12 +410,37 @@ try {
   assert.equal((await imageAs(0)).status, 404, "A reverse block also revokes group media");
   people[1]!.blocked = [];
 } finally { globalThis.fetch = originalFetch; }
+// Replies follow the selected photo author, with a separate friendship boundary.
+const chatId = "60000000-0000-4000-8000-000000000001";
+chats.push({ _id: chatId, kind: "direct", participants: [ids[2], ids[1]], readAt: {}, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+const groupReply = { id: "70000000-0000-4000-8000-000000000001", text: "Ảnh đẹp quá", storyReply: { storyId: groupId, groupId, momentId: photoId } };
+const sentReply = await call(2, `/conversations/${chatId}/messages`, "POST", groupReply, 201);
+assert.equal(sentReply.message.storyReply.image, groupImage);
+assert.equal(sentReply.message.storyReply.groupId, groupId);
+assert.equal((await messageDTO(chatMessages[0] as any, people[1] as any)).storyReply?.image, groupImage);
+await call(1, `/conversations/${chatId}/messages`, "POST", { ...groupReply, id: "70000000-0000-4000-8000-000000000002" }, 400); // Own photo.
+await call(2, `/conversations/${chatId}/messages`, "POST", { ...groupReply, storyReply: { ...groupReply.storyReply, momentId: "20000000-0000-4000-8000-000000000097" } }, 404);
+await call(2, `/conversations/${chatId}/messages`, "POST", { ...groupReply, storyReply: { ...groupReply.storyReply, storyId: "10000000-0000-4000-8000-000000000099" } }, 400);
+// Charlie still sees Bob's stack through another member after unfriending the author.
+people[2]!.following = [ids[0]]; people[0]!.following = [ids[2]];
+assert.equal((await call(2, `/photo-groups/${groupId}/photos`)).items.length, 20);
+await call(2, `/conversations/${chatId}/messages`, "POST", groupReply, 403);
+people[2]!.following = []; people[0]!.following = [];
+assert.equal((await messageDTO(chatMessages[0] as any, people[2] as any)).storyReply?.image, undefined, "Lost group access also removes the embedded reply image");
+people[2]!.following = [ids[1]];
+// A valid direct chat cannot be used to send another member's photo to the wrong recipient.
+albumPhotos.push({ _id: "20000000-0000-4000-8000-000000000098", groupId, userId: ids[0], image: groupImage, caption: "Ảnh Alice", at: new Date().toISOString() });
+await call(2, `/conversations/${chatId}/messages`, "POST", { ...groupReply, storyReply: { ...groupReply.storyReply, momentId: "20000000-0000-4000-8000-000000000098" } }, 400);
+albumPhotos.pop();
+assert.equal(chatMessages.length, 1, "Rejected replies never persist");
+console.log("PASS: group replies target selected authors, reject own/nonfriend/wrong-recipient/forged photos, and recheck preview access.");
 const originalDestroy = cloudinary.uploader.destroy;
 let destroyed = false;
 (cloudinary.uploader as any).destroy = async () => { destroyed = true; return { result: "ok" }; };
 try { await cleanMedia(ids[1]!, groupImage); assert.equal(destroyed, false, "Cleanup preserves media referenced only by a group photo"); }
 finally { cloudinary.uploader.destroy = originalDestroy; }
 await call(1, `/photo-groups/${groupId}/photos/${photoId}`, "DELETE");
+assert.equal((await messageDTO(chatMessages[0] as any, people[1] as any)).storyReply?.image, undefined, "A deleted group photo disappears from reply previews too");
 assert.equal(albumPhotos.length, 24); assert.equal(jobs.some((job) => job.kind === "media.cleanup" && job.data?.url === groupImage), true);
 // Timed membership is exclusive, while expired/cancelled/left group history remains private and readable.
 people = people.map((person) => ({ ...person, following: ids.filter((id) => id !== person._id), blocked: [] }));
@@ -435,10 +487,10 @@ assert.equal((await call(1, "/photo-groups")).invitations.length, 1);
 globalThis.fetch = async () => new Response(new Uint8Array([1]), { headers: { "content-type": "image/webp" } });
 try {
   assert.equal((await api.request(uploadedAvatar.replace(/^\/api/, ""), { headers: { "x-test-user": ids[1]! } })).status, 200, "Pending invite grants avatar identity only");
-  assert.equal((await api.request(uploadedAvatar.replace(/^\/api/, ""), { headers: { "x-test-user": ids[2]! } })).status, 404);
+  assert.equal((await api.request(uploadedAvatar.replace(/^\/api/, ""), { headers: { "x-test-user": ids[2]! } })).status, 200, "A member’s mutual friend can view the group identity");
 } finally { globalThis.fetch = originalFetch; }
-await call(1, `/photo-groups/${avatarGroup}/photos`, "GET", undefined, 404);
-await call(1, `/photo-groups/${avatarGroup}/avatar`, "PATCH", { avatar: uploadedAvatar }, 404);
+await call(1, `/photo-groups/${avatarGroup}/photos`);
+await call(1, `/photo-groups/${avatarGroup}/avatar`, "PATCH", { avatar: uploadedAvatar }, 403);
 await call(0, `/photo-groups/${avatarGroup}/avatar`, "PATCH", { avatar: groupImage }, 400);
 await call(0, `/photo-groups/${avatarGroup}/avatar`, "PATCH", { avatar: "/images/group-avatars/group-reading.png" });
 assert.equal(albums.find((g) => g._id === avatarGroup)!.avatar, "/images/group-avatars/group-reading.png");
@@ -479,15 +531,3 @@ assert.deepEqual(races.map((response) => response.status).sort(), [201, 409], "T
 assert.equal(albums.filter((group) => group.activeMemberIds?.includes(ids[0])).length, 1);
 console.log("PASS: timed exclusive membership (1/3/7 days), expiry, owner cancellation, member leave, archived photos/media, completed retries and overlapping creation races.");
 console.log("PASS: friendship/privacy/media/auth regressions plus private photo-group creation, membership, immutable author uploads, idempotent retry, isolated normal feed, newest-first pagination, ownership deletion and copied-media revocation. All storage is in memory.");
-
-/** Explicit local visual-QA entry point; never imported by the application. */
-export function seedPhotoGroupReview() {
-  const at = (hours: number) => new Date(Date.now() - hours * 3600000).toISOString();
-  people = people.map((p, i) => ({ ...p, name: ["Bạn thử nghiệm", "An", "Vy", "Linh"][i], avatar: `/images/group-avatars/group-${["friends", "reading", "family", "gamers"][i]}.png`, cover: "", bio: "", memberNumber: undefined, following: ids.filter((id) => id !== p._id), blocked: [] }));
-  albums = [{ _id: groupId, title: "Hội cà phê · Nhóm thử", avatar: "/images/group-avatars/group-noodles.png", ownerId: ids[0], memberIds: ids.slice(0, 3), activeMemberIds: ids.slice(0, 3), durationDays: 3, expiresAt: at(-48), createdAt: at(24), updatedAt: at(1) }];
-  albums.push({ _id: "10000000-0000-4000-8000-000000000008", title: "Cuối tuần cùng nhau", avatar: "/images/group-avatars/group-seaside.png", ownerId: ids[3], memberIds: [ids[3]], activeMemberIds: [ids[3]], pendingMemberIds: [ids[0]], durationDays: 7, expiresAt: at(-144), createdAt: at(1), updatedAt: at(1) });
-  albumPhotos = [0, 1, 2].map((n) => ({ _id: `30000000-0000-4000-8000-${String(n + 1).padStart(12, "0")}`, groupId, userId: ids[n], image: `/images/group-avatars/group-${["noodles", "seaside", "reading"][n]}.png`, caption: ["Một chút hôm nay", "Chuyến đi cùng nhau", "Góc nhỏ của nhóm"][n], at: at(n + 1) }));
-  stories = [{ _id: "40000000-0000-4000-8000-000000000001", userId: ids[1], privacy: "connections", day: at(4).slice(0, 10), updatedAt: at(4), items: [{ id: "50000000-0000-4000-8000-000000000001", image: "/images/group-avatars/group-family.png", caption: "Ảnh thường · thử", at: at(4), reactions: {} }] }];
-  pending = []; mediaRecords.length = 0; jobs.length = 0;
-  return { api, db, me: ids[0]!, mediaRecords, bootstrap: () => ({ version: 1, authenticated: true, features: { pushPublicKey: null, emailEnabled: false }, people: people.map((p) => personDTO(p as any, people[0] as any)), stories: stories.map((s) => storyDTO(s as any, people[0] as any, ids.slice(1))), conversations: [], notifications: [], connections: ids.slice(1), blocked: [], settings: { ...defaults, notifySystem: false }, friendRequests: { incoming: [], outgoing: [] } }) };
-}

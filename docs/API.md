@@ -25,10 +25,9 @@ Collection `friend_requests` giữ một lời mời cho mỗi cặp. Field `use
 
 | Endpoint | Hành vi |
 | --- | --- |
-| `GET /stories?cursor=0&limit=6` | Chuỗi ảnh của chính chủ/bạn bè, lọc ảnh riêng tư cũ trước phân trang. |
+| `GET /stories?cursor=0&limit=6&author=me` | Chuỗi ảnh của chính chủ/bạn bè; author tùy chọn là me hoặc ID bạn bè, lọc quyền trước phân trang. |
 | `GET /stories/:id` | Một ngày được phép xem; chính chủ nhận cảm xúc đến. |
 | `POST /stories/moments` | Ảnh vừa chụp thuộc media của người gửi; `storyPrivacy` chỉ nhận `connections` và có mặc định này. |
-| `PATCH /stories/:id/moments/:momentId` | Chỉ sửa `{ caption }`, chính chủ. |
 | `PUT /stories/:id/moments/:momentId/reaction` | `{ reaction }`: `like`, `love`, `haha`, `wow`, `sad`, một emoji Unicode dạng `emoji:🥹`, hoặc `null` để gỡ. API kiểm tra đúng một chuỗi emoji, bao gồm sắc độ da, cờ và ZWJ; không nhận văn bản tùy ý. Không được thả cảm xúc vào ảnh của mình. |
 | `GET /stories/:id/moments/:momentId/reactions` | Chính chủ xem danh sách người thả cảm xúc. |
 | `DELETE /stories/:id/moments/:momentId` | Chính chủ xóa một ảnh. |
@@ -41,7 +40,7 @@ Bộ emoji bàn phím dùng chung với chat. Tương tác cũ vẫn đọc đư
 ## Ảnh và tin nhắn
 
 - `POST /media/upload`: multipart `file`, xác thực loại file và chủ sở hữu; ảnh mới được lưu Cloudinary với delivery type `authenticated`.
-- `GET /media/images/:key?size=thumbnail|feed`: kiểm tra phiên, chặn và tham chiếu ảnh được xem; proxy bytes ảnh với `Cache-Control: private, no-store`. Không redirect hay trả URL có chữ ký Cloudinary ra trình duyệt. Avatar là danh tính tối thiểu của kết quả tìm đúng ID/lời mời; ảnh bìa và khoảnh khắc cần quyền xem tương ứng.
+- `GET /media/images/:key?size=thumbnail|feed`: kiểm tra phiên, chặn và tham chiếu ảnh được xem; proxy bytes ảnh với `Cache-Control: private, no-cache, must-revalidate`, ETag theo ảnh/kích thước/Accept/người xem và `Vary: Cookie, Accept`. Request có ETag khớp chỉ nhận304 sau khi đã kiểm tra lại phiên/quyền; không tải lại bytes Cloudinary. Không redirect hay trả URL có chữ ký Cloudinary ra trình duyệt. Avatar là danh tính tối thiểu của kết quả tìm đúng ID/lời mời; ảnh bìa và khoảnh khắc cần quyền xem tương ứng.
 - Hội thoại/tin nhắn giữ các endpoint hiện tại. Trả lời trực tiếp dưới ảnh gửi `storyReply: { storyId, momentId }` vào hội thoại riêng và giữ nguyên màn ảnh; không điều hướng sau gửi.
 - Báo cáo, chặn, nhạc, thời tiết, tài khoản, email bảo mật, push và quản trị vẫn được giữ.
 
@@ -52,3 +51,5 @@ Không còn API bài viết/Khám phá, tìm kiếm nội dung, follow một chi
 Ảnh Cloudinary cũ cần bước chuyển delivery type khi triển khai; xem [hướng dẫn chuyển ảnh cũ](PRIVATE-MEDIA-ROLLOUT.md). Chỉ sửa code không thu hồi được bản CDN công khai đã tồn tại.
 
 Kiểm tra hồi quy không kết nối dịch vụ thật: build `@tellme/database`, rồi chạy `pnpm --filter @tellme/api test:close-friends`.
+
+Thông báo theo giờ/thời tiết đã tắt hoàn toàn. `/notifications/system` trả mảng rỗng để tương thích; inbox/unread chỉ tổng hợp tương tác người dùng, job `notification.system` cũ được drain mà không gửi.

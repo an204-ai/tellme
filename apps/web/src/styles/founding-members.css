@@ -20,7 +20,7 @@
 .avatar-founding-star > img { display: block; width: 100%; height: 100%; object-fit: contain; }
 [data-theme="dark"] .avatar-founding::before { border-color: #edca70; }
 .app-dialog.founding-welcome { width: 100vw; max-width: none; height: 100dvh; max-height: none; margin: 0; padding: max(16px, env(safe-area-inset-top)) 20px max(16px, env(safe-area-inset-bottom)); border: 0; border-radius: 0; background: transparent; color: #fff; overflow: hidden; }
-.app-dialog.founding-welcome::backdrop { background: #081729e8; backdrop-filter: blur(9px); }
+.app-dialog.founding-welcome::backdrop { background: #101014b8; -webkit-backdrop-filter: blur(9px); backdrop-filter: blur(9px); }
 .app-dialog.founding-welcome > .dialog-content { width: min(100%, 440px); height: 100%; max-height: none; margin: auto; padding: 0; border: 0; border-radius: 0; background: transparent; color: #fff; box-shadow: none; display: flex; flex-direction: column; overflow: visible; }
 .app-dialog.founding-welcome .dialog-header { padding: 0; border: 0; background: transparent; justify-content: flex-end; }
 .founding-welcome .dialog-header h2 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }

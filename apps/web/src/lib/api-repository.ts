@@ -226,7 +226,7 @@ export const apiRepository = {
                 id: message.id,
                 text: message.text,
                 ...(message.stickerId ? { stickerId: message.stickerId } : {}),
-                ...(message.storyReply ? { storyReply: { storyId: message.storyReply.storyId, momentId: message.storyReply.momentId } } : {}),
+                ...(message.storyReply ? { storyReply: { storyId: message.storyReply.storyId, momentId: message.storyReply.momentId, ...(message.storyReply.groupId ? { groupId: message.storyReply.groupId } : {}) } } : {}),
               },
             ),
           );

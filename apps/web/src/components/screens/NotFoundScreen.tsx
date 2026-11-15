@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { ArrowLeft, Home } from "lucide-react";
 import { NotFoundArt } from "@/components/ui/SourceArt";
-import { Brand, Button } from "@/components/ui/Primitives";
+import { Brand } from "@/components/ui/Primitives";
 
 export function NotFoundScreen() {
   return (

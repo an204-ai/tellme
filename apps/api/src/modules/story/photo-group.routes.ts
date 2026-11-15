@@ -8,13 +8,21 @@ import { externalId, internalId, now, personDTO, relations } from "../../backend
 import { idSchema, momentCaptionSchema } from "../../backend/validation.js";
 import { DEFAULT_GROUP_AVATAR, isGroupAvatarPreset } from "../../backend/social-assets.js";
 import { publishUpdate, scheduleCleanup, withMediaChange } from "@tellme/database";
+import { photoGroupVisibility } from "../../backend/photo-group-access.js";
 
 export async function requirePhotoGroup(id: string, me: User) {
-  const group = await photoGroups.findOne({ _id: id, memberIds: me._id });
-  if (!group || group.memberIds.some((id) => me.blocked.includes(id))) fail(404, "Nhóm ảnh không khả dụng.");
   const r = await relations(me);
-  if (group.memberIds.some((id) => r.blocked.includes(id))) fail(404, "Nhóm ảnh không khả dụng.");
+  const group = await photoGroups.findOne({ _id: id, ...photoGroupVisibility(me._id, r) });
+  if (!group) fail(404, "Nhóm ảnh không khả dụng.");
   return group;
+}
+
+async function publishGroupUpdate(memberIds: string[]) {
+  const members = await users.find({ _id: { $in: memberIds } }, { projection: { _id: 1, following: 1 } }).toArray();
+  const candidates = [...new Set(members.flatMap((member) => member.following))];
+  const friends = candidates.length ? await users.find({ _id: { $in: candidates }, following: { $in: memberIds } }, { projection: { _id: 1 } }).toArray() : [];
+  // Invalidation contains no group/photo data. Every subsequent read rechecks its audience.
+  await publishUpdate([...new Set([...memberIds, ...friends.map((friend) => friend._id)])], "photo-groups");
 }
 
 async function photoDTOs(items: GroupPhoto[], me: User) {
@@ -26,7 +34,7 @@ async function photoDTOs(items: GroupPhoto[], me: User) {
 export function registerPhotoGroupRoutes(api: Hono<Env>) {
   api.get("/photo-groups", async (c) => {
     const me = c.get("user"), r = await relations(me);
-    const groups = await photoGroups.find({ memberIds: me._id }).sort({ updatedAt: -1, _id: -1 }).toArray();
+    const groups = await photoGroups.find({ memberIds: { $in: [me._id, ...r.mutual] } }).sort({ updatedAt: -1, _id: -1 }).toArray();
     const visible = groups.filter((group) => !group.memberIds.some((id) => r.blocked.includes(id)));
     const summaries = visible.length ? await groupPhotos.aggregate<{ _id: string; latest: GroupPhoto; count: number }>([
       { $match: { groupId: { $in: visible.map((g) => g._id) } } },
@@ -97,7 +105,7 @@ export function registerPhotoGroupRoutes(api: Hono<Env>) {
       if ((error as { code?: number }).code === 11000) fail(409, "Bạn vừa tham gia nhóm khác. Mỗi lúc chỉ tham gia một nhóm.");
       throw error;
     }
-    await publishUpdate([...group.memberIds, me._id], "photo-groups");
+    await publishGroupUpdate([...group.memberIds, me._id]);
     return c.json({ ok: true });
   });
   api.post("/photo-groups/:id/invitations/decline", async (c) => {
@@ -135,7 +143,7 @@ export function registerPhotoGroupRoutes(api: Hono<Env>) {
       if (!result.matchedCount) fail(409, "Nhóm đã kết thúc.");
       if (group.avatar !== avatar) await scheduleCleanup(me._id, [group.avatar], session);
     });
-    await publishUpdate([...group.memberIds, ...(group.pendingMemberIds || [])], "photo-groups");
+    await publishGroupUpdate([...group.memberIds, ...(group.pendingMemberIds || [])]);
     return c.json({ ok: true });
   });
 
@@ -144,7 +152,8 @@ export function registerPhotoGroupRoutes(api: Hono<Env>) {
     const me = c.get("user"), group = await photoGroups.findOne({ _id: c.req.param("id"), ownerId: me._id });
     if (!group) fail(404, "Chỉ người tạo mới được hủy nhóm.");
     await photoGroups.updateOne({ _id: group._id, ownerId: me._id, endedAt: { $exists: false } }, { $set: { endedAt: now(), endReason: "cancelled" }, $unset: { activeMemberIds: "", pendingMemberIds: "" } });
-    await publishUpdate([...group.memberIds, ...(group.pendingMemberIds || [])], "photo-groups");
+    await publishGroupUpdate(group.memberIds);
+    if (group.pendingMemberIds?.length) await publishUpdate(group.pendingMemberIds, "photo-groups");
     return c.json({ ok: true });
   });
   api.post("/photo-groups/:id/leave", async (c) => {
@@ -153,7 +162,7 @@ export function registerPhotoGroupRoutes(api: Hono<Env>) {
     if (group.ownerId === me._id && photoGroupIsActive(group)) fail(400, "Người tạo dùng Hủy nhóm để kết thúc cho cả nhóm.");
     if (photoGroupIsActive(group)) await photoGroups.updateOne({ _id: group._id }, { $pull: { activeMemberIds: me._id } });
     else await photoGroups.updateOne({ _id: group._id }, { $unset: { activeMemberIds: "" } });
-    await publishUpdate(group.memberIds, "photo-groups");
+    await publishGroupUpdate(group.memberIds);
     return c.json({ ok: true });
   });
 
@@ -186,7 +195,7 @@ export function registerPhotoGroupRoutes(api: Hono<Env>) {
       const result = await groupPhotos.updateOne({ _id: input.id, groupId: group._id, userId: me._id }, { $setOnInsert: { _id: input.id, groupId: group._id, userId: me._id, image: input.image, caption: input.caption, at } }, { upsert: true, session });
       if (result.upsertedCount) await photoGroups.updateOne({ _id: group._id }, { $set: { updatedAt: at } }, { session });
     });
-    await publishUpdate(group.memberIds, "photo-groups");
+    await publishGroupUpdate(group.memberIds);
     return c.json({ ok: true }, 201);
   });
 
@@ -200,7 +209,7 @@ export function registerPhotoGroupRoutes(api: Hono<Env>) {
       await scheduleCleanup(me._id, [photo.image], session);
       await photoGroups.updateOne({ _id: group._id }, { $set: { updatedAt: now() } }, { session });
     }); } finally { await session.endSession(); }
-    await publishUpdate(group.memberIds, "photo-groups");
+    await publishGroupUpdate(group.memberIds);
     return c.json({ ok: true });
   });
 }

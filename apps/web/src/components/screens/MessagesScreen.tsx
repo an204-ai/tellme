@@ -31,7 +31,7 @@ import {
 import { useCommunity } from "@/hooks/use-community";
 import { MessageHistory } from "@/components/chat/MessageHistory";
 import type { Conversation, AppData, Message } from "@/lib/types";
-import { apiRepository, newId, timeOf, timeAgo } from "@/lib/api-repository";
+import { apiRepository, newId, timeAgo } from "@/lib/api-repository";
 import { messageDraftSchema } from "@/lib/validation";
 import { getTellmeSticker } from "@tellme/shared/stickers";
 import { TellmeStickerButton, TellmeStickerDraft, TellmeStickerSuggestions, type TellmeSticker } from "@/components/ui/TellmeStickers";

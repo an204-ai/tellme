@@ -65,7 +65,7 @@ export const messageSchema = z
     replyToId: idSchema.optional(),
     text: z.string().trim().max(1000),
     stickerId: z.string().max(100).refine((id) => !!getTellmeSticker(id), "Sticker không khả dụng.").optional(),
-    storyReply: z.object({ storyId: idSchema, momentId: idSchema }).optional(),
+    storyReply: z.object({ storyId: idSchema, momentId: idSchema, groupId: idSchema.optional() }).strict().refine((value) => !value.groupId || value.storyId === value.groupId, "Nhóm ảnh không khớp.").optional(),
   })
   .strict()
   .refine((v) => !!v.text || !!v.stickerId, "Nhập tin nhắn hoặc chọn sticker.")

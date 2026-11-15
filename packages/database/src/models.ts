@@ -143,7 +143,7 @@ export interface Message {
   conversationId: string;
   senderId: string;
   text: string;
-  storyReply?: { storyId: string; momentId: string };
+  storyReply?: { storyId: string; momentId: string; groupId?: string };
   at: string;
 }
 export interface Notice {

@@ -89,6 +89,14 @@ export function animateSurface(node: HTMLElement, phase: "arrive" | "leave", kin
 
 /** Captures intent once. No MutationObserver over arbitrary React rerenders/typing. */
 export function installMotionSystem() {
+  // Programmatic focus after a tap must not inherit the browser's keyboard heuristic.
+  const pointerInput = () => { document.documentElement.dataset.inputMethod = "pointer"; };
+  const keyboardInput = (event: KeyboardEvent) => {
+    if (event.key === "Tab" || event.key.startsWith("Arrow")) document.documentElement.dataset.inputMethod = "keyboard";
+  };
+  document.documentElement.dataset.inputMethod = "pointer";
+  document.addEventListener("pointerdown", pointerInput, true);
+  document.addEventListener("keydown", keyboardInput, true);
   const remember = (event: MouseEvent) => {
     const trigger = event.target instanceof Element ? event.target.closest<HTMLElement>("button,a,summary,[role=tab]") : null;
     if (!trigger || trigger.closest('[data-motion-ghost]')) return;
@@ -121,5 +129,5 @@ export function installMotionSystem() {
   document.addEventListener("click", remember, true);
   document.addEventListener("toggle", toggle, true);
   document.addEventListener("beforetoggle", toggle, true);
-  return () => { document.removeEventListener("pointerdown", remember, true); document.removeEventListener("click", remember, true); document.removeEventListener("toggle", toggle, true); document.removeEventListener("beforetoggle", toggle, true); document.querySelectorAll('[data-motion-ghost]').forEach((e) => e.remove()); origin = undefined; };
+  return () => { document.removeEventListener("pointerdown", pointerInput, true); document.removeEventListener("keydown", keyboardInput, true); delete document.documentElement.dataset.inputMethod; document.removeEventListener("pointerdown", remember, true); document.removeEventListener("click", remember, true); document.removeEventListener("toggle", toggle, true); document.removeEventListener("beforetoggle", toggle, true); document.querySelectorAll('[data-motion-ghost]').forEach((e) => e.remove()); origin = undefined; };
 }

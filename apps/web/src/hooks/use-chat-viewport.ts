@@ -27,6 +27,14 @@ export function useChatViewport(frame: RefObject<HTMLDivElement | null>, enabled
             ? !focused.readOnly && !focused.disabled
             : focused instanceof HTMLElement && focused.isContentEditable;
         const height = viewport?.height ?? window.innerHeight;
+        // The reply editor follows its own visual viewport. Keep the photo
+        // behind its transparent dialog at the original size and scroll offset.
+        if (document.querySelector("dialog.moment-reply-dialog[open]")) {
+          element.dataset.keyboardOpen = "false";
+          element.style.setProperty("--messages-height", `${fullHeight}px`);
+          element.style.setProperty("--messages-offset", "0px");
+          return;
+        }
         // Browser chrome and pinch zoom are not a keyboard. Keep native zoom available.
         const unzoomed = !viewport || Math.abs(viewport.scale - 1) < .05;
         if (!editable) fullHeight = Math.max(window.innerHeight, height);

@@ -123,28 +123,6 @@
   width: 100%;
   margin-top: 4px;
 }
-.story-reply-input {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 6px 5px 15px;
-  border: 1px solid var(--line);
-  border-radius: 24px;
-  background: #fff;
-}
-.story-reply-input:focus-within {
-  border-color: var(--primary);
-}
-.story-reply-input > input {
-  flex: 1;
-  width: 0;
-  min-width: 0;
-  border: 0;
-  outline: none;
-  padding: 8px 0;
-  background: none;
-  font-size: 14px;
-}
 .story-reply-send {
   flex: 0 0 36px;
   width: 36px;
@@ -158,22 +136,6 @@
 }
 .story-reply-send svg {
   stroke: #fff;
-}
-.story-reply > p {
-  margin-top: 10px;
-  font-size: 12px;
-  line-height: 1.6;
-}
-.story-reply-sent {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-.story-reply-sent > a {
-  color: var(--primary);
-  text-decoration: underline;
-  text-underline-offset: 3px;
 }
 .story-reply-preview {
   display: flex;
@@ -238,9 +200,6 @@
   .image-crop-actions .button {
     padding: 9px 12px;
     font-size: 13px;
-  }
-  .story-reply-input > input {
-    font-size: 16px;
   }
 }
 

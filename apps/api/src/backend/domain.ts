@@ -5,7 +5,10 @@ import {
   conversations,
   messages,
   media,
+  photoGroups,
+  groupPhotos,
 } from "./database.js";
+import { photoGroupVisibility } from "./photo-group-access.js";
 import { fail } from "./security.js";
 import type { User, Story, Conversation, Privacy, Message } from "./models.js";
 import { enqueue } from "@tellme/database";
@@ -202,14 +205,20 @@ export async function conversationDTO(chat: Conversation, me: User, allowed?: bo
 export async function messageDTO(message: Message, me: User) {
   let reply;
   if (message.storyReply) {
-    const story = await stories.findOne({
-      $and: [{ _id: message.storyReply.storyId }, await visibility(me, "userId")],
-    } as Filter<Story>);
-    const moment = story?.items.find((item) => item.id === message.storyReply?.momentId);
-    reply = {
-      ...message.storyReply,
-      ...(moment && story && await canViewMoment(story, moment.id, me) ? { image: moment.image, caption: moment.caption, at: moment.at } : {}),
-    };
+    if (message.storyReply.groupId) {
+      const group = await photoGroups.findOne({ _id: message.storyReply.groupId, ...photoGroupVisibility(me._id, await relations(me)) });
+      const photo = group && await groupPhotos.findOne({ _id: message.storyReply.momentId, groupId: group._id });
+      reply = { ...message.storyReply, ...(photo ? { image: photo.image, caption: photo.caption, at: photo.at } : {}) };
+    } else {
+      const story = await stories.findOne({
+        $and: [{ _id: message.storyReply.storyId }, await visibility(me, "userId")],
+      } as Filter<Story>);
+      const moment = story?.items.find((item) => item.id === message.storyReply?.momentId);
+      reply = {
+        ...message.storyReply,
+        ...(moment && story && await canViewMoment(story, moment.id, me) ? { image: moment.image, caption: moment.caption, at: moment.at } : {}),
+      };
+    }
   }
   return {
     id: message._id,

@@ -7,7 +7,7 @@ import {
 } from "../../backend/database.js";
 import { type Env } from "../../backend/security.js";
 import { defaults } from "../../backend/models.js";
-import { config, listSystemNotices, registerSystemRecipient } from "@tellme/database";
+import { config, listSystemNotices } from "@tellme/database";
 import { canSendInConversation } from "../../backend/chat-policy.js";
 import {
   externalId,
@@ -22,7 +22,6 @@ export function registerBootstrapRoutes(api: Hono<Env>) {
   api.get("/bootstrap", async (c) => {
     const me = c.get("user"),
       r = await relations(me);
-    await registerSystemRecipient(me._id, me.settings.notifySystem !== false).catch(() => undefined);
     const systemNotices = await listSystemNotices(me._id).catch(() => []);
     const recentCutoff = new Date(Date.now() - 7 * 86400000).toISOString();
     const [days, chats, notifications, unreadNotificationCount, pending] =

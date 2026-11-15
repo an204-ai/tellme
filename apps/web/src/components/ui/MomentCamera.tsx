@@ -2,11 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { Camera, CameraOff, Images, LoaderCircle, RefreshCw, SwitchCamera } from "lucide-react";
-import { cameraError, capturePhoto, clampCameraZoom } from "@/lib/camera";
+import { cameraError, capturePhoto, clampCameraZoom, cameraWasEnabled, rememberCameraEnabled, resolveCameraFacing, type CameraFacing } from "@/lib/camera";
 import { Button } from "./Primitives";
 import { SurfacePresence } from "./SurfaceTransition";
 
-type CameraFacing = "user" | "environment";
 type ZoomTrack = Omit<MediaStreamTrack, "getCapabilities"> & {
   getCapabilities: () => MediaTrackCapabilities & { zoom?: { min: number; max: number; step?: number } };
 };
@@ -49,6 +48,7 @@ export function MomentCamera({ onCapture, onBrowse, active = true, autoStart = t
   }, []);
 
   const start = useCallback(async (direction: CameraFacing = facing.current, strict = false) => {
+    if (stream.current?.getVideoTracks().some((track) => track.readyState === "live") && direction === facing.current) return;
     stop();
     opened.current = true;
     const request = generation.current;
@@ -76,9 +76,10 @@ export function MomentCamera({ onCapture, onBrowse, active = true, autoStart = t
       const track = next.getVideoTracks()[0];
       if (!track) throw new Error("Camera chưa gửi được hình ảnh. Bạn mở lại camera nhé.");
       const settings = track.getSettings();
-      facing.current = settings.facingMode === "user" ? "user" : settings.facingMode === "environment" ? "environment" : direction;
+      const capabilities = (track as ZoomTrack).getCapabilities?.();
+      facing.current = resolveCameraFacing(direction, settings, capabilities, track.label);
       setFrontFacing(facing.current === "user");
-      const caps = (track as ZoomTrack).getCapabilities?.().zoom;
+      const caps = capabilities?.zoom;
       const base = (settings as MediaTrackSettings & { zoom?: number }).zoom || 1;
       nativeZoom.current = caps && caps.max > caps.min ? { min: caps.min, max: caps.max, base } : null;
       setZoom(1); setCropZoom(1);
@@ -96,10 +97,12 @@ export function MomentCamera({ onCapture, onBrowse, active = true, autoStart = t
       if (request !== generation.current) return;
       // Readiness comes from loaded video frames, not a delay.
       if (video.current.readyState >= 2) setState("ready");
+      rememberCameraEnabled(true);
 
     } catch (failure) {
       if (request !== generation.current) return;
       stop();
+      if (failure instanceof DOMException && failure.name === "NotAllowedError") rememberCameraEnabled(false);
       setError(cameraError(failure));
       setState("error");
     }
@@ -108,7 +111,7 @@ export function MomentCamera({ onCapture, onBrowse, active = true, autoStart = t
   useEffect(() => {
     if (!active) { stop(); setState("paused"); return; }
     let cancelled = false;
-    if (autoStart || opened.current) void start();
+    if (autoStart || opened.current || cameraWasEnabled()) void start();
     else {
       // A first visit explains camera access; returning users with permission go straight to preview.
       void navigator.permissions?.query({ name: "camera" as PermissionName }).then((permission) => {
@@ -149,7 +152,7 @@ export function MomentCamera({ onCapture, onBrowse, active = true, autoStart = t
     try {
       await zoomQueue.current;
       if (request !== generation.current || !video.current) return;
-      const file = await capturePhoto(video.current, captureZoom.current);
+      const file = await capturePhoto(video.current, captureZoom.current, facing.current === "user");
       if (request !== generation.current) return;
       stop();
       onCaptureRef.current(file);
@@ -204,7 +207,9 @@ export function MomentCamera({ onCapture, onBrowse, active = true, autoStart = t
       const distance = Math.hypot(a!.clientX - b!.clientX, a!.clientY - b!.clientY);
       if (pinch.current.distance > 0) changeZoom(pinch.current.zoom * distance / pinch.current.distance);
     }} onTouchEnd={() => { pinch.current = null; }} onTouchCancel={() => { pinch.current = null; }}>
-      <video ref={video} autoPlay muted playsInline aria-label="Xem trước camera" style={{ transform: `scale(${digitalZoom})` }} onLoadedData={() => { if (stream.current && !document.hidden) setState("ready"); }} />
+      <div className="moment-camera-picture" data-mirrored={frontFacing}>
+        <video ref={video} autoPlay muted playsInline aria-label="Xem trước camera" style={{ transform: `scale(${digitalZoom})` }} onLoadedData={() => { if (stream.current && !document.hidden) setState("ready"); }} />
+      </div>
       {destination}
       {state !== "ready" && <div className="moment-camera-message" role="status">
         {state === "opening" ? <><LoaderCircle size={28} className="camera-spinner" /><strong>Đang mở camera…</strong><p>Cho phép Tellme dùng camera để ghi lại khoảnh khắc.</p></> : <>

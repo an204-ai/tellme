@@ -48,6 +48,7 @@ export interface Message {
   storyReply?: {
     storyId: string;
     momentId: string;
+    groupId?: string;
     image?: string;
     caption?: string;
     at?: string;

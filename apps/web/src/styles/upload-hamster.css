@@ -1,12 +1,12 @@
 /* User-supplied wheel/hamster loader, adapted to the upload byline. */
-.upload-hamster { display: inline-flex; vertical-align: middle; }
+.upload-hamster { display: inline-flex; flex: 0 0 30px; vertical-align: middle; line-height: 0; }
 
   .wheel-and-hamster {
     --dur: 1s;
     position: relative;
     width: 12em;
     height: 12em;
-    font-size: 4px;
+    font-size: 2.5px;
   }
 
   .wheel,

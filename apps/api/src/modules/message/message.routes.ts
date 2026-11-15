@@ -2,7 +2,8 @@ import { advanceReadReceipt } from "../../backend/read-receipt.js";
 import { registerConversationRoutes } from "./conversation.routes.js";
 import { Hono } from "hono";
 import { z } from "zod";
-import { users, conversations, messages } from "../../backend/database.js";
+import { users, conversations, messages, groupPhotos } from "../../backend/database.js";
+import { requirePhotoGroup } from "../story/photo-group.routes.js";
 import { fail, type Env } from "../../backend/security.js";
 import {
   now,
@@ -72,10 +73,18 @@ export function registerMessageRoutes(api: Hono<Env>) {
       chat = await requireConversation(c.req.param("id"), me, true),
       input = v.messageSchema.parse(await c.req.json());
     if (input.storyReply) {
-      const story = await requireStory(input.storyReply.storyId, me);
-      if (!(await canViewMoment(story, input.storyReply.momentId, me)))
-        fail(404, "Khoảnh khắc không còn khả dụng.");
-      if (chat.kind !== "direct" || story.userId === me._id || !chat.participants.includes(story.userId))
+      let authorId: string;
+      if (input.storyReply.groupId) {
+        const group = await requirePhotoGroup(input.storyReply.groupId, me);
+        const photo = await groupPhotos.findOne({ _id: input.storyReply.momentId, groupId: group._id });
+        if (!photo) fail(404, "Khoảnh khắc không còn khả dụng.");
+        authorId = photo.userId;
+      } else {
+        const story = await requireStory(input.storyReply.storyId, me);
+        if (!(await canViewMoment(story, input.storyReply.momentId, me))) fail(404, "Khoảnh khắc không còn khả dụng.");
+        authorId = story.userId;
+      }
+      if (chat.kind !== "direct" || authorId === me._id || !chat.participants.includes(authorId))
         fail(400, "Lời trả lời cần được gửi riêng cho người đăng ảnh.");
     }
     const original = input.replyToId ? await messages.findOne({ _id: input.replyToId, conversationId: chat._id }) : null;

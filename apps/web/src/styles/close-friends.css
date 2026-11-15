@@ -224,10 +224,6 @@ body { font-family: "Nunito", sans-serif; font-size: 17px; font-weight: 700; }
 .now-response-slot { grid-row: 3; position: relative; min-width: 0; align-self: center; width: 100%; max-width: 440px; justify-self: center; }
 .now-respond-bar { display: grid; grid-template-columns: minmax(0, 1fr) minmax(156px, 1fr); align-items: center; min-width: 0; background: #fff; border-radius: 23px; padding: 5px 8px; box-shadow: 0 4px 18px #17345308; }
 .now-respond-bar .story-reply { position: relative; margin: 0; padding: 0; background: transparent; }
-.now-respond-bar .story-reply-input { min-height: 44px; padding: 0; background: transparent; border: 0; border-radius: 0; }
-.now-respond-bar .story-reply-input > input { padding: 8px 7px; min-width: 0; font-size: 16px; font-weight: 700; color: var(--ink); background: transparent; }
-.now-respond-bar .story-reply-input:focus-within { outline: 0; box-shadow: none; }
-.now-respond-bar:has(input:focus) { outline: 2px solid #8ca7d8; outline-offset: 2px; }
 .now-reactions-row { display: flex; align-items: center; gap: 4px; min-width: 0; }
 .now-reaction-strip { display: flex; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; gap: 2px; padding: 0; touch-action: pan-x; scroll-snap-type: x mandatory; }
 .now-reaction-strip::-webkit-scrollbar { display: none; }

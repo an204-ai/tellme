@@ -6,7 +6,7 @@ import { magneticMomentScroll } from "@/lib/moment-snap";
 import { MomentCard, type PhotoMoment } from "./MomentCard";
 
 /** Native scrolling owns momentum and snapping. Only the visible photo and its neighbors render. */
-export function MomentStream({ moments, camera, initialMomentId, startAtPhotos = false, onNearEnd, footer, onRefresh, refreshing = false, cameraRequest = 0, onActiveMoment, focusMomentId }: {
+export function MomentStream({ moments, camera, initialMomentId, startAtPhotos = false, onNearEnd, footer, cameraRequest = 0, onActiveMoment, focusMomentId }: {
   moments: PhotoMoment[];
   focusMomentId?: string;
   camera?: (active: boolean) => ReactNode;
@@ -14,8 +14,6 @@ export function MomentStream({ moments, camera, initialMomentId, startAtPhotos =
   startAtPhotos?: boolean;
   onNearEnd?: () => void;
   footer?: ReactNode;
-  onRefresh?: () => void;
-  refreshing?: boolean;
   cameraRequest?: number;
   onActiveMoment?: (moment: PhotoMoment | null) => void;
 }) {
@@ -29,7 +27,6 @@ export function MomentStream({ moments, camera, initialMomentId, startAtPhotos =
   const initial = Math.max(0, moments.findIndex((moment) => moment.item.id === initialMomentId)) + (camera ? 1 : 0);
   const [active, setActive] = useState(initialMomentId || startAtPhotos ? initial : 0);
   const [activeId, setActiveId] = useState(initialMomentId || "");
-  const drafts = useRef<Record<string, string>>({});
   const requested = useRef(false);
   const previousCameraRequest = useRef(cameraRequest);
   const anchor = useRef({ index: initialMomentId || startAtPhotos ? initial : 0, id: initialMomentId || "" });
@@ -59,7 +56,7 @@ export function MomentStream({ moments, camera, initialMomentId, startAtPhotos =
       frame = requestAnimationFrame(() => {
         frame = requestAnimationFrame(() => {
           const focused = document.activeElement;
-          if (focused instanceof HTMLElement && scroller.contains(focused) && focused.matches("input, textarea")) focused.scrollIntoView({ block: "nearest", behavior: "instant" });
+          if (focused instanceof HTMLElement && !focused.closest(".moment-reply-dialog") && scroller.contains(focused) && focused.matches("input, textarea")) focused.scrollIntoView({ block: "nearest", behavior: "instant" });
         });
       });
     };
@@ -147,7 +144,7 @@ export function MomentStream({ moments, camera, initialMomentId, startAtPhotos =
       </div>
     </section>}
     {moments.map((moment, index) => <section key={moment.item.id} className="moment-page" data-page={index + offset} inert={active !== index + offset} data-moment-id={moment.item.id} aria-label={moment.group ? `Chồng ảnh nhóm ${moment.group.title}` : `Khoảnh khắc của ${moment.story.userId === "me" ? "bạn" : moment.person?.name || "bạn bè"}`}>
-      {Math.abs(index + offset - active) <= 1 && <div className="moment-page-content"><MomentCard moment={moment} active={activeId === moment.item.id} drafts={drafts} />
+      {Math.abs(index + offset - active) <= 1 && <div className="moment-page-content"><MomentCard moment={moment} active={activeId === moment.item.id} />
       </div>}
     </section>)}
     <section className="moment-page moment-stream-end" data-page={moments.length + offset} inert={active !== moments.length + offset} aria-label="Cuối khoảnh khắc"><div className="moment-page-content">{footer}

@@ -1,11 +1,12 @@
 import { Hono } from "hono";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { v2 as cloudinary } from "cloudinary";
 import { media, stories, users, conversations, groupPhotos, photoGroups } from "../../backend/database.js";
 import { fail, type Env } from "../../backend/security.js";
 import { now, relations, visibility } from "../../backend/domain.js";
 import { imageFormat, IMAGE_FORMAT_NAMES, MAX_IMAGE_BYTES } from "../../backend/image-formats.js";
 import { enqueue, mongo, protectedMediaUrl } from "@tellme/database";
+import { photoGroupVisibility } from "../../backend/photo-group-access.js";
 export function registerMediaRoutes(api: Hono<Env>) {
   api.get("/media/images/:key", async (c) => {
     const key = c.req.param("key");
@@ -25,12 +26,18 @@ export function registerMediaRoutes(api: Hono<Env>) {
       }] }, { projection: { _id: 1 } });
       const group = await conversations.findOne({ participants: me._id, avatar: item.url }, { projection: { participants: 1 } });
       const photos = await groupPhotos.find({ image: item.url }, { projection: { groupId: 1 } }).toArray();
-      const albumAllowed = photos.length && await photoGroups.findOne({ _id: { $in: photos.map((p) => p.groupId) }, memberIds: me._id, $and: [{ memberIds: { $nin: r.blocked } }] }, { projection: { _id: 1 } });
-      const albumAvatar = await photoGroups.findOne({ avatar: item.url, memberIds: { $nin: r.blocked }, $or: [{ memberIds: me._id }, { pendingMemberIds: me._id, expiresAt: { $gt: now() }, endedAt: { $exists: false } }] }, { projection: { _id: 1 } });
+      const audience = photoGroupVisibility(me._id, r);
+      const albumAllowed = photos.length && await photoGroups.findOne({ _id: { $in: photos.map((p) => p.groupId) }, ...audience }, { projection: { _id: 1 } });
+      const albumAvatar = await photoGroups.findOne({ avatar: item.url, memberIds: { $nin: r.blocked }, $or: [audience, { pendingMemberIds: me._id, expiresAt: { $gt: now() }, endedAt: { $exists: false } }] }, { projection: { _id: 1 } });
       if (!avatar && !cover && !story && !albumAllowed && !albumAvatar && !(group && !group.participants.some((personId) => r.blocked.includes(personId)))) fail(404, "Ảnh không khả dụng.");
     }
     const size = c.req.query("size");
     if (size && size !== "thumbnail" && size !== "feed") fail(400, "Kích thước ảnh không hợp lệ.");
+    // Reuse downloaded bytes, but recheck the current session/audience above
+    // before every 304. Never put protected photos into a public or SW cache.
+    const etag = `W/"${createHash("sha256").update(JSON.stringify([item._id, me._id, size || "feed", c.req.header("accept") || "image/*"])).digest("hex").slice(0, 32)}"`;
+    const cacheHeaders = { "Cache-Control": "private, no-cache, must-revalidate", "Vary": "Cookie, Accept", "ETag": etag };
+    if (c.req.header("if-none-match")?.split(",").some((value) => value.trim() === etag || value.trim() === "*")) return new Response(null, { status: 304, headers: cacheHeaders });
     const upstream = cloudinary.url(item._id, {
       secure: true, type: item.deliveryType || "upload", sign_url: item.deliveryType === "authenticated",
       transformation: [{ ...(size === "thumbnail" ? { width: 400, height: 400, crop: "limit" } : { width: 1600, crop: "limit" }), fetch_format: "auto", quality: "auto" }],
@@ -38,7 +45,7 @@ export function registerMediaRoutes(api: Hono<Env>) {
     const response = await fetch(upstream, { headers: { Accept: c.req.header("accept") || "image/*" }, redirect: "error", signal: AbortSignal.timeout(30000) });
     if (!response.ok || !response.headers.get("content-type")?.startsWith("image/")) fail(404, "Ảnh chưa tải được. Bạn thử lại nhé.");
     return new Response(response.body, { headers: {
-      "Content-Type": response.headers.get("content-type")!, "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff",
+      "Content-Type": response.headers.get("content-type")!, ...cacheHeaders, "X-Content-Type-Options": "nosniff",
     } });
   });
   api.post("/media/upload", async (c) => {

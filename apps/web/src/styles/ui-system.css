@@ -38,7 +38,7 @@
   -webkit-backdrop-filter: blur(16px) saturate(1.12);
   backdrop-filter: blur(16px) saturate(1.12);
 }
-:root .app-dialog:not(.story-stream-dialog) > .dialog-content {
+:root .app-dialog:not(.story-stream-dialog):not(.founding-welcome):not(.moment-reply-dialog) > .dialog-content {
   background: var(--overlay-surface);
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
@@ -102,12 +102,12 @@ input::placeholder, textarea::placeholder { color: var(--placeholder); opacity: 
 .close-messages .chat-input-line > button[type="submit"] { width: 45px; height: 45px; min-width: 45px; flex-basis: 45px; }
 .close-messages .chat-input-line > button[type="submit"] svg { width: 26px; height: 26px; }
 .stream-moment .now-response-slot { height: 63px; min-height: 63px; }
-.stream-moment .now-respond-bar { height: 63px; grid-template-columns: minmax(0, 1fr) 180px; }
-.stream-moment .now-reaction-strip { width: 132px; flex: 0 0 132px; gap: 3px; height: 50px; align-items: center; }
-.stream-moment .now-reaction-strip img { width: 48px; height: 48px; max-width: none; }
-.stream-moment .now-reaction-strip button { width: 42px; flex: 0 0 42px; height: 50px; padding: 0; }
-.stream-moment .now-reactions-row > .emoji-trigger { width: 44px; min-width: 44px; height: 48px; }
-.stream-moment .now-reactions-row > .emoji-trigger svg { width: 32px; height: 32px; }
+.stream-moment .now-respond-bar { height: 63px; grid-template-columns: minmax(0, 1fr) 168px; }
+.stream-moment .now-reaction-strip { width: 126px; flex: 0 0 126px; gap: 3px; height: 50px; align-items: center; }
+.stream-moment .now-reaction-strip img { width: 40px; height: 40px; max-width: 100%; }
+.stream-moment .now-reaction-strip button { width: 40px; flex: 0 0 40px; height: 50px; padding: 0; }
+.stream-moment .now-reactions-row > .emoji-trigger { width: 39px; min-width: 39px; height: 48px; }
+.stream-moment .now-reactions-row > .emoji-trigger svg { width: 28px; height: 28px; }
 @media (max-width: 640px) {
   .close-messages .message-create-actions { display: none; }
   .message-compose-floating { display: block; position: fixed; bottom: max(35px, calc(env(safe-area-inset-bottom) + 21px)); right: calc(50% - min(calc((100vw - 28px) / 2), 210px)); z-index: 51; }
@@ -136,7 +136,7 @@ input::placeholder, textarea::placeholder { color: var(--placeholder); opacity: 
 :root input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="button"], [type="submit"]):is(:focus, :focus-visible),
 :root textarea:is(:focus, :focus-visible), :root [contenteditable="true"]:focus { outline: none !important; box-shadow: none !important; border-color: var(--input-border, var(--line)) !important; }
 .auth-field, .moment-caption-overlay { --input-border: transparent; }
-:root :is(.cir-search, .input-wrap, .story-reply-input, .tellme-sticker-search, .account-block-search, .close-id-field):focus-within { outline: none !important; box-shadow: none !important; border-color: var(--line) !important; }
+:root :is(.cir-search, .input-wrap, .tellme-sticker-search, .account-block-search, .close-id-field):focus-within { outline: none !important; box-shadow: none !important; border-color: var(--line) !important; }
 :root .close-app .now-respond-bar:has(input:focus) { outline: none; box-shadow: inset 0 1px var(--control-highlight), var(--control-shadow); }
 /* The composer keeps its translucent material without a clipped outer shadow. */
 :root .close-app .chat-input-line,
@@ -195,3 +195,26 @@ input::placeholder, textarea::placeholder { color: var(--placeholder); opacity: 
 :root::-webkit-scrollbar, :root *::-webkit-scrollbar { display: none !important; width: 0; height: 0; }
 /* Next can target a real flow box while the viewport loader keeps its centered artwork. */
 .route-loading-anchor { display: flow-root; position: relative; min-height: 1px; width: 100%; }
+
+/* Touch/pointer focus never paints a keyboard ring. Tab navigation keeps its cue. */
+:root[data-input-method="pointer"] :focus-visible:not(.moment-shutter) { outline: none !important; }
+:root[data-input-method="pointer"] :is(button, a, summary, [tabindex]):focus:not(.moment-shutter) { outline: none !important; }
+:root .stream-moment .group-photo-reply { grid-template-columns: minmax(0, 1fr); }
+
+@media (max-width: 640px) { .moment-audience > span { max-width: clamp(75px, calc(100vw - 282px), 100px); } }
+
+/* The reply editor floats above the visible keyboard; the photo stays behind it. */
+.stream-moment .story-reply-trigger { display: block; min-width: 0; width: 100%; height: 100%; padding: 0; border: 0; background: transparent; color: var(--placeholder); font: 700 16px/1.35 "Nunito", sans-serif; text-align: start; cursor: text; }
+:root .app-dialog.moment-reply-dialog[data-viewport-fit] { position: fixed; inset: var(--dialog-viewport-top, 0px) 0 auto; margin: 0; padding: 0; width: 100vw; max-width: none; height: var(--dialog-viewport-height, 100dvh); max-height: none; border: 0; border-radius: 0; background: transparent; color: var(--ink); box-shadow: none; overflow: hidden; }
+.app-dialog.moment-reply-dialog::backdrop { background: #10101430; -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); }
+:root .moment-reply-dialog > .dialog-content { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 8px; box-sizing: border-box; width: 100%; height: 100%; max-height: none; padding: 16px 16px max(12px, env(safe-area-inset-bottom)); border: 0; border-radius: 0; background: transparent; box-shadow: none; overflow: hidden; }
+:root .moment-reply-dialog[data-keyboard-viewport="true"] > .dialog-content { padding-bottom: 8px; }
+.moment-reply-dialog .dialog-header { position: absolute; top: max(8px, env(safe-area-inset-top)); right: 16px; width: auto; padding: 0; border: 0; background: transparent; }
+.moment-reply-dialog .dialog-header h2 { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.moment-reply-dialog .dialog-header .icon-button { width: 44px; height: 44px; border-radius: 50%; background: var(--control-surface); color: var(--ink); }
+.moment-private-reply { display: flex; align-items: center; flex: 0 0 63px; gap: 8px; box-sizing: border-box; width: min(100%, 440px); min-width: 0; height: 63px; margin: 0; padding: 8px 9px 8px 18px; border: 0; border-radius: 32px; }
+.moment-private-reply > input { flex: 1; min-width: 0; height: 46px; margin: 0; padding: 0; border: 0; background: transparent; color: var(--ink); font: 700 16px/1.4 "Nunito", sans-serif; }
+.moment-private-reply > .story-reply-send { display: grid; place-items: center; flex: 0 0 44px; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; background: var(--primary); color: var(--action-ink); cursor: pointer; }
+.moment-private-reply > .story-reply-send:disabled { display: grid; opacity: .45; cursor: default; }
+.moment-reply-error { order: -1; width: min(100%, 440px); margin: 0; padding: 8px 14px; box-sizing: border-box; border-radius: 16px; background: var(--overlay-surface); color: var(--danger); font-size: 14px; }
+.moment-upload-status { min-height: 32px; }

@@ -6,7 +6,7 @@ import { cleanMedia, processMedia, sweepMedia } from "./media.js";
 import { deliverNotification, sendEmail, sendPush } from "./notifications.js";
 import { sendAccountEmail } from "./account-email.js";
 import { users } from "./database.js";
-import { deliverSystemNotification, scheduleSystemNotifications } from "./system-notifications.js";
+import { deliverSystemNotification } from "./system-notifications.js";
 import type { JobKind } from "./models.js";
 import { logEvent } from "./observability.js";
 
@@ -32,7 +32,7 @@ export async function runWorker(name: "media" | "notification") {
   let stopDispatcher = () => {};
   let beat: ReturnType<typeof setInterval> | undefined;
   let timer: ReturnType<typeof setInterval> | undefined;
-  let stopping = false, scheduling = false;
+  let stopping = false;
   const shutdown = async (code = 0) => {
     if (stopping) return;
     stopping = true;
@@ -59,15 +59,10 @@ export async function runWorker(name: "media" | "notification") {
     heartbeat();
     beat = setInterval(heartbeat, 10000);
     const schedule = () => {
-      if (name === "notification" && !scheduling) {
-        scheduling = true;
-        void scheduleSystemNotifications().catch(() => undefined).finally(() => { scheduling = false; });
-      }
       const hour = new Date().toISOString().slice(0, 13).replaceAll(":", "-");
       if (name === "media") void enqueue("media.sweep", {}, { id: `sweep-${hour}` }).catch(() => undefined);
     };
-    schedule();
-    timer = setInterval(schedule, name === "notification" ? 10000 : 3600000);
+    if (name === "media") { schedule(); timer = setInterval(schedule, 3600000); }
     console.log(`Tellme ${name} worker ready (${config.NODE_ENV}).`);
     logEvent({ service: name, level: "info", event: "process.ready" });
   } catch (error) {

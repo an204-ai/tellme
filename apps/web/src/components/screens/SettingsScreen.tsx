@@ -36,7 +36,7 @@ export function SettingsScreen() {
   }, [pushAvailable]);
   if (!data) return <Loader />;
   const toggle = async (
-    key: "notifyLikes" | "notifyMessages" | "notifySystem" | "reducedMotion",
+    key: "notifyLikes" | "notifyMessages" | "reducedMotion",
     checked: boolean,
   ) => {
     try {
@@ -76,11 +76,6 @@ export function SettingsScreen() {
               key: "notifyLikes" as const,
               title: "Cảm xúc khoảnh khắc",
               text: "Thông báo khi bạn bè thả cảm xúc vào ảnh của bạn.",
-            },
-            {
-              key: "notifySystem" as const,
-              title: "Lời nhắc từ Tellme",
-              text: "Nhắc nhẹ theo giờ trong ngày để bạn ghi lại một chút hôm nay.",
             },
             {
               key: "notifyMessages" as const,
