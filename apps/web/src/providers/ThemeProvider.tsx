@@ -10,7 +10,7 @@ export function ThemeProvider({ initialTheme, children }: { initialTheme: Theme;
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     document.cookie = `tellme_theme=${theme}; Path=/; Max-Age=31536000; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
-    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "dark" ? "#102238" : "#dceafa");
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "dark" ? "#18181b" : "#ffffff");
   }, [theme]);
   return <ThemeContext.Provider value={{ theme, setTheme }}>{children}</ThemeContext.Provider>;
 }

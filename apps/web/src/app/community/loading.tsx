@@ -14,9 +14,9 @@ export default function Loading() {
   }, []);
 
   if (!slow) return <Loader />;
-  return <div className="loading-state route-cat-loading" role="status">
+  return <div className="route-loading-anchor"><div className="loading-state route-cat-loading" role="status">
     <SleepingCat />
     <p>Trang đang mở lâu hơn bình thường.</p>
     <Button onClick={() => window.location.reload()}>Tải lại trang này</Button>
-  </div>;
+  </div></div>;
 }

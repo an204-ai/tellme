@@ -1,21 +1,30 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
-import { Check, Download, LoaderCircle, Share2, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Check, Download, LoaderCircle, Share, Trash2 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { request } from "@/lib/api-repository";
+import { photoGroupsKey } from "@/hooks/use-photo-groups";
+import { Button } from "@/components/ui/Primitives";
+import { Modal } from "@/components/ui/Modal";
+import { StoryMenu } from "./StoryMenu";
 import { useAppStore } from "@/stores/app.store";
 import type { PhotoMoment } from "./MomentCard";
 
 /** Export only the photo already available to this authenticated viewer. Links keep the usual access checks. */
 export function MomentActions({ moment }: { moment: PhotoMoment }) {
-  const id = useId();
-  const panel = useRef<HTMLDivElement>(null);
+  const [expanded, setExpanded] = useState(false);
   const file = useRef<File | null>(null);
   const controller = useRef<AbortController | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false), [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+  const query = useQueryClient();
   const notify = useAppStore((s) => s.notify);
-  const { story, item, person } = moment;
+  const { story, item, person, group } = moment;
+  const pending = useAppStore((state) => state.pendingUpload?.moment.item.id === item.id);
   useEffect(() => () => controller.current?.abort(), []);
   const prepare = async () => {
     if (file.current || loading) return;
@@ -33,14 +42,25 @@ export function MomentActions({ moment }: { moment: PhotoMoment }) {
     } catch { if (!abort.signal.aborted) setError(true); }
     finally { if (!abort.signal.aborted) setLoading(false); }
   };
-  const link = () => `${location.origin}/community/today?story=${encodeURIComponent(story.id)}&moment=${encodeURIComponent(item.id)}`;
+  const link = () => group ? `${location.origin}/community/today?group=${encodeURIComponent(group.id)}` : `${location.origin}/community/today?story=${encodeURIComponent(story.id)}&moment=${encodeURIComponent(item.id)}`;
+  const removeGroupPhoto = async () => {
+    if (!group || deleting) return;
+    setDeleting(true); setDeleteError("");
+    try {
+      await request(`/photo-groups/${group.id}/photos/${item.id}`, { method: "DELETE" });
+      setConfirmDelete(false); setExpanded(false);
+      useAppStore.getState().showFeedback("Đã xóa ảnh");
+      await query.invalidateQueries({ queryKey: photoGroupsKey });
+    } catch (e) { setDeleteError(e instanceof Error ? e.message : "Chưa xóa được ảnh. Thử lại nhé."); }
+    finally { setDeleting(false); }
+  };
   const share = async () => {
     try {
       const photo = file.current;
       if (photo && navigator.canShare?.({ files: [photo] })) await navigator.share({ files: [photo], title: "Khoảnh khắc Tellme", text: item.caption || undefined });
       else if (navigator.share) await navigator.share({ title: "Khoảnh khắc Tellme", url: link() });
       else { await navigator.clipboard.writeText(link()); setCopied(true); return; }
-      panel.current?.hidePopover();
+      setExpanded(false);
     } catch (e) { if (!(e instanceof DOMException && e.name === "AbortError")) notify("Chưa chia sẻ được. Bạn thử tải ảnh xuống nhé."); }
   };
   const download = () => {
@@ -48,16 +68,23 @@ export function MomentActions({ moment }: { moment: PhotoMoment }) {
     const url = URL.createObjectURL(file.current), anchor = document.createElement("a");
     anchor.href = url; anchor.download = file.current.name; anchor.click();
     setTimeout(() => URL.revokeObjectURL(url), 30000);
-    panel.current?.hidePopover();
+    setExpanded(false);
+    useAppStore.getState().showFeedback("Đã gửi ảnh để lưu", "Kiểm tra mục tải về của máy.");
   };
-  const canSharePhoto = !!file.current && typeof navigator !== "undefined" && !!navigator.canShare?.({ files: [file.current] });
   return <div className="moment-actions">
-    <button type="button" className="now-dock-side moment-share-trigger" popoverTarget={id} aria-label="Chia sẻ hoặc tải ảnh"><span className="moment-share-icon"><Share2 size={23} /></span><span>Chia sẻ</span></button>
-    <div ref={panel} id={id} popover="auto" className="moment-share-menu" onToggle={(event) => { if (event.newState === "open") { setCopied(false); void prepare(); } else { controller.current?.abort(); setLoading(false); } }}>
-      <header><img src={item.image} alt="" /><div><strong>{person?.name || "Khoảnh khắc của bạn"}</strong><p>{item.caption || "Một chút hôm nay"}</p></div><button type="button" aria-label="Đóng chia sẻ" popoverTarget={id} popoverTargetAction="hide"><X size={19} /></button></header>
-      <button type="button" onClick={() => void share()}>{copied ? <Check size={22} /> : <Share2 size={22} />}<span><strong>{copied ? "Đã sao chép liên kết" : "Chia sẻ khoảnh khắc"}</strong><small>{canSharePhoto && !loading ? "Gửi ảnh qua ứng dụng bạn thích" : "Liên kết chỉ mở với người có quyền xem"}</small></span></button>
-      <button type="button" disabled={loading || !file.current} onClick={download}>{loading ? <LoaderCircle className="is-spinning" size={22} /> : <Download size={22} />}<span><strong>{loading ? "Đang chuẩn bị ảnh…" : "Tải ảnh xuống"}</strong><small>Lưu ảnh gốc về máy</small></span></button>
-      {error && <p className="moment-share-error" role="alert">Chưa tải được ảnh. <button type="button" onClick={() => void prepare()}>Thử lại</button></p>}
-    </div>
+    <button type="button" className="moment-options-trigger" disabled={pending} aria-label="Tùy chọn ảnh: chia sẻ và thao tác khác" aria-haspopup="dialog" aria-expanded={expanded} onClick={() => { setExpanded(true); setCopied(false); void prepare(); }}><Share size={24} /></button>
+    {expanded && <Modal title={group?.title || (story.userId === "me" ? "Khoảnh khắc của bạn" : "Khoảnh khắc của bạn bè")} className="moment-actions-dialog" onClose={() => { setExpanded(false); controller.current?.abort(); setLoading(false); }}>
+      <div className="moment-sheet-body">
+        <div className="moment-sheet-preview"><img src={item.image} alt={item.caption || `Khoảnh khắc của ${person?.name || "bạn"}`} />{item.caption && <span>{item.caption}</span>}</div>
+        <p className="moment-sheet-author">{group ? `Ảnh của ${story.userId === "me" ? "bạn" : person?.name || "thành viên"}` : story.userId === "me" ? "Ngày của bạn" : person?.name || "Một người bạn"}</p>
+        <div className="moment-sheet-controls" role="group" aria-label="Thao tác khoảnh khắc, cuộn ngang để xem thêm" tabIndex={0}>
+          <button type="button" onClick={() => void share()}>{copied ? <Check size={24} /> : <Share size={24} />}<span>{copied ? "Đã sao chép" : "Chia sẻ"}</span></button>
+          <button type="button" disabled={loading || !file.current} onClick={download}>{loading ? <LoaderCircle className="is-spinning" size={24} /> : <Download size={24} />}<span>{loading ? "Đang tải…" : "Lưu ảnh"}</span></button>
+          {group ? story.userId === "me" && <button type="button" className="danger-text" onClick={() => setConfirmDelete(true)}><Trash2 size={24} /><span>Xóa</span></button> : <StoryMenu story={story} person={person} item={item} allowMusic layout="sheet" />}
+        </div>
+        {error && <p className="moment-share-error" role="alert">Chưa tải được ảnh. <button type="button" onClick={() => void prepare()}>Thử lại</button></p>}
+      </div>
+    </Modal>}
+    {confirmDelete && <Modal title="Xóa ảnh khỏi nhóm?" onClose={() => { if (!deleting) setConfirmDelete(false); }}><div className="dialog-body"><p>Ảnh này sẽ được gỡ khỏi chồng ảnh của nhóm.</p>{deleteError && <p className="field-error" role="alert">{deleteError}</p>}<div className="moment-edit-actions"><Button variant="secondary" disabled={deleting} onClick={() => setConfirmDelete(false)}>Giữ lại</Button><Button disabled={deleting} onClick={() => void removeGroupPhoto()}>{deleting ? "Đang xóa…" : "Xóa ảnh"}</Button></div></div></Modal>}
   </div>;
 }

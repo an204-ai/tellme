@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { normalizeMomentCaption, validMomentCaption } from "@tellme/shared/captions";
 import { getTellmeSticker } from "@tellme/shared/stickers";
 
 export const replySchema = z
@@ -38,7 +39,7 @@ export const registerSchema = loginSchema.extend({
 });
 export const momentSchema = z.object({
   image: z.string().min(1, "Chụp một bức ảnh cho khoảnh khắc này."),
-  caption: z.string().trim().max(300, "Chú thích tối đa 300 ký tự."),
+  caption: z.string().transform(normalizeMomentCaption).refine(validMomentCaption, "Chú thích tối đa 8 từ và 40 ký tự."),
   storyPrivacy: z.literal("connections"),
 });
 

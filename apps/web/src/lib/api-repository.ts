@@ -130,8 +130,9 @@ export const apiRepository = {
     loadedStories.clear();
     knownPeople.clear();
   },
-  async getStoriesPage(cursor = 0, limit = 6): Promise<StoryPage> {
-    const result = await request<{ items: DayStory[]; people: Person[]; nextCursor: number | null }>(`/stories?cursor=${cursor}&limit=${limit}`);
+  async getStoriesPage(cursor = 0, limit = 6, author?: string): Promise<StoryPage> {
+    const params = new URLSearchParams({ cursor: String(cursor), limit: String(limit), ...(author ? { author } : {}) });
+    const result = await request<{ items: DayStory[]; people: Person[]; nextCursor: number | null }>(`/stories?${params}`);
     result.people.forEach((person) => knownPeople.set(person.id, person));
     result.items.forEach((story) => loadedStories.set(story.id, story));
     return { items: result.items, nextCursor: result.nextCursor ?? undefined };

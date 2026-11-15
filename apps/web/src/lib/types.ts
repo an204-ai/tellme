@@ -128,3 +128,28 @@ export interface StoryPage {
   items: DayStory[];
   nextCursor: number | undefined;
 }
+export interface GroupPhoto extends MomentItem {
+  groupId: string;
+  userId: string;
+  person?: Person;
+}
+export interface PhotoGroupInvitation { id: string; title: string; avatar: string; expiresAt: string; owner: Person; }
+export interface PhotoGroup {
+  pendingMembers?: Person[];
+  isJoined?: boolean;
+  canPost?: boolean;
+  durationDays?: 1 | 3 | 7;
+  expiresAt?: string;
+  endedAt?: string;
+  endReason?: "cancelled";
+  id: string;
+  title: string;
+  avatar: string;
+  ownerId: string;
+  memberIds: string[];
+  members?: Person[];
+  createdAt: string;
+  updatedAt: string;
+  count: number;
+  latest?: GroupPhoto;
+}

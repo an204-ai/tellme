@@ -5,8 +5,10 @@ import {
   Camera,
   MessageCircle,
   Users,
+  Copy,
 } from "lucide-react";
 import { useProfilePerson } from "@/hooks/use-stories";
+import { ProfileShare } from "@/components/profile/ProfileShare";
 import { ProfileJourney } from "@/components/profile/ProfileJourney";
 import { useCommunity } from "@/hooks/use-community";
 import { newId, ApiError } from "@/lib/api-repository";
@@ -53,6 +55,7 @@ export function ProfileScreen({ username }: { username: string }) {
   const friend = data.connections.includes(person.id);
   return (
     <div className="profile-journal close-profile">
+      <section className="profile-summary" aria-label="Thông tin cá nhân">
       <div className="profile-cover-area">
         <section className="profile-cover">
           {person.cover && <img src={person.cover} alt={`Ảnh bìa của ${person.name}`} />}
@@ -112,14 +115,19 @@ export function ProfileScreen({ username }: { username: string }) {
           </div>}
         </div>
       </section>
+      {isMe && <div className="profile-quick-actions">
+        <Link href="/community/friends"><span><Users size={24} /></span><strong>{data.connections.length} người bạn</strong></Link>
+        <button type="button" onClick={() => { void navigator.clipboard.writeText(person.username).then(() => useAppStore.getState().notify("Đã sao chép Tellme ID.")).catch(() => useAppStore.getState().notify("Chưa sao chép được. Tellme ID ở ngay dưới tên bạn nhé.")); }}><span><Copy size={24} /></span><strong>Sao chép ID</strong></button>
+        <ProfileShare person={person} />
+      </div>}
+      </section>
       <ProfileJourney key={person.id} personId={person.id} />
-      {isMe && (
-        <button className="journal-composer" onClick={() => open("moment")}>
+      {isMe && <section className="profile-capture-section"><button className="journal-composer" onClick={() => open("moment")}>
           <Avatar person={person} size="sm" />
           <span>Chụp một khoảnh khắc hôm nay nhé?</span>
           <Camera size={20} />
-        </button>
-      )}
+        </button></section>}
+
     </div>
   );
 }

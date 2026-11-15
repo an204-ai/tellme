@@ -1,0 +1,28 @@
+import assert from "node:assert/strict";
+import { photoGroupIsActive, canPostToPhotoGroup } from "@tellme/shared/photo-groups";
+import { mixPhotoFeed, photoGroupMoment } from "../src/lib/photo-group-feed.ts";
+const item = (id: string, at: string) => ({ id, at, image: id, caption: id });
+const group = { id: "g", title: "Nhóm ảnh", avatar: "", ownerId: "me", memberIds: ["me", "other"], createdAt: "2026-11-15T00:00:00Z", updatedAt: "2026-11-15T00:00:00Z", count: 3, latest: { ...item("group-new", "2026-11-15T02:00:00Z"), groupId: "g", userId: "other" } };
+const normal = { story: { id: "s", userId: "me", day: "2026-11-15", privacy: "connections" as const, items: [] }, item: item("normal", "2026-11-15T01:00:00Z") };
+assert.equal(photoGroupMoment({ ...group, count: 0, latest: undefined }), null);
+assert.deepEqual(mixPhotoFeed([normal], [group]).map((m) => m.item.id), ["photo-group:g", "normal"]);
+assert.equal(mixPhotoFeed([normal], [{ ...group, latest: { ...group.latest, at: "2026-11-14T00:00:00Z" } }])[0]?.item.id, "normal", "Only the latest remaining photo controls group order");
+assert.equal(photoGroupMoment({ ...group, latest: { ...group.latest, id: "newer" } })?.item.id, "photo-group:g", "The vertical slot stays stable when a group gains a photo");
+const pending = { ...normal, item: item("pending", "2026-11-15T03:00:00Z"), group: { ...group, count: 4, latest: { ...group.latest, id: "pending" } } };
+const optimistic = mixPhotoFeed([normal], [group], pending);
+assert.equal(optimistic.length, 2); assert.equal(optimistic[0]?.group?.count, 4);
+assert.equal(optimistic[0]?.group?.latest?.id, "pending");
+assert.equal(mixPhotoFeed([normal], [{ ...group, count: 4, latest: { ...group.latest, id: "pending" } }], pending)[0]?.group?.count, 4, "Server confirmation must not double-count an optimistic photo");
+assert.equal(mixPhotoFeed([normal], [], pending)[0]?.group?.count, 4);
+assert.equal(mixPhotoFeed([normal], [group], { ...normal, item: item("regular-pending", "2026-11-15T03:00:00Z") })[0]?.group, undefined);
+console.log("PASS: one group slot, newest-photo ordering, empty groups, stable identity and optimistic deduplication.");
+
+const boundary = Date.parse("2026-11-16T00:00:00Z");
+const timed = { ...group, canPost: true, expiresAt: new Date(boundary).toISOString() };
+assert.equal(canPostToPhotoGroup(timed, boundary - 1), true);
+assert.equal(canPostToPhotoGroup(timed, boundary), false, "Posting stops at the exact expiry boundary");
+assert.equal(photoGroupIsActive({ ...timed, endedAt: "2026-11-15T00:00:00Z" }, boundary - 1), false);
+assert.equal(canPostToPhotoGroup({ ...timed, canPost: false }, boundary - 1), false);
+assert.equal(photoGroupIsActive({ ...group, expiresAt: undefined }, boundary - 1), false, "Legacy groups are read-only archives");
+assert.deepEqual(mixPhotoFeed([normal], [{ ...timed, endedAt: "2026-11-15T00:00:00Z" }]).map((m) => m.item.id), ["photo-group:g", "normal"], "Ending a group preserves its stack and chronological position");
+console.log("PASS: exact expiry, cancelled/left/legacy posting guards and archived stack ordering.");

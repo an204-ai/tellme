@@ -13,6 +13,8 @@ import type {
   BackgroundJob,
   PushSubscriptionRecord,
   FriendRequest,
+  PhotoGroup,
+  GroupPhoto,
 } from "./models.js";
 export const mongo = new MongoClient(config.MONGODB_URI, {
   serverSelectionTimeoutMS: 10000,
@@ -24,6 +26,8 @@ export const users = db.collection<User>("users");
 export const friendRequests = db.collection<FriendRequest>("friend_requests");
 export const sessions = db.collection<Session>("sessions");
 export const stories = db.collection<Story>("stories");
+export const photoGroups = db.collection<PhotoGroup>("photo_groups");
+export const groupPhotos = db.collection<GroupPhoto>("group_photos");
 export const conversations = db.collection<Conversation>("conversations");
 export const messages = db.collection<Message>("messages");
 export const notices = db.collection<Notice>("notifications");
@@ -47,6 +51,12 @@ export async function connectDatabase() {
     stories.createIndex({ day: -1 }),
     stories.createIndex({ userId: 1, day: 1 }, { unique: true }),
     stories.createIndex({ updatedAt: -1 }),
+    photoGroups.createIndex({ memberIds: 1, updatedAt: -1 }),
+    photoGroups.createIndex({ activeMemberIds: 1 }, { unique: true, sparse: true }),
+    photoGroups.createIndex({ expiresAt: 1 }),
+    photoGroups.createIndex({ pendingMemberIds: 1, expiresAt: 1 }),
+    groupPhotos.createIndex({ groupId: 1, at: -1, _id: -1 }),
+    groupPhotos.createIndex({ image: 1 }),
     conversations.createIndex(
       { directKey: 1 },
       {

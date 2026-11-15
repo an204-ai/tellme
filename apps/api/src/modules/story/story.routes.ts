@@ -21,17 +21,20 @@ import { withMediaChange, scheduleCleanup, mongo, publishUpdate } from "@tellme/
 export function registerStoryRoutes(api: Hono<Env>) {
   api.get("/stories", async (c) => {
     const me = c.get("user"), { cursor, limit } = v.pageSchema.parse(c.req.query());
+    const author = z.string().trim().min(1).max(128).optional().parse(c.req.query("author"));
     const r = await relations(me);
     const audience = { $ifNull: ["$$item.privacy", "$privacy"] };
     const items = await stories.aggregate<Story>([
       { $match: await visibility(me, "userId") },
+      ...(author ? [{ $match: { userId: author === "me" ? me._id : author } }] : []),
       { $set: { items: { $filter: { input: "$items", as: "item", cond: { $or: [
         { $eq: ["$userId", me._id] },
 
         { $and: [{ $in: [audience, ["public", "connections"]] }, { $in: ["$userId", r.mutual] }] },
       ] } } } } },
       { $match: { "items.0": { $exists: true } } },
-      { $sort: { updatedAt: -1, _id: -1 } }, { $skip: cursor }, { $limit: limit + 1 },
+      { $set: { latestMomentAt: { $max: "$items.at" } } },
+      { $sort: { latestMomentAt: -1, _id: -1 } }, { $skip: cursor }, { $limit: limit + 1 },
     ]).toArray();
     const page = items.slice(0, limit);
     const people = await users.find({ _id: { $in: [...new Set(page.map((s) => s.userId))] } }, { projection: { passwordHash: 0, email: 0 } }).toArray();
@@ -96,16 +99,6 @@ export function registerStoryRoutes(api: Hono<Env>) {
     });
     await publishUpdate([], "stories");
     return c.json({ ok: true }, 201);
-  });
-  api.patch("/stories/:id/moments/:momentId", async (c) => {
-    const me = c.get("user"), id = c.req.param("id"), momentId = c.req.param("momentId"),
-      input = z.object({ caption: z.string().trim().max(300) }).strict().parse(await c.req.json());
-    const result = await stories.updateOne({ _id: id, userId: me._id, "items.id": momentId }, {
-      $set: { "items.$.caption": input.caption, updatedAt: now() },
-    });
-    if (!result.matchedCount) fail(404, "Không thể chỉnh sửa khoảnh khắc này.");
-    await publishUpdate([], "stories");
-    return c.json({ ok: true });
   });
   api.delete("/stories/:id/moments/:momentId", async (c) => {
     const me = c.get("user"), id = c.req.param("id"), momentId = c.req.param("momentId");

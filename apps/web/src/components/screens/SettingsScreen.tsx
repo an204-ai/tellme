@@ -80,7 +80,7 @@ export function SettingsScreen() {
             {
               key: "notifySystem" as const,
               title: "Lời nhắc từ Tellme",
-              text: "Nhắc nhẹ theo giờ trong ngày và khi thời tiết quanh bạn thay đổi.",
+              text: "Nhắc nhẹ theo giờ trong ngày để bạn ghi lại một chút hôm nay.",
             },
             {
               key: "notifyMessages" as const,

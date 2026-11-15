@@ -1,6 +1,5 @@
 "use client";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,6 +11,7 @@ import {
   Mail,
   UserRound,
 } from "lucide-react";
+import { authDestination } from "@/lib/auth-navigation";
 import { loginSchema, registerSchema } from "@/lib/validation";
 import { request, apiRepository } from "@/lib/api-repository";
 import { useQueryClient } from "@tanstack/react-query";
@@ -23,7 +23,6 @@ interface AuthInput {
   name: string;
 }
 export function AuthScreen({ register = false }: { register?: boolean }) {
-  const router = useRouter();
   const queryClient = useQueryClient();
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -41,18 +40,13 @@ export function AuthScreen({ register = false }: { register?: boolean }) {
       apiRepository.clear();
       queryClient.clear();
       if (result.verificationRequired) {
-        router.replace(`/auth/verify-email${result.verificationEmailSent === false ? "?delivery=failed" : ""}`);
+        window.location.replace(`/auth/verify-email${result.verificationEmailSent === false ? "?delivery=failed" : ""}`);
         return;
       }
       const next = new URLSearchParams(window.location.search).get("next");
-      router.replace(
-        next &&
-          next.startsWith("/") &&
-          !next.startsWith("//") &&
-          !next.startsWith("/auth/")
-          ? next
-          : "/community/today",
-      );
+      // A document navigation discards a prefetched unauthenticated RSC redirect.
+      // Cookies are already committed by the successful login response.
+      window.location.replace(authDestination(next));
     } catch (err) {
       setError(
         err instanceof Error
@@ -67,26 +61,14 @@ export function AuthScreen({ register = false }: { register?: boolean }) {
         <Link href="/community/today" className="auth-brand">
           <Brand />
         </Link>
-        <div className="auth-visual-copy">
-          <h1>
-            Đi làm cũng có
-            <br />
-            <strong>chuyện để kể.</strong>
-          </h1>
-          <p>Chuyện đi làm, kể Tellme nghe.</p>
-        </div>
+
       </section>
       <section className="auth-form-area">
         <div className="uiv-form">
           <div className="container auth-card">
             <div className="heading">
-              {register ? "Chào bạn, vào kể chuyện nhé." : "Mừng bạn trở lại."}
+              {register ? "Tạo tài khoản" : "Đăng nhập"}
             </div>
-            <p className="auth-description">
-              {register
-                ? "Tạo tài khoản để kể chuyện đi làm."
-                : "Đăng nhập để tiếp tục."}
-            </p>
             <form className="form" onSubmit={submit} noValidate>
               {register && (
                 <div>
@@ -141,7 +123,7 @@ export function AuthScreen({ register = false }: { register?: boolean }) {
                     id="auth-password"
                     className="input"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Mật khẩu (từ 8 ký tự)"
+                    placeholder={register ? "Mật khẩu (từ 8 ký tự)" : "Mật khẩu"}
                     autoComplete={
                       register ? "new-password" : "current-password"
                     }
@@ -173,7 +155,7 @@ export function AuthScreen({ register = false }: { register?: boolean }) {
                 disabled={form.formState.isSubmitting}
               >
                 {form.formState.isSubmitting
-                  ? "Đang mở…"
+                  ? "Đang đăng nhập…"
                   : register
                     ? "Tạo tài khoản"
                     : "Đăng nhập"}
@@ -182,7 +164,7 @@ export function AuthScreen({ register = false }: { register?: boolean }) {
             </form>
             {!register && <Link className="auth-forgot-link" href="/auth/forgot-password">Quên mật khẩu?</Link>}
             <p className="auth-switch">
-              {register ? "Đã quen với Tellme?" : "Lần đầu bạn đến đây?"}{" "}
+              {register ? "Đã có tài khoản?" : "Chưa có tài khoản?"}{" "}
               <Link href={register ? "/auth/login" : "/auth/register"}>
                 {register ? "Đăng nhập" : "Tạo tài khoản"}
               </Link>

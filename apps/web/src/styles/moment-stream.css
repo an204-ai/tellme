@@ -1,0 +1,181 @@
+/* Camera first. Photos scroll with the browser's own momentum, in Tellme blue. */
+:root { --motion-soft: 360ms; --ease-soft: cubic-bezier(.22, 1, .36, 1); }
+.now-home-stream { height: 100%; min-height: 0; }
+.moment-stream { position: relative; width: 100%; height: 100%; overflow-y: auto; overflow-x: hidden; overscroll-behavior-y: contain; scroll-snap-type: y mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; overflow-anchor: none; }
+.moment-stream::-webkit-scrollbar { display: none; }
+.moment-stream:focus-visible { outline: 2px solid var(--primary); outline-offset: -3px; }
+.moment-page { box-sizing: border-box; display: flex; align-items: center; justify-content: center; height: max(var(--stream-page-height, 100dvh), 680px); padding: calc(var(--safe-top, 0px) + 100px) 20px calc(100px + env(safe-area-inset-bottom)); scroll-snap-align: start; scroll-snap-stop: normal; position: relative; }
+.moment-page-content { width: min(100%, 440px); min-width: 0; position: relative; }
+.moment-home-top { position: absolute; top: calc(var(--safe-top, 0px) + 22px); left: 50%; transform: translateX(-50%); z-index: 41; pointer-events: none; }
+.moment-audience { pointer-events: auto; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 18px; border: 0; border-radius: 24px; background: var(--paper); color: var(--ink); font: 900 15px/1.3 "Nunito", sans-serif; cursor: pointer; }
+.moment-inline-composer .moment-capture-body { padding: 0; overflow: visible; }
+.moment-inline-composer .moment-camera { gap: 22px; }
+.moment-inline-composer .moment-viewfinder { border-radius: 36px; min-height: 0; background: #102238; }
+.moment-inline-composer .moment-camera-message { background: #102238; font-weight: 700; }
+.moment-inline-composer .moment-camera-message strong { font-weight: 900; font-size: 19px; }
+.moment-inline-composer .moment-camera-note { display: none; }
+.moment-inline-composer .moment-camera-controls { gap: 40px; padding: 5px 0; }
+.moment-inline-composer .moment-shutter { width: 82px; height: 82px; background: var(--paper); color: var(--primary); outline: 3px solid var(--primary); border: 6px solid var(--canvas); transition: transform var(--motion-soft) var(--ease-soft); }
+.moment-inline-composer .moment-shutter > svg { width: 28px; height: 28px; }
+.moment-inline-composer .moment-flip { background: transparent; color: var(--primary); }
+.moment-inline-composer .moment-camera-zoom { position: absolute; top: 14px; right: 14px; z-index: 2; margin: 0; }
+.moment-inline-composer .moment-review-form { overflow: visible; }
+.moment-inline-composer .moment-review-fields { padding: 0; overflow: visible; }
+.moment-inline-composer .moment-photo-review { max-height: none; border-radius: 32px; }
+.moment-inline-composer .moment-publish-footer { padding: 16px 0 0; border: 0; background: transparent; }
+.moment-history-trigger { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 24px auto 0; padding: 8px 14px; min-height: 44px; border: 0; background: transparent; color: var(--ink); font: 900 16px/1.4 "Nunito", sans-serif; cursor: pointer; }
+.moment-history-trigger > span { display: flex; align-items: center; gap: 10px; }
+.moment-history-trigger img { width: 30px; height: 30px; border-radius: 9px; object-fit: cover; }
+.stream-moment { position: relative; display: grid; gap: 18px; text-align: center; }
+.stream-moment .now-photo-stack { width: 100%; margin: 0; }
+.stream-moment .now-photo { border-radius: 36px; isolation: isolate; }
+.stream-moment .now-photo-surface { display: block; position: relative; width: 100%; aspect-ratio: 1; padding: 0; border: 0; border-radius: inherit; background: var(--paper); overflow: hidden; transform: none; transition: none; touch-action: pan-y pinch-zoom; cursor: default; }
+.stream-moment .now-photo-surface > img { width: 100%; height: 100%; object-fit: cover; }
+.stream-caption { position: absolute; z-index: 1; bottom: 18px; left: 50%; transform: translateX(-50%); max-width: calc(100% - 36px); width: max-content; border: 0; border-radius: 24px; padding: 10px 18px; background: var(--primary); color: var(--canvas); cursor: pointer; font: 900 20px/1.35 "Nunito", sans-serif; letter-spacing: -.025em; text-align: center; }
+.stream-caption > span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; white-space: pre-wrap; overflow-wrap: anywhere; }
+.stream-caption.is-expanded { max-height: 60%; overflow-y: auto; }
+.stream-caption.is-expanded > span { display: block; }
+.stream-moment .now-identity-slot { height: auto; min-height: 40px; padding: 0; display: flex; justify-content: center; align-items: center; }
+.stream-moment .now-byline { margin: 0; gap: 9px; flex-wrap: nowrap; }
+.stream-moment .now-byline > a { max-width: 72%; }
+.stream-moment .now-byline strong { font-size: 18px; }
+.stream-moment .now-timestamp { font-size: 15px; color: var(--muted); }
+.stream-moment .now-response-slot { width: 100%; height: 56px; min-height: 56px; }
+.stream-moment .now-respond-bar { grid-template-columns: minmax(0, 1fr) 148px; height: 56px; width: 100%; padding: 5px 8px 5px 16px; border-radius: 28px; background: var(--paper); box-shadow: none; }
+.stream-moment .story-reply { min-width: 0; flex: 1; }
+.stream-moment .story-reply-input { min-width: 0; }
+.stream-moment .story-reply-input input { font-size: 16px; min-width: 0; }
+.stream-moment .story-reply-send { width: 38px; height: 38px; flex: 0 0 38px; border-radius: 50%; background: var(--primary); color: var(--canvas); }
+.stream-moment .story-reply-send:disabled { display: none; }
+.stream-moment .now-reactions-row { gap: 3px; }
+.stream-moment .now-reaction-strip { width: 114px; }
+.stream-moment .now-reaction-strip button { width: 38px; flex: 0 0 38px; }
+.stream-moment .now-reaction-strip img { width: 32px; height: 32px; }
+.stream-moment .moment-actions { justify-self: end; height: 44px; }
+.stream-moment .moment-share-trigger { min-height: 44px; min-width: 44px; padding: 0; }
+.stream-moment .moment-share-trigger > span:last-child { display: none; }
+.stream-moment .moment-share-icon { width: 44px; height: 44px; background: transparent; }
+.moment-return-camera, .story-stream-camera { display: grid; place-items: center; width: 48px; height: 48px; border: 0; border-radius: 50%; background: var(--primary); color: var(--canvas); cursor: pointer; }
+.moment-return-camera { position: absolute; left: calc(50% - 24px); bottom: -2px; }
+.moment-end-copy { text-align: center; }
+.moment-end-copy > img { display: block; margin: 0 auto 24px; object-fit: contain; }
+.moment-end-copy h2 { font-size: 27px; line-height: 1.3; margin: 0 0 12px; }
+.moment-end-copy p { max-width: 32ch; margin: 0 auto 20px; font-size: 16px; line-height: 1.7; }
+.moment-refresh { display: block; margin: 12px auto 0; border: 0; padding: 10px 16px; min-height: 44px; background: var(--paper); border-radius: 22px; color: var(--primary); font: 800 15px "Nunito", sans-serif; cursor: pointer; }
+.now-shelf { max-width: 640px; height: 100%; overflow-y: auto; padding: calc(var(--safe-top) + var(--header-height) + 16px) 20px 110px; margin: auto; }
+.now-shelf-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.now-shelf-header h2 { font-size: 25px; margin: 0; }
+.now-shelf-header button { display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 50%; background: var(--paper); color: var(--ink); cursor: pointer; }
+/* The daily viewer uses the exact same scrolling surface and response layout. */
+.app-dialog.story-stream-dialog { position: fixed; inset: 0; width: 100vw; max-width: none; height: var(--messages-height, 100dvh); max-height: none; margin: 0; padding: 0; border: 0; border-radius: 0; background: var(--canvas); color: var(--ink); overflow: hidden; }
+.app-dialog.story-stream-dialog::backdrop { background: #07162b80; }
+.app-dialog.story-stream-dialog > .dialog-content { width: 100%; height: 100%; max-height: none; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; display: flex; flex-direction: column; }
+.story-stream-dialog > .dialog-content > .dialog-header { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: min(100%, 480px); z-index: 3; border: 0; background: var(--canvas); padding: max(16px, env(safe-area-inset-top)) 20px 10px; }
+.story-stream-dialog > .dialog-content > .dialog-header h2 { font: 900 18px/1.4 "Nunito", sans-serif; }
+.story-stream-dialog > .dialog-content > .dialog-header .dialog-subtitle { font-size: 13px; margin-top: 2px; }
+.story-stream-dialog > .dialog-content > .dialog-header > .icon-button { width: 44px; height: 44px; border-radius: 50%; background: var(--paper); }
+.story-stream-dialog .moment-page { padding-top: 114px; padding-bottom: max(84px, env(safe-area-inset-bottom)); }
+.story-stream-camera { position: absolute; bottom: max(20px, env(safe-area-inset-bottom)); left: calc(50% - 24px); z-index: 3; }
+/* Explicit dialog sizing prevents a global span selector from stretching the founding explanation. */
+.app-dialog.founding-info-dialog { width: min(360px, calc(100vw - 32px)); height: fit-content; max-height: calc(100dvh - 48px); margin: auto; padding: 0; border: 0; border-radius: 28px; background: var(--paper); color: var(--ink); }
+.founding-info-dialog > .dialog-content { width: 100%; height: fit-content; padding: 0; background: var(--paper); border: 0; box-shadow: none; }
+.founding-info-dialog .dialog-header { padding: 20px 20px 0; border: 0; align-items: center; }
+.founding-info-dialog .dialog-header h2 { font-size: 20px; line-height: 1.4; }
+.founding-info { display: block; padding: 12px 24px 26px; white-space: normal; }
+.founding-info > svg { display: block; color: #aa7414; margin-bottom: 12px; }
+.founding-info p { display: block; font: 700 15px/1.7 "Nunito", sans-serif; margin: 0; color: var(--ink); }
+.founding-badge { min-height: 44px; background: transparent; }
+.founding-badge::after { content: none; }
+[data-theme="dark"] .founding-badge { background: transparent; color: #f0ce79; }
+[data-theme="dark"] .founding-info > svg { color: #f0ce79; }
+/* Motion stays on transform/opacity; scrolling never writes React state every frame. */
+.close-app :is(.moment-return-camera, .moment-audience, .moment-history-trigger, .moment-refresh, .moment-flip, .close-more-navigation) { transition: transform var(--motion-soft) var(--ease-soft), opacity 240ms ease-out; }
+.close-app :is(.moment-return-camera, .moment-audience, .moment-history-trigger, .moment-refresh):active { transform: scale(.96); }
+.close-app button:focus-visible { outline: 2px solid var(--primary); outline-offset: 4px; }
+@media (max-width: 640px) {
+  .moment-home-top { top: calc(var(--safe-top, 0px) + 18px); }
+  .close-home .close-brand .brand-wordmark { width: 86px; }
+  .close-home .close-header { padding-inline: 18px; }
+  .close-home .close-header-end { gap: 6px; }
+  .close-home .close-header .theme-toggle { display: none; }
+  .moment-audience { font-size: 13px; padding-inline: 12px; gap: 5px; }
+  .moment-audience > svg { width: 15px; }
+  .moment-page { min-height: 0; height: max(var(--stream-page-height, 100dvh), calc(100vw + 310px)); padding: calc(var(--safe-top, 0px) + 88px) 16px calc(102px + env(safe-area-inset-bottom)); }
+  .moment-page-content { max-width: 440px; }
+  .moment-inline-composer .moment-viewfinder, .stream-moment .now-photo { border-radius: 32px; }
+  .moment-inline-composer .moment-camera { gap: 26px; }
+  .moment-history-trigger { margin-top: 24px; }
+  .stream-moment { gap: 18px; }
+  .stream-caption { font-size: 19px; bottom: 16px; padding: 9px 16px; }
+  .stream-moment .now-byline strong { font-size: 17px; }
+  .stream-moment .now-timestamp { font-size: 14px; }
+  .stream-moment .now-reaction-strip { width: 108px; }
+  .stream-moment .now-reaction-strip button { width: 36px; flex-basis: 36px; }
+  .close-home[data-keyboard-open="true"] .moment-home-top { display: none; }
+  .close-app[data-keyboard-open="true"] .moment-stream { scroll-snap-type: none; }
+  .close-app[data-keyboard-open="true"] .moment-page { padding-top: 20px; padding-bottom: 20px; }
+}
+@media (max-width: 360px) {
+  .moment-audience { max-width: 112px; font-size: 12px; }
+  .close-home .close-brand .brand-wordmark { width: 72px; }
+  .moment-audience > svg { display: none; }
+  .stream-moment .now-respond-bar { grid-template-columns: minmax(0, 1fr) 112px; }
+  .stream-moment .now-reaction-strip { width: 72px; }
+  .stream-caption { font-size: 17px; }
+}
+@media (min-width: 641px) and (max-height: 790px) {
+  .moment-page-content { max-width: 360px; }
+  .moment-page { height: max(var(--stream-page-height, 100dvh), 680px); padding-block: 90px 100px; }
+}
+@media (min-width: 641px) and (max-height: 520px) {
+  .moment-page { min-height: 610px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .moment-stream { scroll-behavior: auto; scroll-snap-type: y proximity; }
+  .close-app :is(.moment-return-camera, .moment-audience, .moment-history-trigger, .moment-refresh, .moment-flip, .close-more-navigation, .moment-shutter) { transition: none; }
+}
+.reduce-motion .moment-stream { scroll-behavior: auto; scroll-snap-type: y proximity; }
+.reduce-motion :is(.moment-return-camera, .moment-audience, .moment-history-trigger, .moment-refresh, .moment-flip, .close-more-navigation, .moment-shutter) { transition: none; }
+.stream-moment > .moment-actions { grid-row: 4; }
+@media (max-width: 640px) {
+  .close-app[data-keyboard-open="true"] .stream-moment .now-respond-bar { grid-template-columns: minmax(0, 1fr); }
+  .close-app[data-keyboard-open="true"] .stream-moment .now-reactions-row,
+  .close-app[data-keyboard-open="true"] .moment-return-camera,
+  .close-app[data-keyboard-open="true"] .stream-moment > .moment-actions { display: none; }
+}
+/* Landscape phones put photo and actions beside each other so each page fits. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .moment-page { height: var(--stream-page-height, 100dvh); min-height: 0; padding: 68px 24px 12px; }
+  .moment-page-content { width: min(100%, 740px); max-width: 740px; }
+  .stream-moment { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: 40px 56px 44px; gap: 10px 24px; align-items: center; }
+  .stream-moment .now-photo-stack { grid-column: 1; grid-row: 1 / 4; width: min(100%, calc(var(--stream-page-height, 100dvh) - 88px)); justify-self: center; }
+  .stream-moment .now-identity-slot { grid-column: 2; grid-row: 1; }
+  .stream-moment .now-response-slot { grid-column: 2; grid-row: 2; }
+  .stream-moment > .moment-actions { grid-column: 2; grid-row: 3; }
+  .stream-caption { font-size: 16px; padding: 6px 12px; bottom: 12px; }
+  .stream-moment .now-byline strong { font-size: 16px; }
+  .stream-moment .now-timestamp { font-size: 13px; }
+  .moment-return-camera { left: calc(75% - 24px); }
+  .moment-inline-composer .moment-camera { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: 100px 70px; gap: 10px 24px; align-items: center; }
+  .moment-inline-composer .moment-viewfinder { grid-column: 1; grid-row: 1 / 3; width: min(100%, calc(var(--stream-page-height, 100dvh) - 88px)); justify-self: center; border-radius: 28px; }
+  .moment-inline-composer .moment-camera-controls { grid-column: 2; grid-row: 1; gap: 20px; }
+  .moment-camera-page .moment-history-trigger { position: absolute; left: 50%; right: 0; bottom: 10px; margin: 0; }
+  .moment-inline-composer .moment-camera-message { padding: 12px; gap: 7px; font-size: 12px; line-height: 1.4; }
+  .moment-inline-composer .moment-camera-message > svg { display: none; }
+  .moment-inline-composer .moment-camera-message strong { font-size: 15px; }
+  .moment-inline-composer .moment-camera-message .button { min-height: 40px; padding: 8px 12px; font-size: 13px; }
+  .moment-inline-composer .moment-review-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px 24px; }
+  .moment-inline-composer .moment-review-fields, .moment-inline-composer .moment-review-controls { display: contents; }
+  .moment-inline-composer .moment-photo-review { grid-column: 1; grid-row: 1 / 3; width: min(100%, calc(var(--stream-page-height, 100dvh) - 88px)); justify-self: center; }
+  .moment-inline-composer .moment-caption-field { grid-column: 2; grid-row: 1; }
+  .moment-inline-composer .moment-publish-footer { grid-column: 2; grid-row: 2; padding: 0; }
+  .moment-camera-page:has(.moment-review-form) .moment-history-trigger { display: none; }
+  .moment-stream-end .moment-page-content { max-width: 560px; }
+  .moment-stream-end .moment-end-copy > img { display: none; }
+  .moment-stream-end .moment-end-copy h2 { font-size: 22px; margin-bottom: 8px; }
+  .moment-stream-end .moment-end-copy p { max-width: 50ch; font-size: 14px; line-height: 1.5; margin-bottom: 8px; }
+  .moment-stream-end .moment-history-trigger { margin-top: 8px; }
+  .moment-stream-end .moment-refresh { margin-top: 4px; }
+  .story-stream-dialog .moment-page { padding: 76px 24px 68px; }
+  .story-stream-dialog .stream-moment .now-photo-stack { width: min(100%, calc(var(--stream-page-height, 100dvh) - 164px)); }
+}

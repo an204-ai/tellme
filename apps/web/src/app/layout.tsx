@@ -13,7 +13,6 @@ import "../styles/conversation-tools.css";
 import "../styles/pull-refresh.css";
 import "../styles/reactions.css";
 import "../styles/mobile-type.css";
-import "../styles/weather.css";
 import "../styles/navigation-motion.css";
 import "../styles/music.css";
 import "../styles/social-composition.css";
@@ -33,9 +32,15 @@ import "../styles/story-stack.css";
 import "../styles/profile-close.css";
 import "../styles/founding-members.css";
 import "../styles/moment-layout.css";
+import "../styles/moment-stream.css";
+import "../styles/locket-refinements.css";
+import "../styles/upload-hamster.css";
+import "../styles/app-finish.css";
+import "../styles/ui-system.css";
+import "../styles/photo-groups.css";
 export async function generateViewport(): Promise<Viewport> {
   const dark = (await cookies()).get("tellme_theme")?.value === "dark";
-  return { width: "device-width", initialScale: 1, viewportFit: "cover", interactiveWidget: "resizes-content", themeColor: dark ? "#102238" : "#dceafa" };
+  return { width: "device-width", initialScale: 1, viewportFit: "cover", interactiveWidget: "resizes-content", themeColor: dark ? "#18181b" : "#ffffff" };
 }
 export const metadata: Metadata = {
   title: "Tellme — Your day. Your stories.",

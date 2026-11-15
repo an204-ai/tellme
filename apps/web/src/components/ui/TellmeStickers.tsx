@@ -5,6 +5,7 @@ import { useId, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
 import { TELLME_STICKERS, TELLME_STICKER_PACKS, getTellmeSticker, normalizeStickerText, suggestTellmeStickers } from "@tellme/shared/stickers";
 import { IconButton } from "./Primitives";
+import { SurfacePresence } from "./SurfaceTransition";
 
 export type TellmeSticker = (typeof TELLME_STICKERS)[number];
 export function TellmeStickerButton({ label, onSelect, disabled = false, showLabels = true }: {
@@ -64,13 +65,12 @@ export function TellmeStickerButton({ label, onSelect, disabled = false, showLab
 export function TellmeStickerSuggestions({ text, onSelect, showLabels = true }: { text: string; onSelect: (sticker: TellmeSticker) => void; showLabels?: boolean }) {
   const [dismissed, setDismissed] = useState<string | null>(null);
   const stickers = suggestTellmeStickers(text);
-  if (!stickers.length || dismissed === text) return null;
-  return <div className="tellme-sticker-suggestions" role="group" aria-label="Sticker gợi ý theo nội dung đang nhập">
+  return <SurfacePresence show={!!stickers.length && dismissed !== text}><div className="tellme-sticker-suggestions" role="group" aria-label="Sticker gợi ý theo nội dung đang nhập">
     <div className="tellme-sticker-suggestion-heading"><span>Kể bằng sticker nè</span><IconButton label="Ẩn gợi ý sticker" onClick={() => setDismissed(text)}><X size={15} /></IconButton></div>
     <div className="tellme-sticker-suggestion-list">{stickers.map((sticker) => <button type="button" key={sticker.id} aria-label={`Dùng sticker gợi ý ${sticker.label}`} onClick={() => { playInterfaceSound("pop"); onSelect(sticker); }}>
       <img src={sticker.src} alt="" width="60" height="60" loading="lazy" draggable={false} />{showLabels && <span>{sticker.label}</span>}
     </button>)}</div>
-  </div>;
+  </div></SurfacePresence>;
 }
 
 export function TellmeStickerDraft({ id, onRemove }: { id: string; onRemove: () => void }) {

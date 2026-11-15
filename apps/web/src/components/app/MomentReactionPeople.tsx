@@ -13,8 +13,8 @@ import type { Reaction } from "@/lib/types";
 
 type Reactor = { id: string; name: string; username: string; avatar: string; reaction: Reaction };
 
-export function MomentReactionPeople({ storyId, itemId, onProfile, loadPreview = true }: {
-  storyId: string; itemId: string; onProfile: () => void; loadPreview?: boolean;
+export function MomentReactionPeople({ storyId, itemId, onProfile, loadPreview = true, label }: {
+  storyId: string; itemId: string; onProfile: () => void; loadPreview?: boolean; label?: string;
 }) {
   const [open, setOpen] = useState(false);
   // The compact preview and full list share one paginated cache; fetch only five initially.
@@ -32,6 +32,7 @@ export function MomentReactionPeople({ storyId, itemId, onProfile, loadPreview =
   const people = [...new Map(query.data?.pages.flatMap((page) => page.items.map((person) => [person.id, person] as const))).values()];
   return <>
     <button className="moment-reaction-people" type="button" onClick={() => setOpen(true)} aria-label="Xem người đã thả cảm xúc" aria-busy={query.isFetching && !people.length}>
+      {label && <span className="moment-activity-label">{label}</span>}
       {people.length ? <span className="reaction-avatar-stack">{people.slice(0, 5).map((person) => <Avatar key={person.id} person={{ name: person.name, avatar: person.avatar }} size="sm" />)}</span>
         : query.isError ? <RefreshCw size={21} aria-hidden="true" /> : <Smile size={23} aria-hidden="true" />}
     </button>

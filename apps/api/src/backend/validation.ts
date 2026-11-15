@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { normalizeMomentCaption, validMomentCaption } from "@tellme/shared/captions";
 import { isMomentReaction, type MomentReaction } from "@tellme/shared/reactions";
 import { getTellmeSticker } from "@tellme/shared/stickers";
 export const idSchema = z.string().uuid();
@@ -42,11 +43,12 @@ export const pushSubscriptionSchema = z.object({
   expirationTime: z.number().int().positive().nullable().optional(),
   keys: z.object({ p256dh: z.string().min(1).max(256), auth: z.string().min(1).max(256) }),
 });
+export const momentCaptionSchema = z.string().max(300).transform(normalizeMomentCaption).refine(validMomentCaption, "Chú thích tối đa 8 từ và 40 ký tự.");
 export const momentSchema = z.object({
   id: idSchema,
   storyId: idSchema,
   image: z.string().min(1).max(2000),
-  caption: z.string().trim().max(300),
+  caption: momentCaptionSchema,
   storyPrivacy: z.literal("connections").default("connections"),
   privacy: z.literal("connections").optional(),
 });

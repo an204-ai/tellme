@@ -8,7 +8,14 @@
     "start": "next start --hostname 0.0.0.0 --port 3000",
     "check-types": "tsc --noEmit",
     "test:received-reactions": "node --experimental-strip-types tests/received-reactions.test.ts",
-    "test:camera": "node --experimental-strip-types tests/camera.test.ts"
+    "test:camera": "node --experimental-strip-types tests/camera.test.ts",
+    "test:profile-journey": "node --experimental-strip-types tests/profile-journey.test.ts",
+    "test:popover-fallback": "node --experimental-strip-types tests/popover-fallback.test.ts",
+    "test:auth-navigation": "node --experimental-strip-types tests/auth-navigation.test.ts",
+    "test:moment-upload": "node --experimental-strip-types tests/moment-upload.test.ts",
+    "test:moment-snap": "node --experimental-strip-types tests/moment-snap.test.ts",
+    "test:ui-motion": "node --experimental-strip-types tests/ui-motion.test.ts",
+    "test:photo-group-feed": "node --experimental-strip-types tests/photo-group-feed.test.ts"
   },
   "dependencies": {
     "@emoji-mart/data": "^1.2.1",

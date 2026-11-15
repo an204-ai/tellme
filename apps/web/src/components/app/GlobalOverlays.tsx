@@ -1,6 +1,7 @@
 "use client";
 import { FoundingWelcome } from "./FoundingWelcome";
 import { MomentComposer } from "./MomentComposer";
+import { PhotoGroupsDialog } from "./PhotoGroupsDialog";
 import { SupportModal } from "./TellmeSupport";
 import { MusicOverlays } from "@/components/music/StoryMusic";
 import { useEffect, useState } from "react";
@@ -199,6 +200,8 @@ export function GlobalOverlays() {
   const pathname = usePathname();
   const { overlay, toast, clearToast, viewedStory, viewedStoryIndex, viewedStoryMomentId, viewedStoryOrigin } =
     useAppStore();
+  const feedback = useAppStore((state) => state.feedback);
+  const clearFeedback = useAppStore((state) => state.clearFeedback);
   useEffect(() => {
     if (!toast) return;
     const timer = setTimeout(clearToast, 4500);
@@ -213,6 +216,7 @@ export function GlobalOverlays() {
   return (
     <>
       {overlay === "moment" && <MomentComposer />}
+      {overlay === "photo-groups" && <PhotoGroupsDialog onClose={() => useAppStore.getState().open(null)} />}
       {overlay === "support" && <SupportModal />}
       {overlay === "edit-profile" && <EditProfile />}
       {viewedStory && (
@@ -226,6 +230,7 @@ export function GlobalOverlays() {
       )}
       <MusicOverlays />
       <FoundingWelcome />
+      {feedback && <Modal title={feedback.title} className="action-feedback-dialog" onClose={clearFeedback}><div className="dialog-body">{feedback.text && <p>{feedback.text}</p>}<Button className="full-width" onClick={clearFeedback}>OK</Button></div></Modal>}
       {toast && (
         <div className="toast" role="status">
           <Check size={18} />

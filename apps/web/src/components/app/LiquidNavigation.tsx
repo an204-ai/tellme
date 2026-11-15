@@ -41,11 +41,7 @@ export function LiquidNavigation({ pathname, className, children }: { pathname: 
     observer.observe(node);
     return () => { observer.disconnect(); animation.current?.cancel(); };
   }, [select]);
-  return <div ref={root} className={`liquid-navigation ${className}`} onClickCapture={(event) => {
-    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    const link = (event.target as Element).closest<HTMLAnchorElement>("a[href]");
-    if (link && event.currentTarget.contains(link)) select(link, true);
-  }}>
+  return <div ref={root} className={`liquid-navigation ${className}`}>
     <span ref={indicator} className="nav-liquid-glider" aria-hidden="true" />
     {children}
   </div>;

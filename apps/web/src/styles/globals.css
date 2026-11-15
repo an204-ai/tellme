@@ -88,7 +88,7 @@ select:focus-visible {
 }
 input::placeholder,
 textarea::placeholder {
-  color: #000000;
+  color: var(--placeholder);
   opacity: 1;
 }
 img {
@@ -334,7 +334,7 @@ a.person-name:hover {
   color: var(--ink);
 }
 .uiv-input .cir-search__field::placeholder {
-  color: #000000;
+  color: var(--placeholder);
 }
 .uiv-input .cir-search:focus-within {
   border-color: #6185bf;
@@ -2187,7 +2187,7 @@ a.person-name:hover {
   border-inline-color: var(--primary);
 }
 .uiv-form .form .input::placeholder {
-  color: #000000;
+  color: var(--placeholder);
 }
 .auth-field {
   display: block;
@@ -2937,7 +2937,7 @@ body {
 input::placeholder,
 textarea::placeholder,
 .uiv-input .cir-search__field::placeholder {
-  color: #000;
+  color: var(--placeholder);
   opacity: 1;
 }
 .uiv-input .cir-search__field:focus,
@@ -2959,7 +2959,7 @@ textarea::placeholder,
   color: #000;
 }
 .uiv-form .form .input::placeholder {
-  color: #000;
+  color: var(--placeholder);
 }
 .uiv-button .button-primary,
 .uiv-form .form .login-button {

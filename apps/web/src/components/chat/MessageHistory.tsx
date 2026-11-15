@@ -14,12 +14,7 @@ type HistoryProps = { data: AppData; conversation: Conversation; person: Person;
 export const MessageHistory = memo(forwardRef<HTMLDivElement, HistoryProps>(function MessageHistory({ data, conversation, person, onReply }, ref) {
   const readers = messageReaders(conversation);
   return <div className="chat-message-history" ref={ref}>
-    <div className="chat-intro">
-      <Avatar person={person} size="lg" />
-      <strong>{person.name}</strong>
-      <span>Bắt chuyện bằng một lời chào nhé.</span>
-    </div>
-    <span className="chat-day-label">Cuộc trò chuyện của bạn</span>
+    {!conversation.messages.length && <div className="chat-intro"><Avatar person={person} size="lg" /><strong>{person.name}</strong></div>}
     {conversation.messages.map((message) => {
       const sticker = getTellmeSticker(message.stickerId);
       return <div key={message.id} className={`message-row ${message.own ? "own" : ""}`}>

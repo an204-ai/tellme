@@ -1,0 +1,197 @@
+/* System material and feedback. New controls inherit these tokens in both themes. */
+:root {
+  --control-surface: #dddde3e6;
+  --control-highlight: #ffffffb3;
+  --control-shadow: 0 8px 24px #17172216;
+  --overlay-surface: #f5f5f5f2;
+  --placeholder: #5f5f69;
+  --ease-arrive: cubic-bezier(.16,1,.3,1);
+  --motion-arrive: 460ms;
+  --motion-leave: 460ms;
+  --ease-leave: cubic-bezier(.4,0,.2,1);
+  --control-selected: #c5c5cfe6;
+  --danger: #b12642;
+  --danger-fill: #b12642;
+  --danger-ink: #fff;
+}
+:root[data-theme="dark"] {
+  --control-surface: #444449c9;
+  --control-highlight: #ffffff20;
+  --control-shadow: 0 8px 24px #0002;
+  --overlay-surface: #2b2b2ff2;
+  --placeholder: #b8b8c0;
+  --control-selected: #62626bc9;
+  --danger: #ff9baf;
+}
+.glass-control,
+.glass-option,
+.glass-action,
+:root .glass-field,
+:root .close-app .button-secondary,
+:root .close-floating-navigation :is(.close-primary-navigation, .close-more-navigation),
+:root :is(.moment-options-trigger, .moment-audience),
+:root .close-app :is(.now-respond-bar, .now-own-response .moment-reaction-people, .chat-input-line, .chat-details-toggle),
+.profile-quick-actions > :is(a, button) > span,
+.close-profile .journey-navigation button::before {
+  background: var(--control-surface);
+  box-shadow: inset 0 1px var(--control-highlight), var(--control-shadow);
+  -webkit-backdrop-filter: blur(16px) saturate(1.12);
+  backdrop-filter: blur(16px) saturate(1.12);
+}
+:root .app-dialog:not(.story-stream-dialog) > .dialog-content {
+  background: var(--overlay-surface);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+input::placeholder, textarea::placeholder { color: var(--placeholder); opacity: 1; font-weight: 700; }
+:root .auth-page .auth-field :is(input, button) { color: var(--ink); }
+:root .auth-page .uiv-form .form .input::placeholder { color: var(--placeholder); font-weight: 700; }
+.route-link-pending { position: absolute; bottom: 3px; left: calc(50% - 5px); width: 10px; height: 10px; border: 2px solid var(--line); border-top-color: var(--primary); border-radius: 50%; animation: camera-spin 750ms linear infinite; }
+.close-primary-navigation > a { position: relative; }
+.message-compose-floating { display: none; }
+/* Camera controls occupy the same slots before and after capture. */
+.moment-camera .moment-viewfinder { touch-action: pan-y; }
+.moment-camera :is(.moment-browse, .moment-discard, .moment-flip, .moment-camera-control-space) { width: 56px; height: 56px; flex: 0 0 56px; }
+.moment-camera :is(.moment-browse, .moment-discard) { border: 0; border-radius: 50%; background: transparent; color: var(--primary); display: grid; place-items: center; cursor: pointer; }
+.moment-camera :is(.moment-browse, .moment-discard, .moment-flip):active { transform: scale(.94); }
+.moment-camera :is(.moment-browse, .moment-discard, .moment-flip) { transition: transform 140ms var(--ease-arrive); }
+.moment-camera .moment-flip > svg { width: 30px; height: 30px; }
+.moment-camera .moment-flip:disabled { opacity: .4; }
+.camera-zoom-presence { position: absolute; z-index: 2; top: 14px; right: 14px; transform-origin: top right; }
+.moment-camera .moment-viewfinder .moment-camera-zoom { position: static; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; margin: 0; padding: 0; color: var(--ink); }
+.moment-camera-zoom output { min-width: 0; font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.moment-captured-form { margin: 0; padding: 0; min-width: 0; width: 100%; }
+.moment-captured-form .moment-photo-review { max-height: none; border-radius: 36px; }
+.moment-inline-composer .moment-captured-form .moment-photo-review { width: min(100%, max(180px, calc(var(--stream-page-height, 100dvh) - 350px))); margin-inline: auto; }
+/* The mirror text gives the chip an intrinsic width in every supported browser. */
+.moment-caption-overlay { --placeholder: #f1f5fd; position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); display: inline-grid; grid-template-columns: minmax(0, 1fr); max-width: calc(100% - 32px); width: max-content; box-sizing: border-box; border-radius: 22px; padding: 8px 14px; background: #07327fb8; color: #fff; font: 800 16px/1.35 "Nunito", sans-serif; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+.moment-caption-overlay > span { grid-area: 1 / 1; white-space: pre; visibility: hidden; overflow: hidden; pointer-events: none; }
+/* Keep the visible chip compact, but let every part of it accept a direct tap. */
+.moment-caption-overlay > input { position: absolute; z-index: 1; inset: -4px 0; box-sizing: border-box; width: 100%; min-width: 0; height: calc(100% + 8px); min-height: 44px; margin: 0; padding: 4px 14px; border: 0; outline: 0; background: transparent; font: inherit; color: inherit; text-align: center; cursor: text; touch-action: manipulation; }
+:root .moment-caption-overlay > input { caret-color: #fff; }
+[data-theme="dark"] .moment-caption-overlay { background: #303e52b8; }
+.moment-caption-overlay input::placeholder { color: var(--placeholder); font-weight: 700; }
+.moment-camera .moment-publish-shutter { background: var(--primary); color: var(--action-ink); }
+.moment-camera .field-error { margin: 0; text-align: center; }
+.moment-capture-dialog .moment-captured-form { padding: 20px; overflow-y: auto; }
+/* Friend filtering is a scoped feed, with a clear all-friends reset. */
+.moment-audience > span { max-width: 130px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.app-dialog.moment-friends-dialog { width: min(420px, calc(100vw - 32px)); padding: 0; border: 0; border-radius: 28px; max-height: calc(100dvh - 48px); overflow-y: auto; color: var(--ink); background: var(--paper); }
+.moment-friends-list { display: grid; gap: 6px; padding: 8px 20px 24px; }
+.moment-friends-list > button { display: flex; gap: 14px; align-items: center; width: 100%; min-height: 72px; border: 0; border-radius: 18px; padding: 10px; background: transparent; color: var(--ink); text-align: left; font: inherit; cursor: pointer; }
+.moment-friends-list > button:hover, .moment-friends-list > button[aria-pressed="true"] { background: var(--paper-soft); }
+.moment-friends-list strong { flex: 1; min-width: 0; overflow-wrap: anywhere; font-size: 17px; }
+.moment-friends-all { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; color: var(--primary); }
+.moment-friends-list > button > svg { flex-shrink: 0; color: var(--primary); }
+/* All new-chat rows and sticker helpers use the same semantic surfaces. */
+.new-conversation-list > button { background: var(--paper-soft); color: var(--ink); border-radius: 18px; min-height: 72px; }
+.new-conversation-list :is(strong, small) { color: var(--ink); }
+.new-conversation-list strong { font-size: 16px; font-weight: 800; }
+.new-conversation-list small { color: var(--muted); }
+.tellme-sticker-picker { background: var(--overlay-surface); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
+.tellme-sticker-picker:popover-open, .tellme-sticker-picker[data-fallback-open="true"] { display: grid; grid-template-rows: auto 44px 44px minmax(0, 1fr); gap: 12px; }
+.tellme-sticker-search { max-height: 44px; min-height: 44px; height: 44px; }
+.tellme-sticker-search input { background: transparent; color: var(--ink); font-weight: 700; }
+.tellme-sticker-suggestions { background: var(--paper); color: var(--ink); }
+.tellme-sticker-suggestion-heading { color: var(--placeholder); }
+.close-messages .chat-input-line { min-height: 59px; }
+.close-messages .chat-input-line > input { height: 47px; min-height: 47px; }
+.close-messages .chat-input-line > .icon-button { width: 39px; min-width: 39px; height: 43px; }
+.close-messages .chat-input-line > .icon-button svg { width: 25px; height: 25px; }
+.close-messages .chat-input-line .tellme-sticker-trigger img { width: 35px; height: 35px; }
+.close-messages .chat-input-line > button[type="submit"] { width: 45px; height: 45px; min-width: 45px; flex-basis: 45px; }
+.close-messages .chat-input-line > button[type="submit"] svg { width: 26px; height: 26px; }
+.stream-moment .now-response-slot { height: 63px; min-height: 63px; }
+.stream-moment .now-respond-bar { height: 63px; grid-template-columns: minmax(0, 1fr) 180px; }
+.stream-moment .now-reaction-strip { width: 132px; flex: 0 0 132px; gap: 3px; height: 50px; align-items: center; }
+.stream-moment .now-reaction-strip img { width: 48px; height: 48px; max-width: none; }
+.stream-moment .now-reaction-strip button { width: 42px; flex: 0 0 42px; height: 50px; padding: 0; }
+.stream-moment .now-reactions-row > .emoji-trigger { width: 44px; min-width: 44px; height: 48px; }
+.stream-moment .now-reactions-row > .emoji-trigger svg { width: 32px; height: 32px; }
+@media (max-width: 640px) {
+  .close-messages .message-create-actions { display: none; }
+  .message-compose-floating { display: block; position: fixed; bottom: max(35px, calc(env(safe-area-inset-bottom) + 21px)); right: calc(50% - min(calc((100vw - 28px) / 2), 210px)); z-index: 51; }
+  .message-compose-floating > button { width: 46px; height: 46px; min-height: 46px; border-radius: 50%; background: var(--primary); color: var(--action-ink); }
+  .close-app.messages-frame.has-open-chat > .close-main { padding-bottom: max(13px, calc(env(safe-area-inset-bottom) + 3px)); }
+  .stream-moment .now-response-slot { margin-top: calc(clamp(10px, 2vh, 20px) + 3px); }
+  .moment-camera .moment-camera-controls { gap: clamp(24px, 8vw, 40px); }
+  .moment-captured-form .moment-photo-review { border-radius: 32px; }
+}
+@media (max-width: 360px) {
+  .moment-audience > span { max-width: 96px; }
+  .close-messages .chat-input-line { gap: 2px; }
+  .close-messages .chat-input-line > .icon-button { width: 36px; min-width: 36px; }
+  .moment-caption-overlay { font-size: 15px; }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  .moment-inline-composer .moment-captured-form .moment-photo-review { grid-column: 1; grid-row: 1 / 3; width: min(100%, max(100px, calc(var(--stream-page-height) - 158px))); justify-self: center; }
+  .moment-inline-composer .moment-captured-form .moment-camera-controls { grid-column: 2; grid-row: 1; gap: 18px; }
+}
+@media (prefers-reduced-motion: reduce) { .moment-camera :is(.moment-browse, .moment-discard, .moment-flip) { transition: none; } }
+.reduce-motion .moment-camera :is(.moment-browse, .moment-discard, .moment-flip) { transition: none; }
+/* Text entry uses the caret as its active cue. Keyboard focus on actions stays visible. */
+:root :is(input, textarea, [contenteditable="true"]) { font-family: "Nunito", sans-serif; caret-color: var(--primary); }
+:root :is(input, textarea)::placeholder { font-family: "Nunito", sans-serif; font-weight: 700; }
+:root :is(input, textarea):placeholder-shown { text-align: start; }
+:root input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="button"], [type="submit"]):is(:focus, :focus-visible),
+:root textarea:is(:focus, :focus-visible), :root [contenteditable="true"]:focus { outline: none !important; box-shadow: none !important; border-color: var(--input-border, var(--line)) !important; }
+.auth-field, .moment-caption-overlay { --input-border: transparent; }
+:root :is(.cir-search, .input-wrap, .story-reply-input, .tellme-sticker-search, .account-block-search, .close-id-field):focus-within { outline: none !important; box-shadow: none !important; border-color: var(--line) !important; }
+:root .close-app .now-respond-bar:has(input:focus) { outline: none; box-shadow: inset 0 1px var(--control-highlight), var(--control-shadow); }
+/* The composer keeps its translucent material without a clipped outer shadow. */
+:root .close-app .chat-input-line,
+:root .close-app .chat-input-line:focus-within { outline: none; box-shadow: inset 0 1px var(--control-highlight); }
+/* Alpha is already present in all six preset assets. Only their old tile was white. */
+:root .group-avatar-presets > button { background: transparent; border-color: transparent; }
+:root .group-avatar-presets > button:is(:hover, [aria-pressed="true"]) { background: var(--control-surface); }
+:root .group-avatar-presets > button[aria-pressed="true"] { border-color: var(--primary); }
+/* The same small glass caption is used in capture, stream and export preview. */
+.stream-caption, .moment-sheet-preview > span { background: #07327fb8; color: #fff; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); font-size: 16px; padding: 8px 14px; letter-spacing: 0; }
+[data-theme="dark"] :is(.stream-caption, .moment-sheet-preview > span) { background: #303e52b8; }
+.stream-caption > span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stream-caption.is-expanded > span { white-space: pre-wrap; }
+/* A larger photo and one swipeable action rail, without a second button row. */
+.app-dialog.moment-actions-dialog { max-height: calc(100dvh - 16px); }
+.moment-actions-dialog > .dialog-content::before { content: ""; display: block; width: 34px; height: 5px; margin: 10px auto 0; border-radius: 4px; background: var(--line); }
+.moment-actions-dialog .dialog-header { padding: 14px 24px 18px; }
+.moment-sheet-body { padding-top: 0; }
+.moment-sheet-preview { width: min(100%, 360px, 46dvh); border-radius: 30px; }
+.moment-sheet-preview > span { left: 50%; right: auto; bottom: 14px; transform: translateX(-50%); width: max-content; max-width: calc(100% - 28px); white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+.moment-sheet-author { margin: 14px 0 18px; color: var(--muted); }
+.moment-sheet-controls { display: flex; gap: 20px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scrollbar-width: none; margin: 0 -24px; padding: 6px 24px 8px; }
+.moment-sheet-controls::-webkit-scrollbar { display: none; }
+.moment-sheet-controls > button, .moment-sheet-tools > button { flex: 0 0 86px; min-width: 86px; min-height: 88px; gap: 10px; padding: 0; scroll-snap-align: center; white-space: nowrap; font-size: 13px; }
+.moment-sheet-controls button > svg { width: 26px; height: 26px; padding: 17px; background: var(--control-surface); }
+@media (max-width: 360px) { .message-compose-floating { right: 12px; bottom: max(36px, calc(env(safe-area-inset-bottom) + 22px)); } .message-compose-floating > button { width: 44px; height: 44px; min-height: 44px; } }
+@media (orientation: landscape) and (max-height: 520px) { .moment-sheet-preview { width: min(100%, 160px, 38dvh); } .moment-sheet-author { margin-block: 8px; } .moment-actions-dialog .dialog-header { padding-block: 8px; } .moment-sheet-controls { padding-block: 4px; } .moment-sheet-controls button > svg { padding: 12px; } }
+
+/* The same neutral material is used by new fields, options and actions. */
+:root .close-app .button-secondary { border: 0; color: var(--ink); }
+:root .glass-field { background: var(--control-surface); color: var(--ink); }
+:root .cir-search.glass-field > input { background: transparent; }
+:root .glass-field:focus-within { box-shadow: inset 0 1px var(--control-highlight), var(--control-shadow) !important; }
+.glass-option { border: 0; color: var(--ink); }
+.glass-option[aria-pressed="true"] { background: var(--control-selected); color: var(--primary); }
+:root .close-app .close-primary-navigation .nav-liquid-glider { background: var(--control-selected); }
+.glass-action { border: 0; color: var(--ink); font: 800 14px/1.3 "Nunito", sans-serif; cursor: pointer; }
+.glass-action.is-danger { color: var(--danger); }
+:root .button-danger { background: var(--danger-fill); color: var(--danger-ink); border: 0; }
+:root .app-dialog[data-viewport-fit] { position: fixed; height: fit-content; inset-inline: 0; inset-block-start: var(--dialog-viewport-top, 0px); inset-block-end: calc(100% - var(--dialog-viewport-top, 0px) - var(--dialog-viewport-height, 100dvh)); margin-block: auto; margin-inline: auto; max-width: calc(100vw - 24px); max-height: calc(var(--dialog-viewport-height, 100dvh) - 24px); }
+.moment-post-ordinary { border: 0; background: transparent; color: var(--primary); font: inherit; font-weight: 900; text-decoration: underline; text-underline-offset: 3px; }
+
+/* Visual transition snapshots never receive input or enter the accessibility tree. */
+[data-motion-ghost], [data-motion-ghost] * { pointer-events: none !important; }
+
+/* The native scrim and modal share one clock, including the last transparent frame. */
+.app-dialog::backdrop { animation: tellme-backdrop-in var(--motion-arrive) var(--ease-arrive) both; }
+.app-dialog[data-backdrop-handoff="true"]::backdrop { animation: none; }
+.app-dialog[data-modal-state="closing"]::backdrop { animation: tellme-backdrop-out var(--motion-leave) var(--ease-leave) both; }
+@keyframes tellme-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes tellme-backdrop-out { from { opacity: 1; } to { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .app-dialog::backdrop, .app-dialog[data-modal-state="closing"]::backdrop { animation-duration: 100ms; } }
+.reduce-motion .app-dialog::backdrop, .reduce-motion .app-dialog[data-modal-state="closing"]::backdrop { animation-duration: 100ms; }
+/* Scroll remains native; only the track/thumb chrome is hidden across the app. */
+:root, :root * { scrollbar-width: none !important; -ms-overflow-style: none; }
+:root::-webkit-scrollbar, :root *::-webkit-scrollbar { display: none !important; width: 0; height: 0; }
+/* Next can target a real flow box while the viewport loader keeps its centered artwork. */
+.route-loading-anchor { display: flow-root; position: relative; min-height: 1px; width: 100%; }

@@ -9,7 +9,7 @@ import { Modal } from "@/components/ui/Modal";
 import { useAppStore } from "@/stores/app.store";
 
 export function AccountSecurity() {
-  const account = useQuery({ queryKey: ["tellme", "account"], queryFn: () => request<{ email: string; emailVerified: boolean; emailAvailable: boolean }>("/auth/account") });
+  const account = useQuery({ queryKey: ["tellme", "account"], queryFn: () => request<{ email: string; emailVerified: boolean; emailAvailable: boolean }>("/auth/account"), staleTime: 60000 });
   const [editing, setEditing] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [password, setPassword] = useState("");

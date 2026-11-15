@@ -691,9 +691,6 @@
 .today-friend-person strong { white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-height: 1.4; }
 .today-friend-person small { color: #fff; }
 .today-friend-shade { background: linear-gradient(180deg, #06182c66, transparent 35%, #06182cf2); }
-.moment-edit-dialog { width: 560px; }
-.moment-edit-preview { display: block; width: calc(100% - 48px); max-height: 220px; object-fit: contain; margin: 20px 24px 0; border-radius: 12px; background: #f5f7fa; }
-.moment-edit-dialog .moment-edit-actions button { min-height: 40px; font-size: 13px; }
 .story-settings-form { display: grid; gap: 20px; }
 .story-settings-form > p { font-size: 13px; line-height: 1.7; }
 .saved-moments { display: grid; gap: 16px; margin-bottom: 24px; }

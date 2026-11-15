@@ -1,4 +1,5 @@
 "use client";
+import { PhotoGroupInvitations } from "./PhotoGroupInvitations";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient, type InfiniteData } from "@tanstack/react-query";
@@ -25,7 +26,7 @@ export function NotificationList({ active, onNavigate, fullPage = false }: { act
   const query = useNotificationPages(scope, active);
   const notices = useMemo(() => {
     const items = query.data?.pages.flatMap((page) => page.items) || [];
-    return items.filter((notice) => !community?.blocked.includes(notice.userId));
+    return items.filter((notice) => notice.systemIcon !== "weather" && !community?.blocked.includes(notice.userId));
   }, [community?.blocked, query.data]);
   const firstPage = query.data?.pages[0];
 
@@ -72,6 +73,7 @@ export function NotificationList({ active, onNavigate, fullPage = false }: { act
   };
 
   return <div className={`notification-feed ${fullPage ? "page" : ""}`}>
+    <PhotoGroupInvitations onAccepted={onNavigate} />
     {scope === "older" && <button type="button" className="notification-scope-back" onClick={backToRecent}>← Thông báo 7 ngày gần đây</button>}
     <div className="notifications-popover-list notification-feed-list" ref={listRef}>
       {query.isPending ? <p className="notification-feed-state">Đang tải thông báo…</p> : query.isError ? <button type="button" className="notification-feed-state notification-feed-retry" onClick={() => void query.refetch()}>Chưa tải được. Chạm để thử lại.</button> : notices.length ? notices.map((notice) => {

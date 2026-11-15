@@ -19,7 +19,6 @@ EMAIL_FROM=Tellme <noreply@tellme.my>
 VAPID_PUBLIC_KEY=
 VAPID_PRIVATE_KEY=
 VAPID_SUBJECT=mailto:noreply@tellme.my
-OPENWEATHER_API_KEY=
 EPIDEMIC_SOUND_API_KEY=
 
 # Public application addresses and authenticated origins.

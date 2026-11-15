@@ -1,0 +1,152 @@
+/* One centered dock, flanked by Tellme Corner and the current photo's actions. */
+.close-app:not(.close-home) .close-header { background: var(--canvas); }
+.close-floating-navigation { --dock-side: 48px; --dock-gap: 12px; position: fixed; bottom: max(14px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); width: min(calc(100% - 32px), 420px); max-width: none; display: grid; grid-template-columns: var(--dock-side) minmax(0, 1fr) var(--dock-side); align-items: center; gap: var(--dock-gap); z-index: 50; padding: 0; }
+.close-floating-navigation .close-primary-navigation { width: 100%; min-width: 0; height: 60px; padding: 5px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-radius: 32px; background: var(--paper); }
+.close-floating-navigation .close-primary-navigation > a { min-width: 0; width: auto; height: 50px; border-radius: 26px; display: grid; place-items: center; padding: 0; }
+.close-floating-navigation .nav-liquid-glider { border-radius: 26px; }
+.close-floating-navigation .close-more-navigation, .moment-options-trigger { width: var(--dock-side, 48px); height: var(--dock-side, 48px); min-height: 44px; border: 0; border-radius: 50%; display: grid; place-items: center; background: var(--paper); color: var(--primary); padding: 0; box-shadow: 0 5px 20px #1734530b; cursor: pointer; }
+.dock-photo-actions { display: grid; place-items: center; width: var(--dock-side); height: var(--dock-side); }
+.dock-camera-shutter { display: block; width: 36px; height: 36px; border: 3px solid var(--primary); padding: 3px; border-radius: 50%; }
+.dock-camera-shutter::after { content: ""; display: block; width: 100%; height: 100%; border-radius: 50%; background: var(--primary); }
+.close-floating-navigation.is-photo-dock .dock-camera-link { background: transparent; }
+.close-floating-navigation.is-photo-dock .dock-camera-link .close-navigation-icon { transform: none; }
+.close-floating-navigation.is-photo-dock .nav-liquid-glider { opacity: 0; }
+.close-floating-navigation .close-navigation-icon { transition: transform 380ms var(--ease-soft); }
+.viewer-navigation { z-index: 5; }
+/* The old extra camera/share row is gone. Content finishes just above the dock. */
+.close-app.close-home { padding-bottom: 0; }
+.moment-page { height: var(--stream-page-height, 100dvh); min-height: 0; padding: calc(var(--safe-top, 0px) + 88px) 20px calc(96px + env(safe-area-inset-bottom)); scroll-snap-stop: always; }
+.moment-page-content { height: 100%; display: flex; flex-direction: column; justify-content: flex-end; width: min(100%, 440px); max-width: 440px; }
+.stream-moment { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 36px auto; gap: 18px; }
+.stream-moment .now-photo-stack { width: min(100%, max(180px, calc(var(--stream-page-height, 100dvh) - 360px))); margin: 0 auto; }
+.stream-moment .now-photo { touch-action: pan-y pinch-zoom; }
+.stream-moment .now-identity-slot { min-height: 36px; height: 36px; }
+.stream-moment .now-response-slot { margin-top: clamp(12px, 4vh, 34px); }
+.stream-moment .now-own-response .moment-reaction-people { gap: 12px; padding: 8px 18px; min-height: 50px; font-size: 16px; font-weight: 900; background: var(--paper); box-shadow: none; }
+.moment-activity-label { font-weight: 900; }
+.moment-inline-composer .moment-camera { gap: 28px; }
+.moment-inline-composer .moment-viewfinder { width: min(100%, max(180px, calc(var(--stream-page-height, 100dvh) - 340px))); margin-inline: auto; }
+.moment-camera-page .moment-history-trigger { margin: 24px auto 0; flex: 0 0 44px; }
+.moment-stream[data-magnetic] { scroll-snap-type: none; scroll-behavior: auto; }
+.story-stream-dialog .moment-page { padding-top: 106px; padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+.story-stream-dialog .moment-page-content { max-width: 440px; }
+/* A photo sheet provides real share/save/edit/delete or report/block actions. */
+.app-dialog.moment-actions-dialog { position: fixed; inset: auto 0 0; margin: 0 auto; padding: 0; width: min(100%, 500px); height: fit-content; max-height: calc(100dvh - 32px); border: 0; border-radius: 32px 32px 0 0; overflow-y: auto; background: var(--paper); color: var(--ink); }
+.moment-actions-dialog > .dialog-content { height: auto; border-radius: inherit; background: var(--paper); box-shadow: none; }
+.moment-actions-dialog .dialog-header { border: 0; padding: 22px 22px 6px; }
+.moment-actions-dialog .dialog-header h2 { font: 900 22px/1.3 "Nunito", sans-serif; }
+.moment-sheet-body { padding: 12px 24px max(24px, env(safe-area-inset-bottom)); }
+.moment-sheet-preview { position: relative; width: min(62%, 230px, 30dvh); aspect-ratio: 1; margin: 0 auto; border-radius: 26px; overflow: hidden; }
+.moment-sheet-preview > img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.moment-sheet-preview > span { position: absolute; inset: auto 12px 12px; border-radius: 18px; padding: 6px 10px; background: var(--primary); color: var(--action-ink); font-weight: 900; font-size: 14px; text-align: center; max-height: 3.8em; overflow: hidden; }
+.moment-sheet-author { text-align: center; font-size: 15px; font-weight: 900; margin: 14px 0 24px; }
+.moment-sheet-controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px 8px; }
+.moment-sheet-tools { display: contents; }
+.moment-sheet-controls > button, .moment-sheet-tools > button { border: 0; background: transparent; color: var(--ink); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 8px; padding: 0 2px; min-height: 82px; font: 800 13px/1.4 "Nunito", sans-serif; text-align: center; cursor: pointer; }
+.moment-sheet-controls button > svg { box-sizing: content-box; width: 24px; height: 24px; padding: 15px; border-radius: 50%; background: var(--paper-soft); color: var(--primary); flex-shrink: 0; }
+.moment-sheet-controls button.danger-text { color: #b12642; }
+.moment-sheet-controls button.danger-text > svg { color: #b12642; }
+.moment-sheet-controls button:disabled { opacity: .5; cursor: default; }
+.moment-sheet-privacy { margin: 22px auto 0; text-align: center; font-size: 12px; line-height: 1.6; color: var(--muted); max-width: 34ch; }
+/* Profile identity and content each have their own calm, clearly bounded surface. */
+.close-app > .close-main > .close-profile { width: min(100%, 780px); margin-inline: auto; padding: 0; background: transparent; border-radius: 0; overflow: visible; display: flex; flex-direction: column; gap: 20px; }
+.close-profile .profile-summary, .close-profile .profile-capture-section { background: var(--paper); border-radius: 28px; overflow: hidden; }
+.close-app .close-profile .profile-cover { height: 190px; border-radius: 0; }
+.close-profile .profile-identity { padding: 0 24px 12px; }
+.close-profile .profile-identity-row { display: flex; flex-direction: column; align-items: center; gap: 0; margin-top: -48px; text-align: center; }
+.close-profile .profile-portrait { width: 100px; height: 100px; border: 5px solid var(--paper); border-radius: 50%; background: var(--paper); }
+.close-profile .profile-heading { padding-top: 14px; width: 100%; }
+.close-app .close-profile .profile-heading h1 { font-size: 28px; line-height: 1.25; }
+.close-profile .profile-handle-line { justify-content: center; gap: 4px 8px; margin-top: 6px; }
+.close-profile .profile-handle { font-size: 14px; max-width: 100%; }
+.close-profile .profile-intro { max-width: 36ch; margin: 8px auto 0; font-size: 16px; line-height: 1.6; }
+.profile-quick-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 18px 20px 26px; }
+.profile-quick-actions > :is(a, button) { display: flex; flex-direction: column; align-items: center; gap: 9px; border: 0; padding: 0; background: transparent; color: var(--ink); cursor: pointer; min-width: 0; }
+.profile-quick-actions > :is(a, button) > span { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; color: var(--primary); background: var(--paper-soft); }
+.profile-quick-actions strong { font-size: 13px; line-height: 1.4; font-weight: 800; text-align: center; }
+.close-app .close-profile .profile-journey { width: 100%; margin: 0; height: 540px; min-height: 540px; max-height: 540px; padding: 0; border-radius: 28px; background: var(--paper); grid-template-rows: 78px minmax(0, 1fr); overflow: hidden; }
+.close-app .close-profile .journey-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; }
+.close-profile .journey-heading h2 { font-size: 19px; font-weight: 900; margin: 0; line-height: 1.3; }
+.close-app .close-profile .journey-heading > .journey-navigation { display: grid; grid-template-columns: 44px 84px 44px; flex: 0 0 auto; width: 172px; height: 44px; gap: 0; }
+.close-app .close-profile .journey-navigation > span { box-sizing: border-box; width: 84px; min-width: 0; padding: 0 4px; border-radius: 0; background: transparent; display: flex; flex-direction: column; gap: 0; }
+.close-profile .journey-navigation strong { font-size: 14px; }
+.close-profile .journey-navigation small { font-size: 11px; }
+.close-app .close-profile .journey-navigation button { width: 44px; height: 44px; flex: none; }
+.close-profile .journey-month-stage { width: auto; margin: 0 12px 12px; border-radius: 22px; background: var(--paper-soft); }
+.close-profile .journey-corner-left { left: 12px; }
+.close-profile .journey-corner-right { right: 12px; }
+.close-profile .profile-capture-section .journal-composer { margin: 0; padding: 18px 20px; width: 100%; background: transparent; border-radius: 0; }
+.close-profile .profile-message { padding-top: 14px; }
+@media (max-width: 640px) {
+  .close-floating-navigation { --dock-side: 46px; --dock-gap: 10px; bottom: max(12px, env(safe-area-inset-bottom)); width: min(calc(100% - 28px), 420px); }
+  .close-floating-navigation .close-primary-navigation { height: 60px; }
+  .moment-page { padding: calc(var(--safe-top, 0px) + 84px) 16px calc(94px + env(safe-area-inset-bottom)); }
+  .moment-page-content { max-width: 440px; }
+  .stream-moment .now-photo-stack { min-width: 0; }
+  .close-profile .profile-identity { padding-inline: 18px; }
+  .close-app .close-profile .profile-cover { height: 150px; }
+  .close-app .close-profile .profile-heading h1 { font-size: 25px; }
+  .profile-quick-actions { padding-inline: 14px; }
+  .close-app .close-profile .profile-journey { height: 540px; min-height: 540px; max-height: 540px; grid-template-rows: 84px minmax(0, 1fr); }
+  .close-app .close-profile .journey-heading { padding-inline: 16px; gap: 6px; }
+  .close-profile .journey-heading h2 { font-size: 17px; max-width: none; white-space: nowrap; }
+  .close-app[data-keyboard-open="true"] .moment-page-content { justify-content: flex-end; }
+  .close-app[data-keyboard-open="true"] .stream-moment .now-identity-slot { height: 36px; min-height: 36px; }
+  .close-app[data-keyboard-open="true"] .stream-moment .now-response-slot { margin-top: 0; }
+}
+@media (max-width: 360px) {
+  .close-floating-navigation { --dock-side: 44px; --dock-gap: 8px; width: calc(100% - 24px); }
+  .dock-camera-shutter { width: 34px; height: 34px; }
+  .profile-quick-actions strong { font-size: 12px; }
+  .close-profile .profile-handle-line { flex-direction: column; }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  .moment-page { padding: 64px 24px 84px; }
+  .moment-page-content { width: min(100%, 740px); max-width: 740px; justify-content: center; height: 100%; }
+  .stream-moment { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: 36px 56px; gap: 12px 24px; align-items: center; }
+  .stream-moment .now-photo-stack { grid-column: 1; grid-row: 1 / 3; align-self: center; width: min(100%, max(100px, calc(var(--stream-page-height) - 158px))); }
+  .stream-moment .now-response-slot { grid-column: 2; grid-row: 2; margin-top: 0; }
+  .stream-moment .now-identity-slot { grid-column: 2; grid-row: 1; }
+  .moment-inline-composer .moment-viewfinder { width: min(100%, max(100px, calc(var(--stream-page-height) - 158px))); margin-inline: auto; }
+  .moment-camera-page .moment-history-trigger { margin: 0; }
+  .story-stream-dialog .moment-page { padding: 76px 24px 84px; }
+  .moment-sheet-preview { width: 100px; }
+}
+@media (prefers-reduced-motion: reduce) { .close-floating-navigation .close-navigation-icon { transition: none; } }
+.reduce-motion .close-floating-navigation .close-navigation-icon { transition: none; }
+
+.moment-options-trigger:disabled { opacity: .35; cursor: default; }
+
+/* The monthly map uses its actual inner width, never a width plus margins. */
+.close-app .profile-journey { cursor: default; }
+.close-profile .journey-heading h2 { flex: 0 0 auto; }
+.close-profile .journey-navigation > span { line-height: 1.35; }
+.close-profile .journey-month-page { position: relative; }
+.close-app .close-profile .journey-heading .journey-navigation button::before { inset: 0; }
+@media (max-width: 360px) {
+  .close-app .close-profile .journey-heading { flex-wrap: wrap; justify-content: center; padding: 12px; gap: 8px; }
+  .close-app .close-profile .journey-heading h2 { width: 100%; text-align: center; }
+  .close-app .close-profile .profile-journey { grid-template-rows: 104px minmax(0, 1fr); }
+}
+/* Sharing starts with a Tellme identity preview; native sharing is an explicit next step. */
+.app-dialog.profile-share-dialog { width: min(440px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 0; border: 0; border-radius: 28px; background: var(--paper); color: var(--ink); }
+.profile-share-dialog > .dialog-content { background: var(--paper); }
+.profile-share-dialog .dialog-header { gap: 12px; border: 0; padding: 20px 20px 0; }
+.profile-share-dialog .dialog-header h2 { font-size: 22px; color: var(--ink); }
+.profile-share-dialog .dialog-header > button { flex: 0 0 44px; width: 44px; height: 44px; color: var(--ink); background: var(--paper-soft); border-radius: 50%; }
+.profile-share-body { padding: 16px 24px 12px; }
+.profile-share-identity { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.profile-share-identity .brand-wordmark-pair { margin-bottom: 24px; }
+.profile-share-identity .brand-wordmark { width: 94px; height: auto; }
+.profile-share-identity .avatar { width: 96px; height: 96px; }
+.profile-share-identity h3 { margin: 16px 0 4px; max-width: 100%; overflow-wrap: anywhere; color: var(--ink); font-size: 25px; font-weight: 900; line-height: 1.3; }
+.profile-share-id { margin: 0; max-width: 100%; overflow-wrap: anywhere; color: var(--primary); font-size: 18px; font-weight: 800; user-select: all; }
+.profile-share-hint { margin: 20px 0; text-align: center; color: var(--muted); font-size: 14px; line-height: 1.6; }
+.profile-share-buttons { display: flex; flex-direction: column; gap: 10px; }
+.profile-share-buttons button { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 48px; padding: 12px 16px; border: 0; border-radius: 18px; background: var(--primary); color: var(--action-ink); font: 800 16px/1.5 "Nunito", sans-serif; cursor: pointer; }
+.profile-share-buttons button + button { background: var(--paper-soft); color: var(--ink); }
+.profile-share-buttons button:disabled { opacity: .5; cursor: wait; }
+.profile-share-buttons button:hover:not(:disabled) { filter: brightness(.94); }
+.profile-share-buttons button:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+.profile-share-status { min-height: 36px; padding-top: 10px; color: var(--muted); font-size: 12px; line-height: 1.5; text-align: center; }
+@media (max-height: 600px) { .profile-share-identity .brand-wordmark-pair { margin-bottom: 12px; } .profile-share-identity .avatar { width: 64px; height: 64px; } .profile-share-body { padding-top: 8px; } .profile-share-hint { margin-block: 12px; } }

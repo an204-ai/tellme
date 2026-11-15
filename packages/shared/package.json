@@ -7,9 +7,17 @@
   "exports": {
     ".": "./src/index.ts",
     "./stickers": "./stickers.mjs",
+    "./captions": {
+      "types": "./captions.d.mts",
+      "default": "./captions.mjs"
+    },
     "./reactions": {
       "types": "./reactions.d.mts",
       "default": "./reactions.mjs"
+    },
+    "./photo-groups": {
+      "types": "./photo-groups.d.mts",
+      "default": "./photo-groups.mjs"
     }
   },
   "dependencies": {

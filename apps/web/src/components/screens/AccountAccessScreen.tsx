@@ -6,7 +6,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { OtpCodeField } from "@/components/ui/OtpCodeField";
 import { Brand } from "@/components/ui/Primitives";
 import { request, apiRepository } from "@/lib/api-repository";
-import { BRAND_DESCRIPTION } from "@/lib/brand";
 
 type Mode = "forgot" | "reset" | "verify";
 type RecoveryStep = "email" | "code" | "password" | "done";
@@ -48,6 +47,7 @@ export function AccountAccessScreen({ mode }: { mode: Mode }) {
     if (verifyingEmail && account.data) setCooldown(account.data.verificationRetryAfter || 0);
   }, [verifyingEmail, account.data?.verificationRetryAfter]);
   const alreadyVerified = verifyingEmail && !!account.data?.emailVerified;
+  useEffect(() => { if (verifyingEmail && (done || alreadyVerified)) window.location.replace("/community/today"); }, [verifyingEmail, done, alreadyVerified]);
   const title = verifyingEmail ? alreadyVerified ? "Email đã xác thực" : "Xác thực email" : step === "code" ? "Nhập mã xác nhận" : step === "password" ? "Đặt mật khẩu mới" : step === "done" ? "Đã đặt lại mật khẩu" : "Quên mật khẩu?";
   const description = verifyingEmail
     ? alreadyVerified ? "Email của bạn đã được xác thực. Bạn có thể vào Tellme để chia sẻ." : `Nhập mã 6 số trong email${account.data?.email ? ` gửi tới ${account.data.email}` : " của bạn"}. Kiểm tra cả thư mục spam nhé.`
@@ -85,7 +85,7 @@ export function AccountAccessScreen({ mode }: { mode: Mode }) {
     } catch (failure) { setError(failure instanceof Error ? failure.message : "Chưa xử lý được. Bạn thử lại nhé."); }
     finally { setBusy(false); }
   };
-  return <main className="auth-page"><section className="auth-visual" aria-label="Tellme"><Link href="/community/today" className="auth-brand"><Brand /></Link><div className="auth-visual-copy"><h1>Đi làm cũng có<br /><strong>chuyện để kể.</strong></h1><p>{BRAND_DESCRIPTION}</p><span>Your day. Your stories.</span></div></section>
+  return <main className="auth-page"><section className="auth-visual" aria-label="Tellme"><Link href="/community/today" className="auth-brand"><Brand /></Link></section>
     <section className="auth-form-area"><div className="uiv-form"><div className="container auth-card">
       <h1 className="heading">{title}</h1><p className="auth-description">{description}</p>
       {(!verifyingEmail && step !== "done" || verifyingEmail && !done && !alreadyVerified) && <form className="form account-access-form" onSubmit={submit}>
@@ -101,7 +101,7 @@ export function AccountAccessScreen({ mode }: { mode: Mode }) {
       {verifyingEmail && !done && !account.data?.emailVerified && <div className="account-resend">{account.data ? <button type="button" className="text-link" disabled={busy || cooldown > 0 || !account.data.emailAvailable} onClick={async () => {
         setBusy(true); setError(""); try { await request("/auth/resend-verification", { method: "POST" }); setMessage("Đã gửi mã xác thực mới. Mã cũ không còn hiệu lực."); setCode(""); setCooldown(60); } catch (failure) { setError((failure as Error).message); } finally { setBusy(false); }
       }}>{cooldown ? `Gửi lại sau ${cooldown}s` : "Gửi lại mã"}</button> : <Link href="/auth/login">Đăng nhập để nhận mã xác thực</Link>}</div>}
-      <div className="account-access-links"><Link href={verifyingEmail && (done || alreadyVerified) ? "/community/today" : "/auth/login"}>{verifyingEmail && (done || alreadyVerified) ? "Vào Tellme" : "Về đăng nhập"}</Link><Link href="/community/today">Ghé xem Tellme</Link></div>
+      <div className="account-access-links"><Link href="/auth/login">Về đăng nhập</Link></div>
     </div></div></section>
   </main>;
 }

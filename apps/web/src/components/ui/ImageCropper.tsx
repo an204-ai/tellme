@@ -36,7 +36,7 @@ export function ImageCropper({ file, kind, title, onCancel, onConfirm }: {
     }).catch((failure: Error) => { if (live) setError(failure.message); });
     return () => { live = false; if (objectUrl) URL.revokeObjectURL(objectUrl); };
   }, [file]);
-  return <Modal title={title || (kind === "avatar" ? "Căn chỉnh ảnh đại diện" : "Căn chỉnh ảnh bìa")}
+  return <Modal closeDisabled={busy} title={title || (kind === "avatar" ? "Căn chỉnh ảnh đại diện" : "Căn chỉnh ảnh bìa")}
     onClose={() => { if (!busy) onCancel(); }} className="image-crop-dialog">
     <div className="image-crop-body">
       <p>Kéo ảnh để căn khung. Dùng thanh thu phóng hoặc hai ngón tay để thu nhỏ, phóng to. Phần trống trong khung sẽ có nền trắng.</p>

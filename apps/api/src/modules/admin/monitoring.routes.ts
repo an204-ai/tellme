@@ -7,7 +7,6 @@ import type { Env } from "../../backend/security.js";
 import { requestMetrics } from "../../backend/observability.js";
 
 const cloudinaryUnavailable = { ready: false, storageBytes: null };
-type ConnectionState = "connected" | "unavailable" | "configured" | "disabled";
 type CloudinaryUsage = { ready: boolean; storageBytes: number | null };
 let usage: { expires: number; value: Promise<CloudinaryUsage> } | undefined;
 
@@ -25,43 +24,15 @@ function cloudinaryUsage() {
   return usage.value;
 }
 
-let providers: { expires: number; value: Promise<{ name: string; state: ConnectionState }[]> } | undefined;
-
-function providerConnections() {
-  if (!providers || providers.expires <= Date.now()) {
-    const check = async (name: string, key: string, url: string, headers?: HeadersInit) => {
-      let state: ConnectionState = key ? "configured" : "disabled";
-      if (key && config.NODE_ENV !== "test") {
-        try {
-          const result = await fetch(url, { headers, signal: AbortSignal.timeout(4000), redirect: "error" });
-          state = result.ok ? "connected" : "unavailable";
-          await result.body?.cancel();
-        } catch { state = "unavailable"; }
-      }
-      return { name, state };
-    };
-    providers = {
-      expires: Date.now() + 10 * 60000,
-      value: Promise.all([
-        check("OpenWeather", config.OPENWEATHER_API_KEY,
-          `https://api.openweathermap.org/data/2.5/weather?${new URLSearchParams({ appid: config.OPENWEATHER_API_KEY, lat: "10.7769", lon: "106.7009" })}`),
-
-      ]),
-    };
-  }
-  return providers.value;
-}
-
 export function registerMonitoringRoutes(api: Hono<Env>) {
   api.get("/admin/infrastructure", async (c) => {
-    const [database, cache, disk, storage, external] = await Promise.all([
+    const [database, cache, disk, storage] = await Promise.all([
       mongo.db(config.MONGODB_DB).command({ ping: 1 }, { timeoutMS: 4000 }).then(() => true, () => false),
       redis.status === "ready" ? redis.ping().then(() => true, () => false) : false,
       statfs(process.cwd()).then((value) => ({
         totalBytes: value.blocks * value.bsize, availableBytes: value.bavail * value.bsize,
       })).catch(() => null),
       cloudinaryUsage(),
-      providerConnections(),
     ]);
     const connection = (name: string, connected: boolean) => ({ name, state: connected ? "connected" : "unavailable" });
     const configured = (name: string, enabled: boolean) => ({ name, state: enabled ? "configured" : "disabled" });
@@ -73,7 +44,7 @@ export function registerMonitoringRoutes(api: Hono<Env>) {
       cloudinary: storage,
       connections: [
         connection("MongoDB Atlas", database), connection("Redis", cache), connection("Cloudinary", storage.ready),
-        ...external, configured("SMTP", !!config.SMTP_URL),
+        configured("SMTP", !!config.SMTP_URL),
         configured("Web Push", !!config.VAPID_PUBLIC_KEY && !!config.VAPID_PRIVATE_KEY),
       ],
     });

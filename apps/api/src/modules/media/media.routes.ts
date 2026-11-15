@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { randomUUID } from "node:crypto";
 import { v2 as cloudinary } from "cloudinary";
-import { media, stories, users, conversations } from "../../backend/database.js";
+import { media, stories, users, conversations, groupPhotos, photoGroups } from "../../backend/database.js";
 import { fail, type Env } from "../../backend/security.js";
 import { now, relations, visibility } from "../../backend/domain.js";
 import { imageFormat, IMAGE_FORMAT_NAMES, MAX_IMAGE_BYTES } from "../../backend/image-formats.js";
@@ -24,7 +24,10 @@ export function registerMediaRoutes(api: Hono<Env>) {
         items: { $elemMatch: { image: item.url, privacy: { $ne: "private" } } },
       }] }, { projection: { _id: 1 } });
       const group = await conversations.findOne({ participants: me._id, avatar: item.url }, { projection: { participants: 1 } });
-      if (!avatar && !cover && !story && !(group && !group.participants.some((personId) => r.blocked.includes(personId)))) fail(404, "Ảnh không khả dụng.");
+      const photos = await groupPhotos.find({ image: item.url }, { projection: { groupId: 1 } }).toArray();
+      const albumAllowed = photos.length && await photoGroups.findOne({ _id: { $in: photos.map((p) => p.groupId) }, memberIds: me._id, $and: [{ memberIds: { $nin: r.blocked } }] }, { projection: { _id: 1 } });
+      const albumAvatar = await photoGroups.findOne({ avatar: item.url, memberIds: { $nin: r.blocked }, $or: [{ memberIds: me._id }, { pendingMemberIds: me._id, expiresAt: { $gt: now() }, endedAt: { $exists: false } }] }, { projection: { _id: 1 } });
+      if (!avatar && !cover && !story && !albumAllowed && !albumAvatar && !(group && !group.participants.some((personId) => r.blocked.includes(personId)))) fail(404, "Ảnh không khả dụng.");
     }
     const size = c.req.query("size");
     if (size && size !== "thumbnail" && size !== "feed") fail(400, "Kích thước ảnh không hợp lệ.");

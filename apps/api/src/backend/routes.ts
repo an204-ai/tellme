@@ -3,6 +3,7 @@ import { registerBootstrapRoutes } from "../modules/bootstrap/bootstrap.routes.j
 import { registerFriendRoutes } from "../modules/user/friend.routes.js";
 import { registerUserRoutes } from "../modules/user/user.routes.js";
 import { registerStoryRoutes } from "../modules/story/story.routes.js";
+import { registerPhotoGroupRoutes } from "../modules/story/photo-group.routes.js";
 import { registerMessageRoutes } from "../modules/message/message.routes.js";
 import { registerNotificationRoutes } from "../modules/notification/notification.routes.js";
 import { registerMediaRoutes } from "../modules/media/media.routes.js";
@@ -21,7 +22,6 @@ import { MediaUnavailable, isTransientConnectionError, connectionFailure, databa
 import { registerRealtimeRoutes } from "./realtime.js";
 import { registerAdminRoutes } from "../modules/admin/admin.routes.js";
 import { registerMusicRoutes } from "../modules/music/music.routes.js";
-import { registerWeatherRoutes } from "../modules/weather/weather.routes.js";
 import { observeRequest } from "./observability.js";
 const cloudUrl = new URL(config.CLOUDINARY_URL);
 cloudinary.config({
@@ -90,7 +90,6 @@ app.get("/health", async (c) => {
 });
 
 app.route("/api/auth", authRouter);
-registerWeatherRoutes(app);
 const api = new Hono<Env>();
 api.use("*", authenticate, rateLimit(300, 60000));
 api.use("*", async (c, next) => {
@@ -107,6 +106,7 @@ registerBootstrapRoutes(api);
 registerFriendRoutes(api);
 registerUserRoutes(api);
 registerStoryRoutes(api);
+registerPhotoGroupRoutes(api);
 registerMusicRoutes(api);
 registerMessageRoutes(api);
 registerNotificationRoutes(api);

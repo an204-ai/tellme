@@ -477,7 +477,7 @@
 }
 
 :where(.uiv-input) .cir-search__field::placeholder {
-  color: #8a93a3;
+  color: var(--placeholder);
 }
 
 :where(.uiv-input) .cir-search__kbd {
@@ -759,7 +759,7 @@
 }
 
 :where(.uiv-form) .form .input::placeholder {
-  color: rgb(170, 170, 170);
+  color: var(--placeholder);
 }
 
 :where(.uiv-form) .form .input:focus {

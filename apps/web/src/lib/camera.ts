@@ -1,3 +1,7 @@
+export function clampCameraZoom(value: number, range: { min: number; max: number }) {
+  return Math.max(range.min, Math.min(range.max, Number.isFinite(value) ? value : range.min));
+}
+
 /** Center crop matches the square camera viewfinder without stretching the image. */
 export function cameraCrop(width: number, height: number, zoom = 1) {
   if (width <= 0 || height <= 0) throw new Error("Camera chưa sẵn sàng. Bạn đợi một chút nhé.");
@@ -28,7 +32,7 @@ export function cameraError(error: unknown) {
   return error instanceof Error ? error.message : "Chưa mở được camera. Bạn thử lại nhé.";
 }
 
-export async function capturePhoto(video: HTMLVideoElement, mirrored = false, zoom = 1): Promise<File> {
+export async function capturePhoto(video: HTMLVideoElement, zoom = 1): Promise<File> {
   if (video.readyState < 2) throw new Error("Camera chưa sẵn sàng. Bạn đợi một chút nhé.");
   const crop = cameraCrop(video.videoWidth, video.videoHeight, zoom);
   const canvas = document.createElement("canvas");
@@ -36,8 +40,8 @@ export async function capturePhoto(video: HTMLVideoElement, mirrored = false, zo
   canvas.height = crop.height;
   const context = canvas.getContext("2d");
   if (!context) throw new Error("Chưa chụp được ảnh trên trình duyệt này. Bạn thử trình duyệt khác nhé.");
-  // Match the viewfinder pixels: CSS mirroring alone is not included by drawImage.
-  if (mirrored) { context.translate(crop.width, 0); context.scale(-1, 1); }
+  // Both front and rear previews retain the source orientation. Capture those
+  // same pixels directly; never introduce a selfie-only horizontal reversal.
   context.drawImage(video, crop.x, crop.y, crop.sourceWidth, crop.sourceHeight, 0, 0, crop.width, crop.height);
   const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.9));
   if (!blob) throw new Error("Chưa chụp được ảnh. Bạn thử lại nhé.");

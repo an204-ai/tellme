@@ -1,0 +1,196 @@
+/* Shared Tellme materials/motion; camera switch adapted from the user's React example. */
+.moment-destination-toggle { position: absolute; z-index: 4; top: 12px; left: 12px; display: grid; place-items: center; width: 48px; height: 48px; padding: 0; border: 0; border-radius: 50%; color: var(--primary); cursor: pointer; }
+.destination-icon { grid-area: 1 / 1; display: grid; place-items: center; transition: transform 500ms var(--ease-arrive); }
+.destination-icon-person { transition-delay: 180ms; }
+.destination-icon-group { transform: scale(0); }
+.moment-destination-toggle[aria-checked="true"] .destination-icon-person { transition-delay: 0ms; transform: rotate(360deg) scale(0); }
+.moment-destination-toggle[aria-checked="true"] .destination-icon-group { transition-delay: 180ms; transform: rotate(360deg) scale(1); }
+/* A compact 4:3 window. Creation steps fit the frame; only data lists scroll. */
+.photo-groups-dialog.app-dialog { width: min(560px, calc(100vw - 24px)); aspect-ratio: 4 / 3; height: auto; max-height: calc(100dvh - 32px); padding: 0; overflow: hidden; box-sizing: border-box; border-radius: 28px; }
+.photo-groups-dialog > .dialog-content { height: 100%; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.photo-groups-dialog .dialog-header { flex: 0 0 auto; padding: 12px 18px; min-height: 56px; box-sizing: border-box; }
+.photo-groups-dialog .dialog-header h2 { font-size: 20px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.photo-groups-layout { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.photo-groups-scroll { flex: 1; overflow-y: auto; overscroll-behavior: contain; min-height: 0; padding: 12px 20px; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+.photo-groups-footer { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px; flex: 0 0 auto; padding: 10px 20px 14px; }
+.photo-groups-footer > small { color: var(--muted); font-size: 12px; text-align: center; }
+.photo-groups-footer .button { min-height: 44px; padding: 10px 16px; font-size: 14px; }
+.photo-group-row { display: flex; align-items: center; width: 100%; gap: 12px; min-height: 64px; padding: 8px 0; border: 0; background: transparent; color: var(--ink); text-align: start; font: 800 16px/1.35 "Nunito", sans-serif; cursor: pointer; }
+.photo-group-row > span:not(.avatar):not(.photo-group-symbol) { min-width: 0; flex: 1; }
+.photo-group-row strong { display: block; overflow: hidden; text-overflow: ellipsis; overflow-wrap: anywhere; }
+.photo-group-row small { display: block; margin-top: 3px; font-size: 12px; font-weight: 700; color: var(--muted); }
+.photo-group-row > svg { flex: 0 0 auto; }
+.photo-group-row > .avatar, .photo-group-symbol { width: 48px; height: 48px; flex: 0 0 48px; }
+.photo-group-symbol { display: grid; place-items: center; border-radius: 50%; color: var(--primary); }
+.photo-group-start { display: flex; flex-direction: column; overflow: clip; }
+.photo-group-create { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; flex: 0 0 auto; margin: auto; padding: 8px; min-height: 120px; border: 0; background: transparent; color: var(--primary); font: 900 17px/1.35 "Nunito", sans-serif; cursor: pointer; }
+.photo-group-create .photo-group-symbol { width: 80px; height: 80px; flex-basis: 80px; }
+.photo-group-create > strong { font: inherit; }
+.photo-group-row:active { opacity: .7; }
+.photo-groups-status { text-align: center; padding: 12px 0; }
+.photo-groups-hint { display: block; color: var(--muted); font-size: 13px; line-height: 1.45; margin: 10px 0; }
+.photo-groups-back { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0; margin: -4px 0 8px; border: 0; background: transparent; color: var(--primary); font: 800 13px "Nunito", sans-serif; }
+.photo-group-form { display: flex; flex-direction: column; gap: 6px; }
+.photo-group-name-row { display: flex; align-items: center; gap: 12px; }
+.photo-group-name-row > label { flex: 1; min-width: 0; font-size: 13px; font-weight: 800; }
+.photo-group-form .input { display: block; width: 100%; box-sizing: border-box; min-width: 0; min-height: 44px; padding: 10px 12px; border: 0; border-radius: 14px; color: var(--ink); font: 700 16px/1.3 "Nunito", sans-serif; }
+.photo-group-name-row .input { margin-top: 4px; }
+.photo-group-avatar-picker { position: relative; flex: 0 0 60px; width: 60px; height: 60px; border: 0; background: transparent; border-radius: 50%; padding: 0; }
+.photo-group-avatar-picker > img { width: 56px; height: 56px; object-fit: contain; }
+.photo-group-avatar-picker > span { position: absolute; right: 0; bottom: 0; display: grid; place-items: center; background: var(--primary); color: var(--action-ink); border-radius: 50%; width: 20px; height: 20px; }
+.photo-group-duration { border: 0; margin: 0; padding: 0; }
+.photo-group-duration legend { font-size: 13px; font-weight: 800; margin-bottom: 6px; }
+.photo-group-duration > div { display: flex; gap: 8px; }
+.photo-group-duration button { display: flex; align-items: center; justify-content: center; gap: 6px; flex: 1; min-height: 44px; border: 0; border-radius: 14px; color: var(--ink); font: 800 14px "Nunito", sans-serif; cursor: pointer; }
+.photo-group-duration button[aria-pressed="true"] { background: var(--control-selected); color: var(--primary); }
+.photo-group-form .group-avatar-presets { margin: 0; gap: 8px; }
+.photo-group-form .group-avatar-presets button { min-width: 0; }
+.photo-group-search { display: flex; align-items: center; gap: 8px; padding-left: 12px; border-radius: 14px; color: var(--muted); }
+.photo-group-search .input { padding-left: 0; background: transparent; }
+.photo-group-picked { display: flex; flex-wrap: wrap; gap: 6px; }
+.photo-group-picked:empty { display: none; }
+.photo-group-picked > button { display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px 4px 4px; min-height: 32px; max-width: 100%; border: 0; border-radius: 18px; background: var(--control-surface); color: var(--ink); font: 800 13px "Nunito", sans-serif; }
+.photo-group-picked > button > span:not(.avatar) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.photo-group-suggestions > button { display: flex; align-items: center; gap: 10px; border: 0; background: transparent; color: var(--ink); width: 100%; min-height: 52px; padding: 6px 0; text-align: left; font: 700 14px "Nunito", sans-serif; }
+.photo-group-suggestions > button > span:not(.avatar) { flex: 1; min-width: 0; }
+.photo-group-suggestions strong, .photo-group-suggestions small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.photo-group-suggestions small { font-size: 12px; color: var(--muted); }
+.photo-group-detail { display: flex; flex-direction: column; gap: 12px; }
+.photo-group-detail > p { margin: 0; color: var(--muted); font-size: 14px; }
+.photo-group-detail > h3 { margin: 8px 0 0; font-size: 20px; }
+.photo-group-detail-heading { display: flex; align-items: center; gap: 12px; }
+.photo-group-detail-heading > span:not(.avatar) { flex: 1; min-width: 0; }
+.photo-group-detail-heading strong, .photo-group-detail-heading small { display: block; font-size: 14px; }
+.photo-group-detail-heading small { color: var(--muted); font-size: 12px; margin-top: 4px; }
+.photo-group-member-avatars { display: flex; flex-wrap: wrap; gap: 10px; }
+.photo-group-member-avatars > span { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 58px; text-align: center; }
+.photo-group-member-avatars small { width: 100%; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.photo-group-end { min-height: 44px; padding: 0 8px; border: 0; color: var(--field-error); font: 800 13px "Nunito", sans-serif; }
+.tellme-corner-dialog .dialog-header { padding: 14px 20px 6px; }
+.tellme-corner-dialog .dialog-body.corner-functions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; gap: 16px 12px; padding: 8px 20px 20px; }
+.tellme-corner-dialog .corner-functions > .corner-function { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; min-width: 0; padding: 0; border: 0; background: transparent; color: var(--ink); font: 800 15px/1.35 "Nunito", sans-serif; text-align: center; cursor: pointer; }
+.tellme-corner-dialog .corner-function .photo-group-symbol { width: 72px; height: 72px; flex: 0 0 72px; align-self: center; }
+.tellme-corner-dialog .corner-function .photo-group-symbol > svg { width: 34px; height: 34px; }
+.tellme-corner-dialog .corner-function > span:last-child { width: 100%; text-align: center; }
+.group-photo-stack { position: relative; isolation: isolate; padding-top: 12px; }
+.group-photo-stack > .now-photo { width: calc(100% - 16px); margin-inline: auto; z-index: 3; }
+.group-photo-back { position: absolute; top: 12px; bottom: 0; left: 8px; right: 8px; overflow: hidden; border-radius: 36px; background: var(--control-surface); box-shadow: 0 4px 12px #0002; }
+.group-photo-back > img { width: 100%; height: 100%; object-fit: cover; }
+.group-photo-back-1 { z-index: 2; transform: translate(5px, -5px) rotate(3deg) scale(.98); }
+.group-photo-back-2 { z-index: 1; transform: translate(-5px, -10px) rotate(-3deg) scale(.96); }
+.stream-moment .group-photo-swipe { cursor: pointer; touch-action: pan-y; transform: translateX(var(--group-drag, 0px)); transition: transform 240ms var(--ease-arrive); user-select: none; -webkit-user-select: none; }
+.group-photo-identity { display: inline-flex; align-items: center; justify-content: center; gap: 9px; max-width: 100%; min-height: 44px; padding: 0; border: 0; background: transparent; color: var(--ink); font: 900 18px/1.35 "Nunito", sans-serif; }
+.group-photo-identity > strong { min-width: 0; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stream-moment .now-identity-slot.group-photo-byline { display: flex; flex-direction: column; height: auto; min-height: 76px; gap: 2px; }
+.group-photo-author { display: flex; justify-content: center; align-items: center; gap: 8px; min-height: 24px; max-width: 100%; font-size: 13px; font-weight: 800; color: var(--muted); }
+.group-photo-author > span:not(.moment-upload-status) { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.group-photo-author time { font-size: 12px; font-weight: 700; }
+.stream-moment .group-photo-count { display: flex; align-items: center; justify-content: center; gap: 8px; height: 28px; min-height: 28px; font-size: 13px; color: var(--muted); font-weight: 800; font-variant-numeric: tabular-nums; }
+.group-photo-count small { font-size: 12px; }
+.group-photo-load-error { display: flex; justify-content: center; gap: 10px; font-size: 13px; color: var(--muted); }
+.group-photo-load-error button { border: 0; background: transparent; color: var(--primary); font: inherit; font-weight: 800; }
+.group-photo-unavailable { justify-items: center; }
+.group-photo-unavailable h2 { font-size: 22px; }
+@media (max-width: 480px) { .tellme-corner-dialog .corner-functions { grid-template-columns: repeat(3, minmax(0, 1fr)); } .photo-groups-dialog .dialog-header { padding: 8px 14px; min-height: 52px; } .photo-groups-dialog .dialog-header h2 { font-size: 18px; } .photo-groups-scroll { padding: 8px 14px; } .photo-groups-footer { padding: 8px 14px 10px; gap: 6px; } .photo-groups-footer .button { font-size: 13px; padding-inline: 10px; } .photo-groups-back { margin-bottom: 4px; } }
+@media (prefers-reduced-motion: reduce) { .stream-moment .group-photo-swipe, .destination-icon { transition: none; } }
+.reduce-motion .stream-moment .group-photo-swipe, .reduce-motion .destination-icon { transition: none; }
+
+.photo-groups-footer.has-back { display: grid; grid-template-columns: 44px minmax(0, 1fr); }
+.photo-groups-footer.has-back .full-width { width: 100%; min-width: 0; }
+.photo-group-footer-back { display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 50%; background: var(--control-surface); color: var(--primary); }
+@media (orientation: landscape) and (max-height: 520px) { .stream-moment.group-photo-card { grid-template-rows: 76px 28px; } }
+
+.photo-group-picked[hidden] { display: none; }
+@media (max-width: 360px) {
+  .photo-group-start .photo-group-create { min-height: 104px; gap: 8px; padding: 4px; }
+  .photo-group-start .photo-group-create .photo-group-symbol { width: 64px; height: 64px; flex-basis: 64px; }
+  .photo-group-name-row { gap: 8px; }
+  .photo-group-name-row > label { font-size: 0; line-height: 0; }
+  .photo-group-name-row .input { margin-top: 0; }
+  .photo-group-avatar-picker { flex-basis: 44px; width: 44px; height: 44px; }
+  .photo-group-avatar-picker > img { width: 44px; height: 44px; }
+  .photo-group-duration legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .photo-groups-scroll { padding: 6px 12px; }
+  .photo-group-suggestions > button { min-height: 44px; padding-block: 4px; }
+}
+
+/* Creation is a fixed frame: outer wrappers never become incidental scroll areas. */
+.photo-group-wizard .photo-groups-scroll { overflow: clip; display: flex; flex-direction: column; }
+.photo-group-wizard .photo-group-form { min-height: 0; flex: 1; }
+.photo-group-wizard .photo-group-form.is-info { gap: 2px; }
+.photo-group-wizard .photo-group-duration button,
+.photo-group-wizard .photo-groups-footer .button { box-sizing: border-box; height: 48px; min-height: 48px; font: 800 14px/1.3 "Nunito", sans-serif; padding: 0 12px; }
+.photo-group-wizard .photo-groups-footer .button-wrap { width: 100%; min-width: 0; }
+.photo-group-wizard .photo-groups-footer .button { width: 100%; }
+.photo-group-form.is-members { overflow: clip; }
+.photo-group-form.is-members .photo-group-search { flex: 0 0 44px; min-height: 44px; }
+.photo-group-form.is-members .photo-group-picked { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; flex: 0 0 auto; scrollbar-width: thin; }
+.photo-group-picked > button { flex: 0 0 auto; max-width: 180px; }
+.photo-group-form.is-members .photo-group-suggestions { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.photo-group-wizard.is-avatar .group-avatar-presets { grid-template-columns: repeat(3, minmax(0, 1fr)); min-height: 0; flex: 1; grid-template-rows: repeat(2, minmax(44px, 1fr)); gap: 4px; }
+.photo-group-wizard.is-avatar .group-avatar-presets > button { display: grid; place-items: center; min-height: 44px; padding: 2px; }
+.photo-group-wizard.is-avatar .group-avatar-presets img { width: auto; max-width: 100%; height: 100%; max-height: 64px; }
+.photo-group-wizard.has-form-error { min-height: min(320px, calc(var(--dialog-viewport-height, 100dvh) - 24px)); }
+@media (max-width: 480px) { .photo-group-wizard .photo-groups-scroll { padding-block: 6px; } }
+@media (max-width: 360px) { .photo-group-wizard .photo-groups-footer { padding-block: 6px; } .tellme-corner-dialog .corner-function .photo-group-symbol { width: 64px; height: 64px; flex-basis: 64px; } }
+@media (max-width: 360px) { .photo-group-wizard.is-avatar .group-avatar-presets img { width: 40px; height: 40px; max-height: 40px; } }
+
+/* Group management fits its actual content, with a balanced action pair and separate destructive row. */
+.photo-groups-dialog.is-detail { aspect-ratio: auto; height: auto; }
+.photo-groups-dialog.is-detail > .dialog-content { height: auto; }
+.photo-groups-dialog.is-detail .dialog-header { gap: 8px; }
+.photo-groups-dialog.is-detail .dialog-header h2 { flex: 1; min-width: 0; }
+.photo-group-header-back { display: grid; place-items: center; width: 44px; height: 44px; flex: 0 0 44px; padding: 0; border: 0; border-radius: 50%; color: var(--primary); }
+.photo-groups-dialog.is-detail .photo-groups-scroll { flex: 0 0 auto; overflow: clip; padding-block: 12px; }
+.photo-groups-dialog.is-detail .photo-group-detail { gap: 12px; }
+.photo-groups-dialog.is-detail .photo-group-detail-heading > .avatar { width: 56px; height: 56px; flex: 0 0 56px; }
+.photo-groups-dialog.is-detail .photo-group-member-avatars { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; gap: 12px; padding-block: 4px; scrollbar-width: thin; }
+.photo-group-member-avatars > span { flex: 0 0 58px; }
+.photo-groups-dialog.is-detail .photo-groups-footer { display: flex; gap: 8px; padding-top: 0; }
+.photo-group-detail-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; width: 100%; }
+.photo-group-detail-actions:empty { display: none; }
+.photo-group-detail-actions > button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 64px; padding: 8px; border-radius: 16px; }
+.photo-group-detail-actions > button > svg { color: var(--primary); }
+.photo-group-detail-actions > button:only-child { grid-column: 1 / -1; }
+.photo-groups-dialog.is-detail .photo-group-end { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 44px; padding: 10px; border-radius: 16px; color: var(--danger); }
+.photo-groups-dialog.is-detail .photo-groups-footer > .button-wrap { flex: 1; }
+.photo-groups-dialog.is-detail .photo-groups-footer > .button-wrap > .button { width: 100%; height: 48px; box-sizing: border-box; }
+/* SE/short visible viewports use the same compact information layout as the narrow phone. */
+@media (max-width: 400px) and (max-height: 720px) {
+  .photo-group-wizard.is-info .photo-group-name-row > label { font-size: 0; line-height: 0; }
+  .photo-group-wizard.is-info .photo-group-name-row .input { margin-top: 0; }
+  .photo-group-wizard.is-info .photo-group-avatar-picker { flex-basis: 44px; width: 44px; height: 44px; }
+  .photo-group-wizard.is-info .photo-group-avatar-picker > img { width: 44px; height: 44px; }
+  .photo-group-wizard .photo-group-duration legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .photo-group-wizard.is-avatar .group-avatar-presets img { width: 40px; height: 40px; max-height: 40px; }
+}
+.photo-group-wizard[data-short-viewport="true"].is-info .photo-group-name-row > label { font-size: 0; line-height: 0; }
+.photo-group-wizard[data-short-viewport="true"].is-info .photo-group-name-row .input { margin-top: 0; }
+.photo-group-wizard[data-short-viewport="true"] .photo-group-duration legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+:root .photo-groups-dialog.photo-group-wizard[data-viewport-fit] { height: min(420px, calc((100vw - 24px) * .75)); }
+
+/* Invitation consent and uploaded avatars extend the common material, not a second UI kit. */
+.photo-group-upload { display: flex; align-items: center; justify-content: center; gap: 8px; position: relative; min-height: 44px; border-radius: 14px; flex: 0 0 44px; cursor: pointer; }
+.photo-group-upload input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.photo-group-form.is-avatar { gap: 6px; }
+.photo-group-wizard.is-avatar { min-height: min(280px, calc(var(--dialog-viewport-height, 100dvh) - 24px)); }
+.photo-group-wizard.is-avatar .group-avatar-presets { grid-template-rows: repeat(2, minmax(44px, 1fr)); }
+.photo-group-wizard.is-avatar .group-avatar-presets > button { min-height: 44px; }
+.photo-group-wizard.is-avatar .group-avatar-presets img { max-height: 48px; }
+.photo-group-detail-avatar { display: grid; gap: 10px; }
+.photo-group-detail-heading > .photo-group-avatar-picker > .avatar { width: 56px; height: 56px; }
+.photo-groups-dialog.is-detail .photo-group-invite { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; width: 100%; border-radius: 16px; }
+.photo-group-pending > .avatar { opacity: .65; }
+.photo-group-pending small:last-child { color: var(--muted); font-size: 11px; }
+.photo-group-invitations { display: grid; gap: 12px; width: 100%; }
+.photo-group-invitations h3 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 15px; }
+.photo-group-invitation { display: grid; gap: 12px; padding-block: 8px 14px; border-bottom: 1px solid var(--line); }
+.photo-group-invitation-heading { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.photo-group-invitation-heading > div { display: grid; gap: 3px; min-width: 0; }
+.photo-group-invitation-heading strong { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.photo-group-invitation-heading small { color: var(--muted); font-size: 12px; }
+.photo-group-invitation-actions { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
+.photo-group-invitation-actions .button { width: 100%; min-height: 44px; padding: 8px; font-size: 14px; }
+.notification-feed > .photo-group-invitations { flex: 0 0 auto; max-height: 40dvh; overflow-y: auto; padding: 6px 20px 14px; }
+@media (max-width:400px) and (max-height:720px) { .photo-group-wizard.is-avatar .group-avatar-presets img { width: 32px; height: 32px; } }

@@ -13,5 +13,3 @@ The existing database was reconciled once against the private historical roster:
 `initializeMemberNumbers` supports an explicit, idempotent legacy backfill. On an empty counter, supply the complete historical roster to reserve deleted accounts’ places; an omitted history can only order surviving records. It never renumbers assigned accounts. Do not reset the production counter or rerun a fresh backfill over a restored subset without preserving historical positions.
 
 `users.foundingWelcomedAt` records the first welcome. `POST /users/me/founding-welcome` atomically claims it for the authenticated founding account, returning `celebrate: true` only once. The pending flag is visible only in that account’s own DTO; profile updates cannot alter the number or welcome timestamp.
-
-The optional integration check uses a random, isolated `tellme_members_test_*` database and drops only that database afterward. Set an explicit `TEST_MONGODB_URI`, then run `pnpm --filter @tellme/database test:members`. It checks concurrent allocation across the 100-account boundary, deletion, transaction rollback, historical slots and idempotence.

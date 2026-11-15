@@ -3,7 +3,7 @@ import { v2 as cloudinary } from "cloudinary";
 import sharp from "sharp";
 import { encode } from "blurhash";
 import { config } from "./config.js";
-import { media, mongo, stories, users, conversations } from "./database.js";
+import { media, mongo, stories, users, conversations, groupPhotos, photoGroups } from "./database.js";
 import type { User } from "./models.js";
 import { enqueue } from "./queue.js";
 
@@ -41,7 +41,7 @@ export async function cleanMedia(ownerId: string, url: string) {
       canDelete = false;
       const record = await media.findOne({ _id: item._id, ownerId }, { session });
       if (!record) return;
-      const referenced = (await conversations.findOne({ avatar: url }, { session })) || (await stories.findOne({ "items.image": url }, { session })) || (await users.findOne({ $or: [{ avatar: url }, { cover: url }] }, { session }));
+      const referenced = (await photoGroups.findOne({ avatar: url }, { session })) || (await conversations.findOne({ avatar: url }, { session })) || (await stories.findOne({ "items.image": url }, { session })) || (await groupPhotos.findOne({ image: url }, { session })) || (await users.findOne({ $or: [{ avatar: url }, { cover: url }] }, { session }));
       if (referenced) return;
       await media.updateOne({ _id: item._id }, { $set: { state: "deleting" } }, { session });
       canDelete = true;

@@ -23,13 +23,13 @@ export function useProfilePerson(username: string, enabled: boolean) {
   });
 }
 
-export function useStoryPages(enabled: boolean) {
+export function useStoryPages(enabled: boolean, author?: string) {
   const client = useQueryClient();
   const query = useInfiniteQuery({
-    queryKey: ["tellme", "stories", "pages"],
+    queryKey: ["tellme", "stories", "pages", author || "all"],
     initialPageParam: 0,
     queryFn: async ({ pageParam }) => {
-      const page = await apiRepository.getStoriesPage(pageParam, 6);
+      const page = await apiRepository.getStoriesPage(pageParam, 6, author);
       client.setQueryData(communityKey, apiRepository.snapshot());
       return page;
     },

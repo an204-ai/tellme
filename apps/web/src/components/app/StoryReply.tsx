@@ -12,7 +12,7 @@ import type { DayStory, Message, MomentItem, Person } from "@/lib/types";
 
 export type MomentReplyComposer = { formId: string; drafts: RefObject<Record<string, string>>; onDraftChange: (ready: boolean) => void; onSendingChange: (sending: boolean) => void };
 
-export function StoryReply({ story, item, person, compact = false, composer }: { story: DayStory; item: MomentItem; person?: Person; compact?: boolean; composer?: MomentReplyComposer }) {
+export function StoryReply({ story, item, person, compact = false, composer, inlineSend = false }: { story: DayStory; item: MomentItem; person?: Person; compact?: boolean; composer?: MomentReplyComposer; inlineSend?: boolean }) {
   const { data, update, saving } = useCommunity();
   const [text, setDraft] = useState(() => composer?.drafts.current[item.id] || "");
   const setText = (value: string) => {
@@ -73,7 +73,7 @@ export function StoryReply({ story, item, person, compact = false, composer }: {
         setText(next);
         requestAnimationFrame(() => { input.current?.focus(); input.current?.setSelectionRange(start + emoji.length, start + emoji.length); });
       }}/>}
-      {!composer && <button type="submit" className="story-reply-send" disabled={saving || !text.trim()} aria-label="Gửi lời trả lời qua tin nhắn"><Send size={18}/></button>}
+      {(!composer || inlineSend) && <button type="submit" className="story-reply-send" disabled={saving || !text.trim()} aria-label="Gửi lời trả lời qua tin nhắn"><Send size={18}/></button>}
     </div>
     {!compact && saving && <p role="status">Đang gửi lời trả lời…</p>}
     {!compact && error && <p className="field-error" role="alert">{error}</p>}

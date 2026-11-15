@@ -18,7 +18,7 @@ export function Button({
   variant = "primary",
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "primary" | "secondary" | "ghost";
+  variant?: "primary" | "secondary" | "ghost" | "danger";
 }) {
   return (
     <span className={`uiv-button button-wrap ${className}`}>
@@ -59,7 +59,7 @@ export function Avatar({
   const online = usePresenceStore((state) => !!person?.id && !!state.online[person.id]);
   const founding = person?.foundingMember && size !== "xs" && !className.includes("profile-portrait");
   return (
-    <span className={`avatar avatar-${size} ${founding ? "avatar-founding" : ""} ${className}`} title={founding ? "Người mở lối của Tellme" : undefined}>
+    <span data-motion-key={person?.id ? `person:${person.id}` : undefined} className={`avatar avatar-${size} ${founding ? "avatar-founding" : ""} ${className}`} title={founding ? "Người mở lối của Tellme" : undefined}>
       {person?.avatar ? (person.avatar.startsWith("/images/group-avatars/") ? <Image src={person.avatar} alt={person.name} width={120} height={120} sizes="120px" /> : <img
         src={person?.avatar}
         alt={person?.name || "Thành viên Tellme"}
@@ -92,12 +92,13 @@ export function Loader({
   label?: string;
   small?: boolean;
 }) {
-  return (
+  const content = (
     <div className={`loading-state ${small ? "small" : "route-cat-loading"}`} role="status" data-route-loading={small ? undefined : "true"}>
       {small ? <span className="uiv-loading"><LoaderArt /></span> : <SleepingCat />}
       <span>{label}</span>
     </div>
   );
+  return small ? content : <div className="route-loading-anchor">{content}</div>;
 }
 export function ImageUploadSpinner() {
   return (
@@ -149,7 +150,7 @@ export const Input = forwardRef<
 >(function Input({ className = "", leading, ...props }, ref) {
   return (
     <span className={`uiv-input input-wrap ${className}`}>
-      <span className="cir-search">
+      <span className="cir-search glass-field">
         {leading}
         {/* Accessible name is supplied through aria-label or an associated label. */}
         <input ref={ref} className="cir-search__field" {...props} />

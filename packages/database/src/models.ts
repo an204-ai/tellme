@@ -98,6 +98,31 @@ export interface Story {
   updatedAt: string;
   moderation?: ModerationState;
 }
+export interface PhotoGroup {
+  /** Invitation grants no membership or media access until accepted. */
+  pendingMemberIds?: string[];
+  /** Unique sparse multikey index reserves one active group per member. Unset on end/expiry. */
+  activeMemberIds?: string[];
+  durationDays?: 1 | 3 | 7;
+  expiresAt?: string;
+  endedAt?: string;
+  endReason?: "cancelled";
+  _id: string;
+  title: string;
+  avatar: string;
+  ownerId: string;
+  memberIds: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+export interface GroupPhoto {
+  _id: string;
+  groupId: string;
+  userId: string;
+  image: string;
+  caption: string;
+  at: string;
+}
 export interface Conversation {
   ownerId?: string;
   mutedBy?: string[];

@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
+  ChevronRight,
   PanelRight,
   MessageCircle,
   PencilLine,
@@ -30,7 +31,7 @@ import {
 import { useCommunity } from "@/hooks/use-community";
 import { MessageHistory } from "@/components/chat/MessageHistory";
 import type { Conversation, AppData, Message } from "@/lib/types";
-import { apiRepository, newId, timeOf } from "@/lib/api-repository";
+import { apiRepository, newId, timeOf, timeAgo } from "@/lib/api-repository";
 import { messageDraftSchema } from "@/lib/validation";
 import { getTellmeSticker } from "@tellme/shared/stickers";
 import { TellmeStickerButton, TellmeStickerDraft, TellmeStickerSuggestions, type TellmeSticker } from "@/components/ui/TellmeStickers";
@@ -45,6 +46,7 @@ import {
 } from "@/components/ui/Primitives";
 import { EmojiButton } from "@/components/ui/EmojiButton";
 import { Modal } from "@/components/ui/Modal";
+import { FloatingActions } from "@/components/ui/FloatingActions";
 
 function conversationPerson(
   data: AppData | undefined,
@@ -154,7 +156,6 @@ export function MessagesScreen({
               Tin nhắn
             </h2>
             <div className="message-create-actions">
-              <TooltipIconButton label="Tạo nhóm chat" onClick={() => setCreatingGroup(true)}><Users size={20} /></TooltipIconButton>
               <TooltipIconButton label="Cuộc trò chuyện mới" onClick={() => setCreating(true)}><PencilLine size={20} /></TooltipIconButton>
             </div>
           </header>
@@ -181,7 +182,7 @@ export function MessagesScreen({
                     <span>
                       <span className="conversation-row-name">
                         <strong>{user?.name}</strong>
-                        <small>{last ? timeOf(last.at) : ""}</small>
+                        <small>{last ? timeAgo(last.at) : ""}</small>
                       </span>
                       <span
                         className={`conversation-preview ${entry.unread ? "has-unread" : ""}`}
@@ -191,6 +192,7 @@ export function MessagesScreen({
                           : "Bắt đầu câu chuyện…"}
                       </span>
                     </span>
+                    <ChevronRight className="conversation-chevron" size={21} aria-hidden="true" />
                     {entry.unread > 0 && (
                       <b className="conversation-unread notification-marker">{entry.unread}</b>
                     )}
@@ -213,7 +215,7 @@ export function MessagesScreen({
                 >
                   <ArrowLeft size={21} />
                 </Link>
-                <ChatAvatar data={data} chat={conversation} />
+                <div className="chat-person-heading"><ChatAvatar data={data} chat={conversation} />
                 <div>
                   {conversation.kind === "group" ? (
                     <strong className="person-name">{person.name}</strong>
@@ -230,6 +232,7 @@ export function MessagesScreen({
                       ? `${conversation.participantIds?.length || 0} thành viên · Nhóm chat`
                       : online ? "Đang hoạt động" : "Cuộc trò chuyện"}
                   </small>
+                </div>
                 </div>
                 <button type="button" ref={detailsButton} className={`icon-button chat-details-toggle ${detailsOpen ? "active" : ""}`} aria-label={detailsOpen ? "Đóng thông tin trò chuyện" : "Mở thông tin và chức năng trò chuyện"} aria-controls={detailsId} aria-expanded={detailsOpen} onClick={() => detailsOpen ? closeDetails() : setDetailsOpen(true)}><PanelRight size={21} /></button>
               </header>
@@ -319,16 +322,14 @@ export function MessagesScreen({
                       requestAnimationFrame(() => inputRef.current?.focus());
                     }}
                   />
-                  <TellmeStickerButton key={conversation.id} label="Thêm sticker Tellme vào tin nhắn" disabled={saving || sending} onSelect={selectSticker} showLabels={false} />
+                  <TellmeStickerButton key={conversation.id} label="Thêm sticker" disabled={saving || sending} onSelect={selectSticker} showLabels={false} />
                   <input
                     ref={inputRef}
                     aria-label="Nhập tin nhắn"
                     value={text}
                     maxLength={1000}
                     placeholder={
-                      conversation.kind === "group"
-                        ? "Nhắn vào nhóm…"
-                        : `Nhắn gì đó cho ${person.name.split(" ").slice(-1)[0]}…`
+                      "Tin nhắn…"
                     }
                     onChange={(event) => {
                       setText(event.target.value);
@@ -365,14 +366,16 @@ export function MessagesScreen({
         {conversation && <ConversationTools key={conversation.id} chat={conversation} data={data} open={detailsOpen} panelId={detailsId} onClose={closeDetails} />}
         </div>
       </section>
+      {!conversationId && <FloatingActions><div className="message-compose-floating"><IconButton label="Cuộc trò chuyện mới" tooltip={false} onClick={() => setCreating(true)}><PencilLine size={23} /></IconButton></div></FloatingActions>}
       {creatingGroup && <Modal title="Tạo nhóm chat" className="create-group-dialog" onClose={() => setCreatingGroup(false)}><div className="dialog-body"><GroupComposer data={data} onCreated={(id) => { setCreatingGroup(false); router.push(`/community/messages/${id}`); }} /></div></Modal>}
       {creating && (
         <Modal
-          title="Bắt đầu một cuộc trò chuyện"
+          title="Tin nhắn mới"
+          className="new-conversation-dialog"
           onClose={() => setCreating(false)}
         >
           <div className="dialog-body new-conversation-list">
-            <button onClick={() => { setCreating(false); setCreatingGroup(true); }}><Users size={24} /><span><strong>Tạo nhóm chat</strong><small>Đặt tên và chọn avatar cho hội của bạn</small></span></button>
+            <button onClick={() => { setCreating(false); setCreatingGroup(true); }}><Users size={24} /><span><strong>Tạo nhóm chat</strong><small>Chọn thành viên</small></span></button>
             {data.people
               .filter(
                 (entry) =>

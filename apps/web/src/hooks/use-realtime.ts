@@ -21,7 +21,7 @@ export function useRealtime(enabled: boolean, friendIds: string[] = []) {
     const prune = setInterval(pruneTyping, 1000);
     let stopped = false, paused = false, failures = 0, lastFrame = 0;
     let noticeRefresh: ReturnType<typeof setTimeout> | undefined;
-    let noticeSound: "notification" | "weather" | undefined;
+    let noticeSound: "notification" | undefined;
     let legacyNotice = false;
     const seenNotices = new Set<string>();
     let reconnect: ReturnType<typeof setTimeout> | undefined, pulse: ReturnType<typeof setTimeout> | undefined, invalidate: ReturnType<typeof setTimeout> | undefined, resync: ReturnType<typeof setTimeout> | undefined;
@@ -95,12 +95,12 @@ export function useRealtime(enabled: boolean, friendIds: string[] = []) {
             if (typeof value.storyId === "string" && typeof value.momentId === "string") queueReactionRefresh(value.storyId, value.momentId);
           }
           else if (value.kind === "notifications") {
+            if (value.systemIcon === "weather") return;
             if (typeof value.noticeId !== "string") legacyNotice = true;
             else if (!seenNotices.has(value.noticeId)) {
               seenNotices.add(value.noticeId);
               if (seenNotices.size > 128) seenNotices.delete(seenNotices.values().next().value!);
-              if (value.systemIcon === "weather") noticeSound = "weather";
-              else noticeSound ??= "notification";
+              noticeSound ??= "notification";
             }
             if (!noticeRefresh) noticeRefresh = setTimeout(() => {
               noticeRefresh = undefined;
